@@ -7,9 +7,12 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -31,8 +34,13 @@ public class GoogleAuthorizeUtil {
     }
 
     public static GoogleCredential getGoogleCredential() throws IOException {
+        var pathToKey = "E:\\YandexDisk (noir74)\\Sync\\YandexDisk\\IdeaProjects\\RunVolunteerBotPavshino\\src\\main\\resources\\pavshino5verstServiceAccount.json";
+        GoogleCredentials googleCredentials = GoogleCredentials.
+                fromStream(new FileInputStream(pathToKey));
+        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(googleCredentials);
+
         return GoogleCredential
-                .fromStream(new FileInputStream("E:\\YandexDisk (noir74)\\Sync\\YandexDisk\\IdeaProjects\\RunVolunteerBotPavshino\\src\\main\\resources\\pavshino5verstServiceAccount.json"))
+                .fromStream(new FileInputStream(pathToKey))
                 .createScoped(List.of(SheetsScopes.SPREADSHEETS));
     }
 }
