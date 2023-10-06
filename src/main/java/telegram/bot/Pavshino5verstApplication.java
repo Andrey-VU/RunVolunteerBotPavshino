@@ -5,11 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class Pavshino5verstApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(Pavshino5verstApplication.class, args);
-        GoogleSheetUtils googleSheetUtils = new GoogleSheetUtils();
-        System.out.println("Hello, world");
     }
 
 }
