@@ -42,7 +42,7 @@ public interface TelegramBotStorage {
      * @param date - Дата за котроую хотим получить список участников
      * @return Список участников
      */
-    List<User> getPartisipansByDate(LocalDate date);
+    List<User> getParticipantsByDate(LocalDate date);
 
     /**
      * Записываем участие
@@ -56,6 +56,6 @@ public interface TelegramBotStorage {
      * Отменяем участие
      * @param participation - Участие которое удаляем
      */
-    void delteParticipation(Participation participation);
+    void deleteParticipation(Participation participation);
 
 }

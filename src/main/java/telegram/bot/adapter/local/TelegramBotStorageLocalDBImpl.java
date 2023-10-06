@@ -34,7 +34,7 @@ public class TelegramBotStorageLocalDBImpl implements TelegramBotStorage {
     }
 
     @Override
-    public List<User> getPartisipansByDate(LocalDate date) {
+    public List<User> getParticipantsByDate(LocalDate date) {
         return null;
     }
 
@@ -44,7 +44,7 @@ public class TelegramBotStorageLocalDBImpl implements TelegramBotStorage {
     }
 
     @Override
-    public void delteParticipation(Participation participation) {
+    public void deleteParticipation(Participation participation) {
 
     }
 }

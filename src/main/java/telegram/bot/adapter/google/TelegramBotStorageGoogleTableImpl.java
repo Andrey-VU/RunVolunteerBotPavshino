@@ -33,7 +33,7 @@ public class TelegramBotStorageGoogleTableImpl implements TelegramBotStorage {
     }
 
     @Override
-    public List<User> getPartisipansByDate(LocalDate date) {
+    public List<User> getParticipantsByDate(LocalDate date) {
         return null;
     }
 
