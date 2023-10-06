@@ -8,7 +8,7 @@ public class Pavshino5verstApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(Pavshino5verstApplication.class, args);
-        GoogleSheetUtil googleSheetUtil = new GoogleSheetUtil();
+        GoogleSheetUtils googleSheetUtils = new GoogleSheetUtils();
         System.out.println("Hello, world");
     }
 
