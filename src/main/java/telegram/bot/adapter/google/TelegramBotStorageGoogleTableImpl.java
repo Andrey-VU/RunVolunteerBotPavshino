@@ -43,7 +43,7 @@ public class TelegramBotStorageGoogleTableImpl implements TelegramBotStorage {
     }
 
     @Override
-    public void delteParticipation(Participation participation) {
+    public void deleteParticipation(Participation participation) {
 
     }
 }
