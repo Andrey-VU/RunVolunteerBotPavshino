@@ -1,19 +1,21 @@
 package telegram.bot.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class User {
 
     // Имя
-    public String name;
+    private String name;
 
     // Фамилия
-    public String surname;
+    private String surname;
 
     // Телеграм пользоваителя
-    public String telegram;
+    private String telegram;
 
     // Идентификатор пользователя в системе 5 верст
-    public String code;
+    private String code;
 }
