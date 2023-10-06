@@ -2,9 +2,9 @@ package telegram.bot.config;
 
 public enum BotModes {
 
-    LOCAL("-l"),
+    LOCAL("TelegramBotStorageLocalDBImpl"),
 
-    GOOGLE("-g");
+    GOOGLE("TelegramBotStorageGoogleTableImpl");
 
     private final String code;
 

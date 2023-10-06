@@ -15,7 +15,7 @@ public class Pavshino5verstApplication {
 			"Ключи для запуска:\n" +
 			"    -h  - вывести эту подсказку\n" +
 			"    -l  - запустить бота с локальной БД\n" +
-			"    -g  - запустить бота на тадблицах Google Sheets";
+			"    -g  - запустить бота на тадблицах Google Sheets\n\n";
 
 	public static void main(String[] args) {
 		if (Arrays.asList(args).contains("-h")) {

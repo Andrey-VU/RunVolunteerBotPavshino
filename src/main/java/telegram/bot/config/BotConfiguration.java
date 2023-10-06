@@ -1,6 +1,7 @@
 package telegram.bot.config;
 
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,10 @@ public class BotConfiguration {
 
     private final Environment environment;
 
+    /**
+     * Режим бота
+     */
+    @Getter
     @Setter
     private static BotModes mode;
 
