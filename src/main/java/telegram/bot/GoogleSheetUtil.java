@@ -22,7 +22,7 @@ public class GoogleSheetUtil {
     public GoogleSheetUtil() {
         this.APPLICATION_NAME = "Google Sheets App";
 
-        var pathToKey = "E:\\YandexDisk (noir74)\\Sync\\YandexDisk\\IdeaProjects\\RunVolunteerBotPavshino\\src\\main\\resources\\pavshino5verstServiceAccount.json";
+        var pathToKey = "pavshino5verstServiceAccount.json";
         GoogleCredentials googleCredentials;
         HttpRequestInitializer requestInitializer;
 
