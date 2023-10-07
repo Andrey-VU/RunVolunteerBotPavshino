@@ -11,7 +11,7 @@ import org.springframework.core.env.Environment;
 @Slf4j
 @Configuration
 @PropertySource(value = "classpath:application.properties")
-@PropertySource(value = "file:bot-config.properties", ignoreResourceNotFound = false)
+@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/bot-config.properties", ignoreResourceNotFound = false)
 public class BotConfiguration {
 
     private final Environment environment;
