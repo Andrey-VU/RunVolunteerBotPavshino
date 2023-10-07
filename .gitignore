@@ -160,7 +160,11 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
+<<<<<<< HEAD
 # local config file
 local_config/
+=======
+bot-config.*
+>>>>>>> main
 
 # End of https://www.toptal.com/developers/gitignore/api/java,maven,intellij
