@@ -9,23 +9,26 @@ import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.config.GoogleSheetConfig;
+import telegram.bot.model.Event;
+import telegram.bot.model.User;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Data
 @Component
 public class GoogleSheetUtils {
     private Sheets sheetService;
+    private List<Event> events;
+    private List<User> users;
 
     public GoogleSheetUtils() {
         initialize();
@@ -44,20 +47,24 @@ public class GoogleSheetUtils {
         }
     }
 
-    public String readCellValue(String sheetName, String cellAddress) {
-        return readRangeValues(sheetName, cellAddress, cellAddress).get(0).get(0);
+    public String readValueCell(String sheetName, String cellAddress) {
+        return readValuesArray(sheetName, cellAddress, cellAddress).get(0).get(0);
     }
 
-    public List<List<String>> readRangeValues(String sheetName, String rangeBegin, String rangeEnd) {
+    public List<String> readValuesRange(String sheetName, String rangeBegin, String rangeEnd) {
+        return readValuesArray(sheetName, rangeBegin, rangeEnd).get(0);
+    }
+
+    public List<List<String>> readValuesArray(String sheetName, String arrayBegin, String arrayEnd) {
         List<List<String>> values = new LinkedList<>();
         try {
-            var range = sheetName + "!" + rangeBegin + ":" + rangeEnd;
+            var arrayBorders = sheetName + "!" + arrayBegin + ":" + arrayEnd;
 
             var objectsInTheRange = Optional
                     .ofNullable(
                             sheetService.spreadsheets()
                                     .values()
-                                    .get(GoogleSheetConfig.getGoogleSheetId(), range)
+                                    .get(GoogleSheetConfig.getGoogleSheetId(), arrayBorders)
                                     .execute()
                                     .getValues())
                     .orElse(List.of(List.of("")));
@@ -75,11 +82,11 @@ public class GoogleSheetUtils {
     }
 
     private void initialize() {
-        connect();
-        prepareData();
+        connectToStorage();
+        loadDataFromStorage();
     }
 
-    private void connect() {
+    private void connectToStorage() {
         GoogleCredentials googleCredentials;
         HttpRequestInitializer requestInitializer;
         NetHttpTransport netHttpTransport;
@@ -97,8 +104,27 @@ public class GoogleSheetUtils {
                 .build();
     }
 
-    private void prepareData() {
-        writeCellValue(GoogleSheetConfig.getGoogleSheetNameVolunteers(), "C17", "test тест");
-        System.out.println(readCellValue(GoogleSheetConfig.getGoogleSheetNameVolunteers(), "C17"));
+    private void loadDataFromStorage() {
+        loadUsers();
+        loadEvents();
+    }
+
+    private void loadUsers() {
+        users = new ArrayList<>();
+        List<String> userProperties = new LinkedList<>();
+        var rowNumber = 2;
+        do {
+            var rangeBegin = "A" + rowNumber;
+            var rangeEnd = "C" + rowNumber++;
+            userProperties = readValuesRange(GoogleSheetConfig.getGoogleSheetNameContacts(), rangeBegin, rangeEnd);
+
+            if (!userProperties.get(0).isEmpty()) users.add(new User(userProperties));
+            else break;
+        }
+        while (true);
+    }
+
+    private void loadEvents() {
+
     }
 }

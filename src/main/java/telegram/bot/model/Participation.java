@@ -14,4 +14,7 @@ public class Participation {
 
     // Дата участия
     private LocalDate eventDate;
+
+    // Позиция
+    private String role;
 }
