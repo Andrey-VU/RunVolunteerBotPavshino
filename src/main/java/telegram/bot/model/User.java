@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -18,7 +17,7 @@ public class User {
     // Фамилия
     private String surname;
 
-    // Телеграм пользоваителя
+    // Телеграм пользователя
     private String telegram;
 
     // Идентификатор пользователя в системе 5 верст

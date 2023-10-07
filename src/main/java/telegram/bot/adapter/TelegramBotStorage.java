@@ -12,6 +12,7 @@ public interface TelegramBotStorage {
 
     /**
      * Записываем нового участника
+     *
      * @param user - Новый пользователь
      * @return Возвращает участника
      */
@@ -19,6 +20,7 @@ public interface TelegramBotStorage {
 
     /**
      * Получаем участника по его телеграму
+     *
      * @param telegram - Телеграм пользователя
      * @return Пользователь по телеграму
      */
@@ -26,6 +28,7 @@ public interface TelegramBotStorage {
 
     /**
      * Получаем участника по его коду
+     *
      * @param code - Код пользователя в системе 5 верст
      * @return Пользователь по телеграму
      */
@@ -33,12 +36,14 @@ public interface TelegramBotStorage {
 
     /**
      * Получаем всех участников
+     *
      * @return Полный список всенх заргестрированных пользователей
      */
     List<User> getUsers();
 
     /**
      * Получаем список участников на дату
+     *
      * @param date - Дата за котроую хотим получить список участников
      * @return Список участников
      */
@@ -46,6 +51,7 @@ public interface TelegramBotStorage {
 
     /**
      * Записываем участие
+     *
      * @param participation - участие
      * @return Возвращаем участие записанное
      * Если вернуди null - запсь не уадалсь
@@ -54,6 +60,7 @@ public interface TelegramBotStorage {
 
     /**
      * Отменяем участие
+     *
      * @param participation - Участие которое удаляем
      */
     void deleteParticipation(Participation participation);
