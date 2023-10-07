@@ -18,17 +18,17 @@ import telegram.bot.model.User;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Slf4j
 @Component
 public class GoogleSheetUtils {
     private Sheets sheetService;
-    private List<Event> events;
     private List<User> users;
+    private Map<LocalDate, Event> events;
 
     public GoogleSheetUtils() {
         initialize();
@@ -39,9 +39,10 @@ public class GoogleSheetUtils {
             var range = sheetName + "!" + cellAddress;
             var value = new ValueRange().setValues(List.of(List.of(cellValue)));
             UpdateValuesResponse result = sheetService.spreadsheets().values()
-                    .update(GoogleSheetConfig.getGoogleSheetId(), range, value)
+                    .update(GoogleSheetConfig.getSheetId(), range, value)
                     .setValueInputOption("RAW")
                     .execute();
+            pause();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,10 +65,12 @@ public class GoogleSheetUtils {
                     .ofNullable(
                             sheetService.spreadsheets()
                                     .values()
-                                    .get(GoogleSheetConfig.getGoogleSheetId(), arrayBorders)
+                                    .get(GoogleSheetConfig.getSheetId(), arrayBorders)
                                     .execute()
                                     .getValues())
                     .orElse(List.of(List.of("")));
+
+            pause();
 
             objectsInTheRange
                     .forEach(currentRowObject -> {
@@ -79,6 +82,22 @@ public class GoogleSheetUtils {
             throw new RuntimeException(e);
         }
         return values;
+    }
+
+    private void pause() {
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(GoogleSheetConfig.getApiPauseLong());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initialize() {
@@ -112,19 +131,58 @@ public class GoogleSheetUtils {
     private void loadUsers() {
         users = new ArrayList<>();
         List<String> userProperties = new LinkedList<>();
-        var rowNumber = 2;
+        var rowNumber = GoogleSheetConfig.getSheetContactsStartRow();
         do {
             var rangeBegin = "A" + rowNumber;
             var rangeEnd = "C" + rowNumber++;
-            userProperties = readValuesRange(GoogleSheetConfig.getGoogleSheetNameContacts(), rangeBegin, rangeEnd);
+            userProperties = readValuesRange(GoogleSheetConfig.getSheetNameContacts(), rangeBegin, rangeEnd);
 
             if (!userProperties.get(0).isEmpty()) users.add(new User(userProperties));
             else break;
-        }
-        while (true);
+        } while (true);
     }
 
     private void loadEvents() {
+        var eventColumnBegin = GoogleSheetConfig.getSheetEventStartColumn();
+        var eventColumnEnd = searchLastColumnForSaturdays();
+        List<String> roles = getRoles();
+    }
 
+    private List<String> getRoles() {
+        var roles = new LinkedList<String>();
+        var rowNumber = GoogleSheetConfig.getSheetRoleStartRow();
+        do {
+            var cellAddress = "A" + rowNumber++;
+            var role = readValueCell(GoogleSheetConfig.getSheetNameVolunteers(), cellAddress);
+            if (!role.isEmpty()) roles.add(role);
+            else break;
+        } while (true);
+        return roles;
+    }
+
+    private int searchLastColumnForSaturdays() {
+        var eventColumn = GoogleSheetConfig.getSheetEventStartColumn();
+        var saturdaysCounter = 0;
+        LocalDate pendingSaturday = null;
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        do {
+            var cellAddress = "R1C" + eventColumn++;
+            var dateString = readValueCell(GoogleSheetConfig.getSheetNameVolunteers(), cellAddress);
+            if (dateString.isEmpty()) {
+                pendingSaturday = getNextSaturday(Optional.ofNullable(pendingSaturday).orElse(LocalDate.now()));
+                writeCellValue(GoogleSheetConfig.getSheetNameVolunteers(), cellAddress, pendingSaturday.format(dateFormat));
+                saturdaysCounter++;
+            } else {
+                pendingSaturday = LocalDate.parse(dateString, dateFormat);
+                if (pendingSaturday.isAfter(LocalDate.now())) saturdaysCounter++;
+            }
+        } while (saturdaysCounter < 4);
+        return --eventColumn;
+    }
+
+    private LocalDate getNextSaturday(LocalDate day) {
+        do day = day.plusDays(1);
+        while (day.getDayOfWeek() != DayOfWeek.SATURDAY);
+        return day;
     }
 }

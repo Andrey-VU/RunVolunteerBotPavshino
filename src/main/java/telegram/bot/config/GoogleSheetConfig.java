@@ -10,20 +10,35 @@ import org.springframework.context.annotation.PropertySource;
 public class GoogleSheetConfig {
     private static String APPLICATION_NAME;
     private static String SERVICE_ACCOUNT_KEY_PATH;
-    private static String GOOGLE_SHEET_ID;
-    private static String GOOGLE_SHEET_NAME_VOLUNTEERS;
-    private static String GOOGLE_SHEET_NAME_CONTACTS;
+    private static String SHEET_ID;
+    private static String SHEET_NAME_VOLUNTEERS;
+    private static String SHEET_NAME_CONTACTS;
+    private static int SHEET_CONTACTS_START_ROW;
+    private static int SHEET_ROLE_START_ROW;
+    private static int SHEET_EVENT_START_COLUMN;
+    private static int SHEET_SATURDAYS_AHEAD;
+    private static long API_PAUSE_LONG;
 
-    public GoogleSheetConfig(@Value("${google.sheet.app.name}") String google_sheet_app_name,
-                             @Value("${google.sheet.service.account.key}") String google_sheet_service_account_key,
-                             @Value("${google.sheet.id}") String google_sheet_id,
-                             @Value("${google.sheet.name.volunteers}") String google_sheet_name_volunteers,
-                             @Value("${google.sheet.name.contacts}") String google_sheet_name_contacts) {
-        APPLICATION_NAME = google_sheet_app_name;
-        SERVICE_ACCOUNT_KEY_PATH = google_sheet_service_account_key;
-        GOOGLE_SHEET_ID = google_sheet_id;
-        GOOGLE_SHEET_NAME_VOLUNTEERS = google_sheet_name_volunteers;
-        GOOGLE_SHEET_NAME_CONTACTS = google_sheet_name_contacts;
+    public GoogleSheetConfig(@Value("${sheet.app.name}") String sheet_app_name,
+                             @Value("${sheet.service.account.key}") String sheet_service_account_key,
+                             @Value("${sheet.id}") String sheet_id,
+                             @Value("${sheet.name.volunteers}") String sheet_name_volunteers,
+                             @Value("${sheet.name.contacts}") String sheet_name_contacts,
+                             @Value("${sheet.contacts.start.row}") String sheet_contacts_start_row,
+                             @Value("${sheet.role.start.row}") String sheet_role_start_row,
+                             @Value("${sheet.event.start.column}") String sheet_event_start_column,
+                             @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead,
+                             @Value("${api.pause.ms}") String api_pause_ms) {
+        APPLICATION_NAME = sheet_app_name;
+        SERVICE_ACCOUNT_KEY_PATH = sheet_service_account_key;
+        SHEET_ID = sheet_id;
+        SHEET_NAME_VOLUNTEERS = sheet_name_volunteers;
+        SHEET_NAME_CONTACTS = sheet_name_contacts;
+        SHEET_CONTACTS_START_ROW = Integer.parseInt(sheet_contacts_start_row);
+        SHEET_ROLE_START_ROW = Integer.parseInt(sheet_role_start_row);
+        SHEET_EVENT_START_COLUMN = Integer.parseInt(sheet_event_start_column);
+        SHEET_SATURDAYS_AHEAD = Integer.parseInt(sheet_saturdays_ahead);
+        API_PAUSE_LONG = Long.parseLong(api_pause_ms);
     }
 
     public static String getApplicationName() {
@@ -34,13 +49,38 @@ public class GoogleSheetConfig {
         return SERVICE_ACCOUNT_KEY_PATH;
     }
 
-    public static String getGoogleSheetId() {
-        return GOOGLE_SHEET_ID;
+    public static String getSheetId() {
+        return SHEET_ID;
     }
 
-    public static String getGoogleSheetNameVolunteers() { return GOOGLE_SHEET_NAME_VOLUNTEERS; }
+    public static String getSheetNameVolunteers() {
+        return SHEET_NAME_VOLUNTEERS;
+    }
 
-    public static String getGoogleSheetNameContacts() { return GOOGLE_SHEET_NAME_CONTACTS; }
+    public static String getSheetNameContacts() {
+        return SHEET_NAME_CONTACTS;
+    }
+
+    public static int getSheetContactsStartRow() {
+        return SHEET_CONTACTS_START_ROW;
+    }
+
+    public static int getSheetRoleStartRow() {
+        return SHEET_ROLE_START_ROW;
+    }
+
+    public static int getSheetEventStartColumn() {
+        return SHEET_EVENT_START_COLUMN;
+    }
+
+    public static int getSheetSaturdaysAhead() {
+        return SHEET_SATURDAYS_AHEAD;
+    }
+
+    public static long getApiPauseLong() {
+        return API_PAUSE_LONG;
+    }
+
 
     @Override
     public String toString() {
