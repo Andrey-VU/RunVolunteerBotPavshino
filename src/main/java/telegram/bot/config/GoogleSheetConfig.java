@@ -1,4 +1,4 @@
-package telegram.bot.googleSheet;
+package telegram.bot.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;

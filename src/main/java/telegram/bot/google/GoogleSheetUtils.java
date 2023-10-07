@@ -1,4 +1,4 @@
-package telegram.bot.googleSheet;
+package telegram.bot.google;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -12,6 +12,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import telegram.bot.config.GoogleSheetConfig;
 
 import java.io.FileInputStream;
 import java.io.IOException;
