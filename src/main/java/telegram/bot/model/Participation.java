@@ -1,12 +1,12 @@
 package telegram.bot.model;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
+@Builder
 public class Participation {
 
     // Пользователь
@@ -14,4 +14,10 @@ public class Participation {
 
     // Дата участия
     private LocalDate eventDate;
+
+    // Позиция
+    private String role;
+
+    // номер строки в sheet
+    private int rowNumber;
 }

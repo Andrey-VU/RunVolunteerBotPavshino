@@ -5,13 +5,14 @@ import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
+import telegram.bot.storage.Storage;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
 @Component("local")
-public class TelegramBotStorageLocalDBImpl implements TelegramBotStorage {
+public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBotStorage {
 
     @Override
     public User saveUser(User user) {
@@ -34,7 +35,7 @@ public class TelegramBotStorageLocalDBImpl implements TelegramBotStorage {
     }
 
     @Override
-    public List<User> getParticipantsByDate(LocalDate date) {
+    public List<Participation> getParticipantsByDate(LocalDate date) {
         return null;
     }
 
