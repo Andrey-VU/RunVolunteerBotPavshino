@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 @PropertySource(value = "classpath:application.properties")
-@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/googleSheet.properties", ignoreResourceNotFound = false)
+@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/googleSheet.properties", ignoreResourceNotFound = false, encoding = "UTF-8")
 public class SheetConfig {
     private static String GOOGLE_APPLICATION_NAME;
     private static String GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
