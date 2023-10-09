@@ -50,6 +50,14 @@ public interface TelegramBotStorage {
     List<Participation> getParticipantsByDate(LocalDate date);
 
     /**
+     * Получаем список свободных позиций на дату
+     *
+     * @param date - Дата, за которую хотим получить список участников
+     * @return - Список свободных позиций на указанную дату
+     */
+    List<Participation> getAvailableParticipationByDate(LocalDate date);
+
+    /**
      * Записываем участие
      *
      * @param participation - участие
