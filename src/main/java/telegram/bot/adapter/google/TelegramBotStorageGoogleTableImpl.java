@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
-import telegram.bot.config.GoogleSheetConfig;
+import telegram.bot.config.SheetConfig;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component("google")
@@ -30,10 +31,10 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
         if (contacts.containsKey(user.getFullName()))
             return null;
 
-        var cellRangeBegin = getCellAddress(GoogleSheetConfig.getSheetContactsRowStart() + contacts.size(), GoogleSheetConfig.getSheetContactsColumnFirst());
-        var cellRangeEnd = getCellAddress(GoogleSheetConfig.getSheetContactsRowStart() + contacts.size(), GoogleSheetConfig.getSheetContactsColumnLast());
+        var cellRangeBegin = getCellAddress(SheetConfig.getSheetContactsRowStart() + contacts.size(), SheetConfig.getSheetContactsColumnFirst());
+        var cellRangeEnd = getCellAddress(SheetConfig.getSheetContactsRowStart() + contacts.size(), SheetConfig.getSheetContactsColumnLast());
         if (!googleSheetUtils.writesValues(
-                GoogleSheetConfig.getSheetContacts(),
+                SheetConfig.getSheetContacts(),
                 cellRangeBegin + ":" + cellRangeEnd,
                 List.of(List.of(
                         user.getFullName(),
@@ -66,6 +67,14 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     }
 
     @Override
+    public List<Participation> getAvailableParticipationByDate(LocalDate date) {
+        return events.get(date).getParticipants()
+                .stream()
+                .filter(participation -> Objects.isNull(participation.getUser()))
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    @Override
     public Participation saveParticipation(Participation participation) {
         var event = events.get(participation.getEventDate());
         if (Objects.isNull(event))
@@ -81,7 +90,7 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
             return null;
 
         var cellAddress = getCellAddress(participation.getRowNumber(), event.getColumnNumber());
-        if (!googleSheetUtils.writeCellValue(GoogleSheetConfig.getSheetVolunteers(), cellAddress, participation.getUser().getFullName()))
+        if (!googleSheetUtils.writeCellValue(SheetConfig.getSheetVolunteers(), cellAddress, participation.getUser().getFullName()))
             return null;
 
         participant.setUser(participation.getUser());
@@ -91,7 +100,7 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     @Override
     public void deleteParticipation(Participation participation) {
         var cellAddress = getCellAddress(participation.getRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
-        if (googleSheetUtils.writeCellValue(GoogleSheetConfig.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
+        if (googleSheetUtils.writeCellValue(SheetConfig.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
                     .stream()
                     .filter(obj -> obj.getRowNumber() == participation.getRowNumber())
@@ -105,20 +114,6 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     @PostConstruct
     private void postConstruct() {
         loadDataFromGoogleSheets();
-
-//        var participation = Participation.builder()
-//                .user(User.builder()
-//                        .name("Елена")
-//                        .surname("ДЕНИСКИН").build()
-//                )
-//                .eventDate(string2LocalDate("22.04.2023"))
-//                .role("Фотограф2")
-//                .rowNumber(7)
-//                .build();
-//
-//        saveParticipation(participation);
-
-//        saveUser(User.builder().name("Петя").surname("Иванов").telegram("@noir74").code("74").build());
     }
 
     private void loadDataFromGoogleSheets() {
@@ -128,11 +123,11 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
 
     private void loadContacts() {
         contacts = new HashMap<>();
-        var rangeBegin = getCellAddress(GoogleSheetConfig.getSheetContactsRowStart(), GoogleSheetConfig.getSheetContactsColumnFirst());
-        var rangeEnd = getCellAddress(null, GoogleSheetConfig.getSheetContactsColumnLast());
-        googleSheetUtils.readValuesRange(GoogleSheetConfig.getSheetContacts(), rangeBegin, rangeEnd)
+        var rangeBegin = getCellAddress(SheetConfig.getSheetContactsRowStart(), SheetConfig.getSheetContactsColumnFirst());
+        var rangeEnd = getCellAddress(null, SheetConfig.getSheetContactsColumnLast());
+        googleSheetUtils.readValuesRange(SheetConfig.getSheetContacts(), rangeBegin, rangeEnd)
                 .forEach(userProperty -> {
-                    var user = new User(userProperty);
+                    var user = User.createFrom(userProperty);
                     contacts.put(user.getFullName(), user);
                 });
     }
@@ -146,41 +141,41 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     }
 
     private List<String> getRoles() {
-        var rangeBegin = getCellAddress(GoogleSheetConfig.getSheetVolunteersRoleRowStart(), GoogleSheetConfig.getSheetVolunteersRoleColumn());
-        var rangeEnd = getCellAddress(null, GoogleSheetConfig.getSheetVolunteersRoleColumn());
-        return googleSheetUtils.reagValuesList(GoogleSheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
+        var rangeBegin = getCellAddress(SheetConfig.getSheetVolunteersRoleRowStart(), SheetConfig.getSheetVolunteersRoleColumn());
+        var rangeEnd = getCellAddress(null, SheetConfig.getSheetVolunteersRoleColumn());
+        return googleSheetUtils.reagValuesList(SheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
     private List<String> getEventsDate() {
-        var rangeBegin = getCellAddress(GoogleSheetConfig.getSheetVolunteersEventRow(), GoogleSheetConfig.getSheetVolunteersEventColumnStart());
-        var rangeEnd = getCellAddress(GoogleSheetConfig.getSheetVolunteersEventRow(), null);
-        var dates = googleSheetUtils.readValuesRange(GoogleSheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd).get(0);
+        var rangeBegin = getCellAddress(SheetConfig.getSheetVolunteersEventRow(), SheetConfig.getSheetVolunteersEventColumnStart());
+        var rangeEnd = getCellAddress(SheetConfig.getSheetVolunteersEventRow(), null);
+        var dates = googleSheetUtils.readValuesRange(SheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd).get(0);
         addSaturdaysIfNeeded(dates);
         return dates;
     }
 
     private void addSaturdaysIfNeeded(List<String> dates) {
         var nextSaturdaysCounter = 0;
-        var saturdayColumn = GoogleSheetConfig.getSheetVolunteersEventColumnStart();
+        var saturdayColumn = SheetConfig.getSheetVolunteersEventColumnStart();
         LocalDate saturday = LocalDate.now();
         for (String stringDate : dates) {
             saturday = string2LocalDate(stringDate);
             nextSaturdaysCounter += saturday.isEqual(LocalDate.now()) || saturday.isAfter(LocalDate.now()) ? 1 : 0;
             saturdayColumn++;
         }
-        while (nextSaturdaysCounter < GoogleSheetConfig.getSheetSaturdaysAhead()) {
+        while (nextSaturdaysCounter < SheetConfig.getSheetSaturdaysAhead()) {
             saturday = getNextSaturday(saturday);
-            var cellAddress = getCellAddress(GoogleSheetConfig.getSheetVolunteersEventRow(), saturdayColumn++);
-            googleSheetUtils.writeCellValue(GoogleSheetConfig.getSheetVolunteers(), cellAddress, saturday.format(GoogleSheetConfig.DATE_FORMATTER));
+            var cellAddress = getCellAddress(SheetConfig.getSheetVolunteersEventRow(), saturdayColumn++);
+            googleSheetUtils.writeCellValue(SheetConfig.getSheetVolunteers(), cellAddress, saturday.format(SheetConfig.DATE_FORMATTER));
             dates.add(localDate2String(saturday));
             nextSaturdaysCounter++;
         }
     }
 
     private List<List<String>> getVolunteers(List<String> roles, List<String> dates) {
-        var rangeBegin = getCellAddress(GoogleSheetConfig.getSheetVolunteersRoleRowStart(), GoogleSheetConfig.getSheetVolunteersRoleColumn() + 1);
-        var rangeEnd = getCellAddress(GoogleSheetConfig.getSheetVolunteersRoleRowStart() + roles.size() - 1, GoogleSheetConfig.getSheetVolunteersRoleColumn() + dates.size());
-        return googleSheetUtils.readValuesRange(GoogleSheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
+        var rangeBegin = getCellAddress(SheetConfig.getSheetVolunteersRoleRowStart(), SheetConfig.getSheetVolunteersRoleColumn() + 1);
+        var rangeEnd = getCellAddress(SheetConfig.getSheetVolunteersRoleRowStart() + roles.size() - 1, SheetConfig.getSheetVolunteersRoleColumn() + dates.size());
+        return googleSheetUtils.readValuesRange(SheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
     private void prepareEvents(List<String> roles, List<String> dates, List<List<String>> volunteers) {
@@ -194,13 +189,13 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
                         .eventDate(date)
                         .role(roles.get(roleIndex))
                         .user(getVolunteerForEvent(volunteers.get(roleIndex), dateIndex))
-                        .rowNumber(GoogleSheetConfig.getSheetVolunteersRoleRowStart() + roleIndex).build());
+                        .rowNumber(SheetConfig.getSheetVolunteersRoleRowStart() + roleIndex).build());
                 roleIndex++;
             }
             events.put(date, Event.builder()
                     .eventDate(date)
                     .participants(participants)
-                    .columnNumber(GoogleSheetConfig.getSheetVolunteersEventColumnStart() + dateIndex).build());
+                    .columnNumber(SheetConfig.getSheetVolunteersEventColumnStart() + dateIndex).build());
             dateIndex++;
         }
     }
@@ -210,11 +205,11 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     }
 
     private LocalDate string2LocalDate(String value) {
-        return LocalDate.parse(value, GoogleSheetConfig.DATE_FORMATTER);
+        return LocalDate.parse(value, SheetConfig.DATE_FORMATTER);
     }
 
     private String localDate2String(LocalDate value) {
-        return value.format(GoogleSheetConfig.DATE_FORMATTER);
+        return value.format(SheetConfig.DATE_FORMATTER);
     }
 
     private LocalDate getNextSaturday(LocalDate day) {

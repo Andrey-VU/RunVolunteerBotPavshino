@@ -3,7 +3,7 @@ package telegram.bot.storage;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import telegram.bot.config.GoogleSheetConfig;
+import telegram.bot.config.SheetConfig;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -27,7 +27,7 @@ public class GoogleSheetUtils {
             var range = sheetName + "!" + cellAddress;
             var body = new ValueRange().setValues(values);
             UpdateValuesResponse result = sheetService.spreadsheets().values()
-                    .update(GoogleSheetConfig.getSheetId(), range, body)
+                    .update(SheetConfig.getGoogleSheetId(), range, body)
                     .setValueInputOption("RAW")
                     .execute();
             pause();
@@ -57,7 +57,7 @@ public class GoogleSheetUtils {
                     .ofNullable(
                             sheetService.spreadsheets()
                                     .values()
-                                    .get(GoogleSheetConfig.getSheetId(), range)
+                                    .get(SheetConfig.getGoogleSheetId(), range)
                                     .execute()
                                     .getValues())
                     .orElse(Collections.emptyList());
@@ -77,7 +77,7 @@ public class GoogleSheetUtils {
     private void pause() {
         Thread thread = new Thread(() -> {
             try {
-                Thread.sleep(GoogleSheetConfig.getApiPauseLong());
+                Thread.sleep(SheetConfig.getGoogleApiPauseLong());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

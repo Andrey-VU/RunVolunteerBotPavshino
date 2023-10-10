@@ -35,12 +35,14 @@
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
+.idea/
 .idea/*
 .idea/artifacts
 .idea/compiler.xml
 .idea/jarRepositories.xml
 .idea/modules.xml
 .idea/*.iml
+.idea/*.xml
 .idea/modules
 *.iml
 *.ipr
@@ -160,11 +162,7 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
-<<<<<<< HEAD
-# local config file
 local_config/
-=======
 bot-config.*
->>>>>>> main
 
 # End of https://www.toptal.com/developers/gitignore/api/java,maven,intellij

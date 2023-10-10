@@ -20,11 +20,12 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 @PropertySource(value = "classpath:application.properties")
-@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/googleSheet.properties", ignoreResourceNotFound = false)
-public class GoogleSheetConfig {
-    private static String APPLICATION_NAME;
-    private static String SERVICE_ACCOUNT_KEY_PATH;
-    private static String SHEET_ID;
+@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/googleSheet.properties", ignoreResourceNotFound = false, encoding = "UTF-8")
+public class SheetConfig {
+    private static String GOOGLE_APPLICATION_NAME;
+    private static String GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
+    private static long GOOGLE_API_PAUSE_LONG;
+    private static String GOOGLE_SHEET_ID;
     private static String SHEET_VOLUNTEERS;
     private static String SHEET_CONTACTS;
     private static int SHEET_CONTACTS_ROW_START;
@@ -35,26 +36,26 @@ public class GoogleSheetConfig {
     private static int SHEET_VOLUNTEERS_EVENT_COLUMN_START;
     private static int SHEET_VOLUNTEERS_EVENT_ROW;
     private static int SHEET_SATURDAYS_AHEAD;
-    private static long API_PAUSE_LONG;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public GoogleSheetConfig(@Value("${sheet.app.name}") String sheet_app_name,
-                             @Value("${sheet.service.account.key}") String sheet_service_account_key,
-                             @Value("${sheet.id}") String sheet_id,
-                             @Value("${sheet.volunteers}") String sheet_volunteers,
-                             @Value("${sheet.contacts}") String sheet_contacts,
-                             @Value("${sheet.contacts.row.start}") String sheet_contacts_row_start,
-                             @Value("${sheet.contacts.column.first}") String sheet_contacts_column_first,
-                             @Value("${sheet.contacts.column.last}") String sheet_contacts_column_last,
-                             @Value("${sheet.volunteers.role.row.start}") String sheet_volunteers_role_row_start,
-                             @Value("${sheet.volunteers.role.column}") String sheet_volunteers_role_column,
-                             @Value("${sheet.volunteers.event.column.start}") String sheet_volunteers_event_column_start,
-                             @Value("${sheet.volunteers.event.row}") String sheet_volunteers_event_row,
-                             @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead,
-                             @Value("${api.pause.ms}") String api_pause_ms) {
-        APPLICATION_NAME = sheet_app_name;
-        SERVICE_ACCOUNT_KEY_PATH = sheet_service_account_key;
-        SHEET_ID = sheet_id;
+    public SheetConfig(@Value("${google.app.name}") String google_app_name,
+                       @Value("${google.service.account.key}") String google_service_account_key,
+                       @Value("${google.api.pause.ms}") String google_api_pause_ms,
+                       @Value("${google.sheet.id}") String google_sheet_id,
+                       @Value("${sheet.volunteers}") String sheet_volunteers,
+                       @Value("${sheet.contacts}") String sheet_contacts,
+                       @Value("${sheet.contacts.row.start}") String sheet_contacts_row_start,
+                       @Value("${sheet.contacts.column.first}") String sheet_contacts_column_first,
+                       @Value("${sheet.contacts.column.last}") String sheet_contacts_column_last,
+                       @Value("${sheet.volunteers.role.row.start}") String sheet_volunteers_role_row_start,
+                       @Value("${sheet.volunteers.role.column}") String sheet_volunteers_role_column,
+                       @Value("${sheet.volunteers.event.column.start}") String sheet_volunteers_event_column_start,
+                       @Value("${sheet.volunteers.event.row}") String sheet_volunteers_event_row,
+                       @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead) {
+        GOOGLE_APPLICATION_NAME = google_app_name;
+        GOOGLE_SERVICE_ACCOUNT_KEY_PATH = google_service_account_key;
+        GOOGLE_API_PAUSE_LONG = Long.parseLong(google_api_pause_ms);
+        GOOGLE_SHEET_ID = google_sheet_id;
         SHEET_VOLUNTEERS = sheet_volunteers;
         SHEET_CONTACTS = sheet_contacts;
         SHEET_CONTACTS_ROW_START = Integer.parseInt(sheet_contacts_row_start);
@@ -65,19 +66,22 @@ public class GoogleSheetConfig {
         SHEET_VOLUNTEERS_EVENT_COLUMN_START = Integer.parseInt(sheet_volunteers_event_column_start);
         SHEET_VOLUNTEERS_EVENT_ROW = Integer.parseInt(sheet_volunteers_event_row);
         SHEET_SATURDAYS_AHEAD = Integer.parseInt(sheet_saturdays_ahead);
-        API_PAUSE_LONG = Long.parseLong(api_pause_ms);
     }
 
-    public static String getApplicationName() {
-        return APPLICATION_NAME;
+    public static String getGoogleApplicationName() {
+        return GOOGLE_APPLICATION_NAME;
     }
 
-    public static String getServiceAccountKeyPath() {
-        return SERVICE_ACCOUNT_KEY_PATH;
+    public static String getGoogleServiceAccountKeyPath() {
+        return GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
     }
 
-    public static String getSheetId() {
-        return SHEET_ID;
+    public static long getGoogleApiPauseLong() {
+        return GOOGLE_API_PAUSE_LONG;
+    }
+
+    public static String getGoogleSheetId() {
+        return GOOGLE_SHEET_ID;
     }
 
     public static String getSheetVolunteers() {
@@ -120,10 +124,6 @@ public class GoogleSheetConfig {
         return SHEET_SATURDAYS_AHEAD;
     }
 
-    public static long getApiPauseLong() {
-        return API_PAUSE_LONG;
-    }
-
     @Bean(name = "GoogleSheetUtils")
     public GoogleSheetUtils getGoogleSheetUtils() {
         return new GoogleSheetUtils(connectToStorage());
@@ -135,8 +135,8 @@ public class GoogleSheetConfig {
         NetHttpTransport netHttpTransport;
 
         try {
-            System.out.println(GoogleSheetConfig.getServiceAccountKeyPath());
-            googleCredentials = GoogleCredentials.fromStream(new FileInputStream(GoogleSheetConfig.getServiceAccountKeyPath()));
+            System.out.println(SheetConfig.getGoogleServiceAccountKeyPath());
+            googleCredentials = GoogleCredentials.fromStream(new FileInputStream(SheetConfig.getGoogleServiceAccountKeyPath()));
             requestInitializer = new HttpCredentialsAdapter(googleCredentials);
             netHttpTransport = GoogleNetHttpTransport.newTrustedTransport();
         } catch (IOException | GeneralSecurityException e) {
@@ -144,7 +144,7 @@ public class GoogleSheetConfig {
         }
 
         return new Sheets.Builder(netHttpTransport, GsonFactory.getDefaultInstance(), requestInitializer)
-                .setApplicationName(GoogleSheetConfig.getApplicationName())
+                .setApplicationName(SheetConfig.getGoogleApplicationName())
                 .build();
     }
 

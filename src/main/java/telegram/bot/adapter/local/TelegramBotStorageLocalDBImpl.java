@@ -40,6 +40,11 @@ public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBo
     }
 
     @Override
+    public List<Participation> getAvailableParticipationByDate(LocalDate date) {
+        return null;
+    }
+
+    @Override
     public Participation saveParticipation(Participation participation) {
         return null;
     }
