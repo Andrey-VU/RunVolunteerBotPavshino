@@ -1,18 +1,25 @@
 package telegram.bot.adapter.local;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
+import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component("local")
+@RequiredArgsConstructor
 public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBotStorage {
+    private final LocalExcelUtils localExcelUtils;
 
     @Override
     public User saveUser(User user) {
@@ -51,6 +58,23 @@ public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBo
 
     @Override
     public void deleteParticipation(Participation participation) {
+    }
+    @PostConstruct
+    private void postConstruct() throws IOException {
+        loadDataFromLocalExcelFile();
+    }
+
+    private void loadDataFromLocalExcelFile() throws IOException {
+        loadContacts();
+        loadEvents();
+    }
+
+    private void loadEvents() throws IOException {
 
     }
+
+    private void loadContacts() throws IOException {
+        Map<Integer, List<String>> contactsFromExcel = localExcelUtils.readXLSXFile(0);
+    }
+
 }

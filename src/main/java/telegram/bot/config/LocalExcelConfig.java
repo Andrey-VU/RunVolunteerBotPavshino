@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import telegram.bot.storage.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 
 @Configuration
@@ -22,6 +21,6 @@ public class LocalExcelConfig {
     }
     @Bean(name = "LocalExcelUtils")
     public LocalExcelUtils getLocalExcelUtils() {
-        return new LocalExcelUtils();
+        return new LocalExcelUtils(LOCAL_STORAGE_PATH);
     }
 }

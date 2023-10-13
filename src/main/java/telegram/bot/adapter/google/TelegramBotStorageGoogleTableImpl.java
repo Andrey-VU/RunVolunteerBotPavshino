@@ -10,8 +10,10 @@ import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 import telegram.bot.storage.GoogleSheetUtils;
+import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TelegramBotStorageGoogleTableImpl extends Storage implements TelegramBotStorage {
     private final GoogleSheetUtils googleSheetUtils;
+    private final LocalExcelUtils localExcelUtils;
 
     @Override
     public User saveUser(User user) {
@@ -112,16 +115,16 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     }
 
     @PostConstruct
-    private void postConstruct() {
+    private void postConstruct() throws IOException {
         loadDataFromGoogleSheets();
     }
 
-    private void loadDataFromGoogleSheets() {
+    private void loadDataFromGoogleSheets() throws IOException {
         loadContacts();
         loadEvents();
     }
 
-    private void loadContacts() {
+    private void loadContacts() throws IOException {
         contacts = new HashMap<>();
         var rangeBegin = getCellAddress(SheetConfig.getSheetContactsRowStart(), SheetConfig.getSheetContactsColumnFirst());
         var rangeEnd = getCellAddress(null, SheetConfig.getSheetContactsColumnLast());
@@ -130,14 +133,16 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
                     var user = User.createFrom(userProperty);
                     contacts.put(user.getFullName(), user);
                 });
+        localExcelUtils.writeContactsToExcel(contacts);
     }
 
-    private void loadEvents() {
+    private void loadEvents() throws IOException {
         events = new HashMap<>();
         var roles = getRoles();
         var dates = getEventsDate();
         var volunteers = getVolunteers(roles, dates);
         prepareEvents(roles, dates, volunteers);
+        localExcelUtils.writeVolunteersToExcel(events);
     }
 
     private List<String> getRoles() {
