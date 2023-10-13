@@ -72,11 +72,6 @@ public class LocalExcelUtils {
 
             countRow.getAndIncrement();
         });
-//        File currDir = new File("local_config");
-//        String path = currDir.getAbsolutePath();
-//        String fileLocation = path.substring(0, path.length()) + "\\temp_table.xlsx";
-
-        //   FileOutputStream outputStream = new FileOutputStream(fileLocation);
         FileOutputStream outputStream = new FileOutputStream(pathToExcelFile);
         workbook.write(outputStream);
         workbook.close();
@@ -84,17 +79,11 @@ public class LocalExcelUtils {
 
     public void writeVolunteersToExcelSave(Map<LocalDate, Event> volunteers) throws IOException {
         // Add a sheet into Existing workbook
-      /*  File currDir = new File("local_config");
-        String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length()) + "\\temp_table.xlsx";
-
-        FileInputStream fileinp = new FileInputStream(fileLocation);*/
         FileInputStream fileinp = new FileInputStream(pathToExcelFile);
         XSSFWorkbook workbook = new XSSFWorkbook(fileinp);
 
         Sheet sheet = workbook.createSheet("Volunteers");
 
-        Map<LocalDate, Event> sortedMapVolunteers = new TreeMap<>(volunteers);
         AtomicInteger countColumn = new AtomicInteger(0);
         //Формируем первую строку
         Row row = sheet.createRow(0);
@@ -104,7 +93,6 @@ public class LocalExcelUtils {
             cell.setCellValue(key.format(DATE_FORMATTER));
             countColumn.getAndIncrement();
         });
-     //   FileOutputStream fileOut = new FileOutputStream(fileLocation);
         FileOutputStream fileOut = new FileOutputStream(pathToExcelFile);
         workbook.write(fileOut);
         fileOut.close();
@@ -113,18 +101,11 @@ public class LocalExcelUtils {
 
     public void writeVolunteersToExcel(Map<LocalDate, Event> events) throws IOException {
         // Add a sheet into Existing workbook
-        /*File currDir = new File("local_config");
-        String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length()) + "\\temp_table.xlsx";
-
-        FileInputStream fileinp = new FileInputStream(fileLocation);*/
         FileInputStream fileinp = new FileInputStream(pathToExcelFile);
         XSSFWorkbook workbook = new XSSFWorkbook(fileinp);
 
         Sheet sheet = workbook.createSheet("Volunteers");
 
-        // Map<LocalDate, Event> sortedMapVolunteers = new TreeMap<>(events);
-        AtomicInteger countColumn = new AtomicInteger(1);
         //Формируем первую строку
         Row headRow = sheet.createRow(0);
         sheet.setColumnWidth(0, 6000);
@@ -136,8 +117,6 @@ public class LocalExcelUtils {
         for (int i = 1; i <= maxRowNumber; i++) {
             sheet.createRow(i);
         }
-        AtomicInteger countRow = new AtomicInteger(1);
-        //countColumn.set(0);
         events.forEach((key, value) -> {
             Cell headCell = headRow.createCell(value.getColumnNumber());
             headCell.setCellValue(key.format(DATE_FORMATTER));
@@ -148,15 +127,13 @@ public class LocalExcelUtils {
                         Row row = sheet.getRow(member.getRowNumber());
                         Cell cell = row.createCell(value.getColumnNumber());
                         String cellValue = member.getUser() != null ? member.getUser().getFullName() : "";
-                        //   String cellValue = member.getUser() != null ? member.toString() : "";
+
                         cell.setCellValue(cellValue);
                         System.out.println(cellValue);
                     }
             );
 
         });
-
-       // FileOutputStream fileOut = new FileOutputStream(fileLocation);
         FileOutputStream fileOut = new FileOutputStream(pathToExcelFile);
         workbook.write(fileOut);
         fileOut.close();
