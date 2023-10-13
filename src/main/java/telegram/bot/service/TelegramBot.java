@@ -45,7 +45,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @PostConstruct
     private void init() throws TelegramApiException {
-        telegramBotsApi.registerBot(this); // Регистрируем бота
+       // telegramBotsApi.registerBot(this); // Регистрируем бота
     }
 
     @Override
