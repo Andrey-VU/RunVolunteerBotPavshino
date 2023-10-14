@@ -212,11 +212,6 @@ public class LocalExcelUtils implements StorageUtils {
     }
 
     @Override
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
-        return null;
-    }
-
-    @Override
     public List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd) {
         return null;
     }

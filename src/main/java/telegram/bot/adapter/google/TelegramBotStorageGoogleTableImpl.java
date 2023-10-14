@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
-import telegram.bot.model.Participation;
-import telegram.bot.model.User;
 import telegram.bot.storage.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
