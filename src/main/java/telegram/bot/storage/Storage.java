@@ -66,6 +66,7 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public Participation saveParticipation(Participation participation) {
+        loadDataFromStorage();
         var event = events.get(participation.getEventDate());
         if (Objects.isNull(event))
             return null;
@@ -99,6 +100,11 @@ public abstract class Storage implements TelegramBotStorage {
             assert participant != null;
             participant.setUser(null);
         }
+    }
+
+    protected void loadDataFromStorage() {
+        loadContacts();
+        loadEvents();
     }
 
     protected void loadContacts() {

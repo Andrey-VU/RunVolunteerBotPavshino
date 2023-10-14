@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.Participation;
+import telegram.bot.model.User;
 import telegram.bot.storage.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
@@ -17,21 +18,15 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     private final GoogleSheetUtils googleSheetUtils;
     private final LocalExcelUtils localExcelUtils;
 
-    @Override
-    public Participation saveParticipation(Participation participation) {
-        loadDataFromGoogleSheets();
-        return super.saveParticipation(participation);
-    }
-
     @PostConstruct
     private void postConstruct() {
         storageUtils = googleSheetUtils;
-        loadDataFromGoogleSheets();
+        loadDataFromStorage();
     }
 
-    private void loadDataFromGoogleSheets() {
-        loadContacts();
-        loadEvents();
+    @Override
+    protected void loadDataFromStorage() {
+        super.loadDataFromStorage();
         localExcelUtils.writeContactsToExcel(contacts);
         localExcelUtils.writeVolunteersToExcel(events);
     }

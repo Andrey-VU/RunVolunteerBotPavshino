@@ -17,5 +17,6 @@ public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBo
     @PostConstruct
     private void postConstruct() {
         storageUtils = localExcelUtils;
+        loadDataFromStorage();
     }
 }
