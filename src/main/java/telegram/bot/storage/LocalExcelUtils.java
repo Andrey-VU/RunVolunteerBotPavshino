@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
-public class LocalExcelUtils {
+public class LocalExcelUtils implements StorageUtils {
     private final String pathToExcelFile;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -84,36 +84,6 @@ public class LocalExcelUtils {
         }
     }
 
-    public void writeVolunteersToExcelSave(Map<LocalDate, Event> volunteers) {
-        // Add a sheet into Existing workbook
-        XSSFWorkbook workbook = null;
-        try (FileInputStream fileinp = new FileInputStream(pathToExcelFile)) {
-            workbook = new XSSFWorkbook(fileinp);
-        } catch (IOException e) {
-            // TODO - add logging
-            throw new RuntimeException(e);
-        }
-
-        Sheet sheet = workbook.createSheet("Volunteers");
-        AtomicInteger countColumn = new AtomicInteger(0);
-        //Формируем первую строку
-        Row row = sheet.createRow(0);
-        volunteers.forEach((key, value) -> {
-            sheet.setColumnWidth(countColumn.get(), 6000);
-            Cell cell = row.createCell(countColumn.get());
-            cell.setCellValue(key.format(DATE_FORMATTER));
-            countColumn.getAndIncrement();
-        });
-        try (FileOutputStream fileOut = new FileOutputStream(pathToExcelFile)) {
-            workbook.write(fileOut);
-            fileOut.close();
-            System.out.println("File is written successfully");
-        } catch (Exception e) {
-            // TODO - add logging
-            throw new RuntimeException(e);
-        }
-    }
-
     public void writeVolunteersToExcel(Map<LocalDate, Event> events) {
         // Add a sheet into Existing workbook
         XSSFWorkbook workbook = null;
@@ -164,6 +134,36 @@ public class LocalExcelUtils {
         }
     }
 
+    public void writeVolunteersToExcelSave(Map<LocalDate, Event> volunteers) {
+        // Add a sheet into Existing workbook
+        XSSFWorkbook workbook = null;
+        try (FileInputStream fileinp = new FileInputStream(pathToExcelFile)) {
+            workbook = new XSSFWorkbook(fileinp);
+        } catch (IOException e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
+
+        Sheet sheet = workbook.createSheet("Volunteers");
+        AtomicInteger countColumn = new AtomicInteger(0);
+        //Формируем первую строку
+        Row row = sheet.createRow(0);
+        volunteers.forEach((key, value) -> {
+            sheet.setColumnWidth(countColumn.get(), 6000);
+            Cell cell = row.createCell(countColumn.get());
+            cell.setCellValue(key.format(DATE_FORMATTER));
+            countColumn.getAndIncrement();
+        });
+        try (FileOutputStream fileOut = new FileOutputStream(pathToExcelFile)) {
+            workbook.write(fileOut);
+            fileOut.close();
+            System.out.println("File is written successfully");
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
+    }
+
     public Map<Integer, List<String>> readXLSXFile(int indexSheet) {
         Map<Integer, List<String>> dataFromListExcel = new HashMap<>();
         try (InputStream ExcelFileToRead = new FileInputStream(pathToExcelFile);
@@ -194,6 +194,31 @@ public class LocalExcelUtils {
             throw new RuntimeException(e);
         }
         return dataFromListExcel;
+    }
+
+    @Override
+    public boolean writeCellValue(String sheetName, String cellAddress, String cellValue) {
+        return false;
+    }
+
+    @Override
+    public boolean writesValues(String sheetName, String cellAddress, List<List<Object>> values) {
+        return false;
+    }
+
+    @Override
+    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd) {
+        return null;
+    }
+
+    @Override
+    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
+        return null;
+    }
+
+    @Override
+    public List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd) {
+        return null;
     }
 
     private int findMaxRowNumber(Map<LocalDate, Event> events) {

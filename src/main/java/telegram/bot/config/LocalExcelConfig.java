@@ -19,6 +19,7 @@ public class LocalExcelConfig {
     public String getLOCAL_STORAGE_PATH() {
         return LOCAL_STORAGE_PATH;
     }
+
     @Bean(name = "LocalExcelUtils")
     public LocalExcelUtils getLocalExcelUtils() {
         return new LocalExcelUtils(LOCAL_STORAGE_PATH);
