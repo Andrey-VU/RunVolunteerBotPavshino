@@ -7,8 +7,10 @@ import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 
-import java.io.*;
-
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -19,8 +21,8 @@ public class LocalExcelUtils {
     private final String pathToExcelFile;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public void writeContactsToExcel(Map<String, User> contacts) throws IOException {
-        Workbook workbook = new XSSFWorkbook();
+    public void writeContactsToExcel(Map<String, User> contacts) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
 
         Sheet sheet = workbook.createSheet("Contacts");
         sheet.setColumnWidth(0, 6000);
@@ -33,7 +35,7 @@ public class LocalExcelUtils {
         headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        XSSFFont font = ((XSSFWorkbook) workbook).createFont();
+        XSSFFont font = workbook.createFont();
         font.setFontName("Arial");
         font.setFontHeightInPoints((short) 12);
         font.setBold(false);
@@ -72,18 +74,27 @@ public class LocalExcelUtils {
 
             countRow.getAndIncrement();
         });
-        FileOutputStream outputStream = new FileOutputStream(pathToExcelFile);
-        workbook.write(outputStream);
-        workbook.close();
+
+        try (FileOutputStream outputStream = new FileOutputStream(pathToExcelFile)) {
+            workbook.write(outputStream);
+            workbook.close();
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
     }
 
-    public void writeVolunteersToExcelSave(Map<LocalDate, Event> volunteers) throws IOException {
+    public void writeVolunteersToExcelSave(Map<LocalDate, Event> volunteers) {
         // Add a sheet into Existing workbook
-        FileInputStream fileinp = new FileInputStream(pathToExcelFile);
-        XSSFWorkbook workbook = new XSSFWorkbook(fileinp);
+        XSSFWorkbook workbook = null;
+        try (FileInputStream fileinp = new FileInputStream(pathToExcelFile)) {
+            workbook = new XSSFWorkbook(fileinp);
+        } catch (IOException e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
 
         Sheet sheet = workbook.createSheet("Volunteers");
-
         AtomicInteger countColumn = new AtomicInteger(0);
         //Формируем первую строку
         Row row = sheet.createRow(0);
@@ -93,16 +104,25 @@ public class LocalExcelUtils {
             cell.setCellValue(key.format(DATE_FORMATTER));
             countColumn.getAndIncrement();
         });
-        FileOutputStream fileOut = new FileOutputStream(pathToExcelFile);
-        workbook.write(fileOut);
-        fileOut.close();
-        System.out.println("File is written successfully");
+        try (FileOutputStream fileOut = new FileOutputStream(pathToExcelFile)) {
+            workbook.write(fileOut);
+            fileOut.close();
+            System.out.println("File is written successfully");
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
     }
 
-    public void writeVolunteersToExcel(Map<LocalDate, Event> events) throws IOException {
+    public void writeVolunteersToExcel(Map<LocalDate, Event> events) {
         // Add a sheet into Existing workbook
-        FileInputStream fileinp = new FileInputStream(pathToExcelFile);
-        XSSFWorkbook workbook = new XSSFWorkbook(fileinp);
+        XSSFWorkbook workbook = null;
+        try (FileInputStream fileinp = new FileInputStream(pathToExcelFile)) {
+            workbook = new XSSFWorkbook(fileinp);
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
 
         Sheet sheet = workbook.createSheet("Volunteers");
 
@@ -134,38 +154,44 @@ public class LocalExcelUtils {
             );
 
         });
-        FileOutputStream fileOut = new FileOutputStream(pathToExcelFile);
-        workbook.write(fileOut);
-        fileOut.close();
-        System.out.println("File is written successfully");
+        try (FileOutputStream fileOut = new FileOutputStream(pathToExcelFile)) {
+            workbook.write(fileOut);
+            fileOut.close();
+            System.out.println("File is written successfully");
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
+        }
     }
 
-    public Map<Integer, List<String>> readXLSXFile(int indexSheet) throws IOException {
+    public Map<Integer, List<String>> readXLSXFile(int indexSheet) {
         Map<Integer, List<String>> dataFromListExcel = new HashMap<>();
-        InputStream ExcelFileToRead = new FileInputStream(pathToExcelFile);
-        XSSFWorkbook wb = new XSSFWorkbook(ExcelFileToRead);
+        try (InputStream ExcelFileToRead = new FileInputStream(pathToExcelFile);
+             XSSFWorkbook wb = new XSSFWorkbook(ExcelFileToRead)) {
 
-        XSSFWorkbook test = new XSSFWorkbook();
+            XSSFSheet sheet = wb.getSheetAt(indexSheet);
+            XSSFRow row;
+            XSSFCell cell;
 
-        XSSFSheet sheet = wb.getSheetAt(indexSheet);
-        XSSFRow row;
-        XSSFCell cell;
+            Iterator<Row> rows = sheet.rowIterator();
+            int countRow = 0;
 
-        Iterator rows = sheet.rowIterator();
-        int countRow = 0;
-
-        while (rows.hasNext()) {
-            List<String> fromRow = new ArrayList<>();
-            row = (XSSFRow) rows.next();
-            Iterator cells = row.cellIterator();
-            while (cells.hasNext()) {
-                cell = (XSSFCell) cells.next();
-                fromRow.add(cell.getStringCellValue());
-                System.out.print(cell.getStringCellValue() + " ");
+            while (rows.hasNext()) {
+                List<String> fromRow = new ArrayList<>();
+                row = (XSSFRow) rows.next();
+                Iterator<Cell> cells = row.cellIterator();
+                while (cells.hasNext()) {
+                    cell = (XSSFCell) cells.next();
+                    fromRow.add(cell.getStringCellValue());
+                    System.out.print(cell.getStringCellValue() + " ");
+                }
+                dataFromListExcel.put(countRow, fromRow);
+                countRow++;
+                System.out.println();
             }
-            dataFromListExcel.put(countRow, fromRow);
-            countRow++;
-            System.out.println();
+        } catch (Exception e) {
+            // TODO - add logging
+            throw new RuntimeException(e);
         }
         return dataFromListExcel;
     }

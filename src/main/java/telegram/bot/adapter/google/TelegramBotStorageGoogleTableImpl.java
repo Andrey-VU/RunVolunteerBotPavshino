@@ -79,6 +79,7 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
 
     @Override
     public Participation saveParticipation(Participation participation) {
+        loadDataFromGoogleSheets();
         var event = events.get(participation.getEventDate());
         if (Objects.isNull(event))
             return null;
@@ -115,16 +116,20 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     }
 
     @PostConstruct
-    private void postConstruct() throws IOException {
-        loadDataFromGoogleSheets();
+    private void postConstruct() {
+        try {
+            loadDataFromGoogleSheets();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void loadDataFromGoogleSheets() throws IOException {
+    private void loadDataFromGoogleSheets() {
         loadContacts();
         loadEvents();
     }
 
-    private void loadContacts() throws IOException {
+    private void loadContacts() {
         contacts = new HashMap<>();
         var rangeBegin = getCellAddress(SheetConfig.getSheetContactsRowStart(), SheetConfig.getSheetContactsColumnFirst());
         var rangeEnd = getCellAddress(null, SheetConfig.getSheetContactsColumnLast());
@@ -136,13 +141,13 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
         localExcelUtils.writeContactsToExcel(contacts);
     }
 
-    private void loadEvents() throws IOException {
+    private void loadEvents() {
         events = new HashMap<>();
         var roles = getRoles();
         var dates = getEventsDate();
         var volunteers = getVolunteers(roles, dates);
         prepareEvents(roles, dates, volunteers);
-        localExcelUtils.writeVolunteersToExcel(events);
+       localExcelUtils.writeVolunteersToExcel(events);
     }
 
     private List<String> getRoles() {
