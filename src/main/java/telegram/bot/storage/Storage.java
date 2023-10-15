@@ -129,7 +129,7 @@ public abstract class Storage implements TelegramBotStorage {
     protected List<String> getRoles() {
         var rangeBegin = getCellAddress(SheetConfig.getSheetVolunteersRoleRowStart(), SheetConfig.getSheetVolunteersRoleColumn());
         var rangeEnd = getCellAddress(null, SheetConfig.getSheetVolunteersRoleColumn());
-        return storageUtils.reagValuesList(SheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
+        return storageUtils.readValuesList(SheetConfig.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
     protected List<String> getEventsDate() {

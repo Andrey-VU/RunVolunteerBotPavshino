@@ -15,7 +15,7 @@ public interface StorageUtils {
     boolean writesValues(String sheetName, String cellAddress, List<List<Object>> values);
 
     // reads list of String from 'rangeBegin' to 'rangeEnd' at 'sheetName'
-    List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd);
+    List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd);
 
     // reads matrix of String from 'rangeBegin' to 'rangeEnd' at 'sheetName'
     List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd);

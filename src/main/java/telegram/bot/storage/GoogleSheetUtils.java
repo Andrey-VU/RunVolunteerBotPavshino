@@ -41,8 +41,8 @@ public class GoogleSheetUtils implements StorageUtils {
     }
 
     @Override
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd) {
-        return reagValuesList(sheetName, rangeBegin, rangeEnd, 0);
+    public List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd) {
+        return readValuesList(sheetName, rangeBegin, rangeEnd, 0);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class GoogleSheetUtils implements StorageUtils {
         return values;
     }
 
-    private List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
+    private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
         List<String> valuesList = new LinkedList<>();
         readValuesRange(sheetName, rangeBegin, rangeEnd).forEach(values -> valuesList.add(!values.isEmpty() && values.size() >= index + 1 ? values.get(index) : ""));
         return valuesList;
