@@ -25,7 +25,6 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     @Override
     protected void loadDataFromStorage() {
         super.loadDataFromStorage();
-        localExcelUtils.writeContactsToExcel(contacts);
-        localExcelUtils.writeVolunteersToExcel(events);
+        localExcelUtils.initExcelFile(contacts, events);
     }
 }
