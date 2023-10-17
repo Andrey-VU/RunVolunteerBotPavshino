@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
+import telegram.bot.config.BotConfiguration;
+import telegram.bot.config.BotModes;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 
@@ -17,6 +19,6 @@ public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBo
     @PostConstruct
     private void postConstruct() {
         storageUtils = localExcelUtils;
-        loadDataFromStorage();
+        if (BotConfiguration.getMode() == BotModes.LOCAL) loadDataFromStorage();
     }
 }

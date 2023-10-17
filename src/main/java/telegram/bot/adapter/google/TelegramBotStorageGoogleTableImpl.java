@@ -1,10 +1,13 @@
 package telegram.bot.adapter.google;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.BootstrapConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.adapter.TelegramBotStorage;
+import telegram.bot.config.BotConfiguration;
+import telegram.bot.config.BotModes;
 import telegram.bot.storage.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
@@ -19,7 +22,7 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     @PostConstruct
     private void postConstruct() {
         storageUtils = googleSheetUtils;
-        loadDataFromStorage();
+        if (BotConfiguration.getMode() == BotModes.GOOGLE) loadDataFromStorage();
     }
 
     @Override
