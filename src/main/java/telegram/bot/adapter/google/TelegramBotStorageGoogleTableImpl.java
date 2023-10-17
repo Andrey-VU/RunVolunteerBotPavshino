@@ -1,7 +1,6 @@
 package telegram.bot.adapter.google;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.validation.BootstrapConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
