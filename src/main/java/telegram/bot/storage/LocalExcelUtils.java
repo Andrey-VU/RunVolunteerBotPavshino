@@ -141,10 +141,9 @@ public class LocalExcelUtils implements StorageUtils {
         XSSFWorkbook workbook = new XSSFWorkbook();
 
         Sheet sheet = workbook.createSheet(SheetConfig.getSheetContacts());
-        sheet.setColumnWidth(0, 6000);
-        sheet.setColumnWidth(1, 6000);
-        sheet.setColumnWidth(2, 6000);
-
+        for (int i = 0; i < 4; i++) {
+            sheet.setColumnWidth(i, 6000);
+        }
         Row header = sheet.createRow(0);
         Cell headerCell = header.createCell(0);
         headerCell.setCellValue("Name");
@@ -152,7 +151,8 @@ public class LocalExcelUtils implements StorageUtils {
         headerCell.setCellValue("Login Telegram");
         headerCell = header.createCell(2);
         headerCell.setCellValue("Phone");
-
+        headerCell = header.createCell(3);
+        headerCell.setCellValue("Comment");
         AtomicInteger countRow = new AtomicInteger(1);
         contacts.forEach((key, value) -> {
             Row row = sheet.createRow(countRow.get());
@@ -162,6 +162,8 @@ public class LocalExcelUtils implements StorageUtils {
             cell.setCellValue(value.getTelegram());
             cell = row.createCell(2);
             cell.setCellValue(value.getCode());
+            cell = row.createCell(3);
+            cell.setCellValue(value.getComment());
             countRow.getAndIncrement();
         });
         try (FileOutputStream outputStream = new FileOutputStream(pathToExcelFile)) {
@@ -174,6 +176,8 @@ public class LocalExcelUtils implements StorageUtils {
     }
 
     private void writeVolunteersToExcel(Map<LocalDate, Event> events) {
+        int rowNumberCorrection = findMinRowNumber(events) - 1;
+        int colNumberCorrection = findMinColNumber(events) - 1;
         // Add a sheet into Existing workbook
         XSSFWorkbook workbook = null;
         try (FileInputStream fileinp = new FileInputStream(pathToExcelFile)) {
@@ -191,18 +195,18 @@ public class LocalExcelUtils implements StorageUtils {
 
         int maxRowNumber = findMaxRowNumber(events);
         //Формируем остальные строки
-        for (int i = 1; i <= maxRowNumber; i++) {
+        for (int i = 1; i <= maxRowNumber - rowNumberCorrection; i++) {
             sheet.createRow(i);
         }
         events.forEach((key, value) -> {
-            Cell headCell = headRow.createCell(value.getColumnNumber());
+            Cell headCell = headRow.createCell(value.getColumnNumber() - colNumberCorrection);
             headCell.setCellValue(key.format(DATE_FORMATTER));
 
             List<Participation> members = value.getParticipants();
             members.forEach(member -> {
-                Row row = sheet.getRow(member.getRowNumber());
+                Row row = sheet.getRow(member.getRowNumber() - rowNumberCorrection);
                 Cell roleCell = (row.getCell(0) == null) ? row.createCell(0) : row.getCell(0);
-                Cell cell = row.createCell(value.getColumnNumber());
+                Cell cell = row.createCell(value.getColumnNumber() - colNumberCorrection);
                 String cellValue = member.getUser() != null ? member.getUser().getFullName() : "";
                 if (!member.getRole().isBlank()) {
                     roleCell.setCellValue(member.getRole());
@@ -290,6 +294,18 @@ public class LocalExcelUtils implements StorageUtils {
                 .max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
 
         return maxEvent.getParticipants().stream().max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+    }
+
+    private int findMinRowNumber(Map<LocalDate, Event> events) {
+        Event minEvent = events.values().stream().min(Comparator.comparingInt(event -> event.getParticipants().stream()
+                .min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
+
+        return minEvent.getParticipants().stream().min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+    }
+
+    private int findMinColNumber(Map<LocalDate, Event> events) {
+        Event minColumnNumberEvent = events.values().stream().min(Comparator.comparingInt(event -> event.getColumnNumber())).get();
+        return minColumnNumberEvent.getColumnNumber();
     }
 
     private int addressPartCell(String range, int numberPart, int defaultValue) {
