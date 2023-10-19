@@ -23,7 +23,7 @@ public class Pavshino5verstApplication {
             return;
         } else if (Arrays.asList(args).contains("-l")
                 && Arrays.asList(args).contains("-g")) {
-            System.out.println("Запустите бота только в одно конфигурации");
+            System.out.println("Запустите бота только в одной конфигурации");
             return;
         } else if (Arrays.asList(args).contains("-l")) {
             BotConfiguration.setMode(BotModes.LOCAL);
@@ -31,6 +31,8 @@ public class Pavshino5verstApplication {
             BotConfiguration.setMode(BotModes.GOOGLE);
         }
 
+        BotConfiguration.setMode(BotModes.LOCAL);
+       // BotConfiguration.setMode(BotModes.GOOGLE);
         SpringApplication.run(Pavshino5verstApplication.class, args);
     }
 }

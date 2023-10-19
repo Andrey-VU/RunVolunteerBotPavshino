@@ -11,17 +11,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-public class GoogleSheetUtils {
+public class GoogleSheetUtils implements StorageUtils {
     private final Sheets sheetService;
 
     public GoogleSheetUtils(Sheets sheetService) {
         this.sheetService = sheetService;
     }
 
+    @Override
     public boolean writeCellValue(String sheetName, String cellAddress, String cellValue) {
         return writesValues(sheetName, cellAddress, List.of(List.of(cellValue)));
     }
 
+    @Override
     public boolean writesValues(String sheetName, String cellAddress, List<List<Object>> values) {
         try {
             var range = sheetName + "!" + cellAddress;
@@ -38,16 +40,12 @@ public class GoogleSheetUtils {
         return true;
     }
 
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd) {
-        return reagValuesList(sheetName, rangeBegin, rangeEnd, 0);
+    @Override
+    public List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd) {
+        return readValuesList(sheetName, rangeBegin, rangeEnd, 0);
     }
 
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
-        List<String> valuesList = new LinkedList<>();
-        readValuesRange(sheetName, rangeBegin, rangeEnd).forEach(values -> valuesList.add(!values.isEmpty() && values.size() >= index + 1 ? values.get(index) : ""));
-        return valuesList;
-    }
-
+    @Override
     public List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd) {
         List<List<String>> values = new LinkedList<>();
         try {
@@ -72,6 +70,12 @@ public class GoogleSheetUtils {
         }
         pause();
         return values;
+    }
+
+    private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
+        List<String> valuesList = new LinkedList<>();
+        readValuesRange(sheetName, rangeBegin, rangeEnd).forEach(values -> valuesList.add(!values.isEmpty() && values.size() >= index + 1 ? values.get(index) : ""));
+        return valuesList;
     }
 
     private void pause() {

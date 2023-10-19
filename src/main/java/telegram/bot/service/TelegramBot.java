@@ -2,8 +2,8 @@ package telegram.bot.service;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -13,8 +13,10 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.config.BotModes;
+import telegram.bot.config.StorageChooser;
 
 @Component
+@DependsOn("storageChooser")
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final static BotModes mode = BotConfiguration.getMode();
@@ -39,13 +41,13 @@ public class TelegramBot extends TelegramLongPollingBot {
     private String botName;
 
     @Autowired
-    public TelegramBot(@Qualifier("local") TelegramBotStorage storage) throws TelegramApiException {
-        this.storage = storage;
+    public TelegramBot(StorageChooser storageChooser) throws TelegramApiException {
+        this.storage = storageChooser.getStorage();
     }
 
     @PostConstruct
     private void init() throws TelegramApiException {
-       // telegramBotsApi.registerBot(this); // Регистрируем бота
+        // telegramBotsApi.registerBot(this); // Регистрируем бота
     }
 
     @Override

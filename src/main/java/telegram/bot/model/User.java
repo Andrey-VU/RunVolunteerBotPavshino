@@ -22,13 +22,17 @@ public class User {
     // Идентификатор пользователя в системе 5 верст
     private String code;
 
+    // Примечание
+    private String comment;
+
     public static User createFrom(List<String> userProperties) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
         return new User(
                 getValueFromList(fullNameList, 0),
                 getValueFromList(fullNameList, 1),
                 getValueFromList(userProperties, 1),
-                getValueFromList(userProperties, 2));
+                getValueFromList(userProperties, 2),
+                getValueFromList(userProperties, 3));
     }
 
     private static String getValueFromList(List<String> list, int elementIndex) {
