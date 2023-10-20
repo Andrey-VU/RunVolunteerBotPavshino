@@ -13,7 +13,7 @@ import telegram.bot.storage.Storage;
 @Slf4j
 @Component("local")
 @RequiredArgsConstructor
-public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBotStorage {
+public class TelegramBotStorageLocalDBImpl extends Storage {
     private final LocalExcelUtils localExcelUtils;
 
     @PostConstruct

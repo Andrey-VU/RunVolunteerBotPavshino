@@ -14,7 +14,7 @@ import telegram.bot.storage.Storage;
 @Slf4j
 @Component("google")
 @RequiredArgsConstructor
-public class TelegramBotStorageGoogleTableImpl extends Storage implements TelegramBotStorage {
+public class TelegramBotStorageGoogleTableImpl extends Storage {
     private final GoogleSheetUtils googleSheetUtils;
     private final LocalExcelUtils localExcelUtils;
 
@@ -28,5 +28,7 @@ public class TelegramBotStorageGoogleTableImpl extends Storage implements Telegr
     protected void loadDataFromStorage() {
         super.loadDataFromStorage();
         localExcelUtils.initExcelFile(contacts, events);
+
+
     }
 }
