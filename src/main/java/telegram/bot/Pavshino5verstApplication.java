@@ -32,7 +32,9 @@ public class Pavshino5verstApplication {
         }
 
         BotConfiguration.setMode(BotModes.LOCAL);
-       // BotConfiguration.setMode(BotModes.GOOGLE);
+        //BotConfiguration.setMode(BotModes.GOOGLE);
+
         SpringApplication.run(Pavshino5verstApplication.class, args);
+        //ApplicationContext ctx = new AnnotationConfigApplicationContext(BotConfiguration.class);
     }
 }

@@ -10,7 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import telegram.bot.config.SheetConfig;
+import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
@@ -140,7 +140,7 @@ public class LocalExcelUtils implements StorageUtils {
     private void writeContactsToExcel(Map<String, User> contacts) {
         XSSFWorkbook workbook = new XSSFWorkbook();
 
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetContacts());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetContacts());
         for (int i = 0; i < 4; i++) {
             sheet.setColumnWidth(i, 6000);
         }
@@ -186,7 +186,7 @@ public class LocalExcelUtils implements StorageUtils {
             log.info("Error creating FileInputStream");
             throw new RuntimeException(e);
         }
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetVolunteers());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetVolunteers());
         //Формируем первую строку
         Row headRow = sheet.createRow(0);
         sheet.setColumnWidth(0, 6000);
@@ -235,7 +235,7 @@ public class LocalExcelUtils implements StorageUtils {
             log.info("Error creating FileInputStream");
             throw new RuntimeException(e);
         }
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetVolunteers());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetVolunteers());
         AtomicInteger countColumn = new AtomicInteger(0);
         //Формируем первую строку
         Row row = sheet.createRow(0);

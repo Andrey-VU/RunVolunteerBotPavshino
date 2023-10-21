@@ -1,9 +1,9 @@
 package telegram.bot.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -13,11 +13,11 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.config.BotModes;
-import telegram.bot.config.StorageChooser;
 
+@Slf4j
 @Component
-@DependsOn("storageChooser")
 public class TelegramBot extends TelegramLongPollingBot {
+    private final TelegramBotStorage storage;
 
     private final static BotModes mode = BotConfiguration.getMode();
 
@@ -25,8 +25,6 @@ public class TelegramBot extends TelegramLongPollingBot {
      * Собственно API бота
      */
     private final TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-
-    private final TelegramBotStorage storage;
 
     /**
      * Токен телеграма
@@ -41,8 +39,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     private String botName;
 
     @Autowired
-    public TelegramBot(StorageChooser storageChooser) throws TelegramApiException {
-        this.storage = storageChooser.getStorage();
+    public TelegramBot(TelegramBotStorage storage) throws TelegramApiException {
+        this.storage = storage;
     }
 
     @PostConstruct

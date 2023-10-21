@@ -1,5 +1,8 @@
 package telegram.bot.config;
 
+import lombok.Getter;
+
+@Getter
 public enum BotModes {
 
     LOCAL("local"),
@@ -12,7 +15,4 @@ public enum BotModes {
         this.code = code;
     }
 
-    public String getCode() {
-        return code;
-    }
 }
