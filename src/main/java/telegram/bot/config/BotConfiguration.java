@@ -8,8 +8,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,9 +35,7 @@ public class BotConfiguration {
     /**
      * Режим бота
      */
-    @Getter
-    @Setter
-    private static BotModes mode;
+    private static BotStorageMode botStorageMode;
 
     private static String GOOGLE_APPLICATION_NAME;
     private static String GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
@@ -64,9 +60,9 @@ public class BotConfiguration {
     public TelegramBotStorage getTelegramBotStorage() {
         Storage telegramBotStorage;
 
-        if (BotConfiguration.getMode() == BotModes.GOOGLE)
+        if (botStorageMode == BotStorageMode.GOOGLE)
             telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(connectionToGoogleStorage()), new LocalExcelUtils(LOCAL_STORAGE_PATH));
-        else if (BotConfiguration.getMode() == BotModes.LOCAL)
+        else if (botStorageMode == BotStorageMode.LOCAL)
             telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_STORAGE_PATH));
         else throw new RuntimeException("error choosing Storage");
 
@@ -75,7 +71,8 @@ public class BotConfiguration {
         return telegramBotStorage;
     }
 
-    public BotConfiguration(@Value("${google.app.name}") String google_app_name,
+    public BotConfiguration(@Value("${bot.storage.mode}") String bot_storage_mode,
+                            @Value("${google.app.name}") String google_app_name,
                             @Value("${google.service.account.key}") String google_service_account_key,
                             @Value("${google.api.pause.ms}") String google_api_pause_ms,
                             @Value("${google.sheet.id}") String google_sheet_id,
@@ -89,6 +86,12 @@ public class BotConfiguration {
                             @Value("${sheet.volunteers.event.column.start}") String sheet_volunteers_event_column_start,
                             @Value("${sheet.volunteers.event.row}") String sheet_volunteers_event_row,
                             @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead) {
+
+        if (bot_storage_mode.equals(BotStorageMode.GOOGLE.toString()))
+            BotConfiguration.botStorageMode = BotStorageMode.GOOGLE;
+        else if (bot_storage_mode.equals(BotStorageMode.LOCAL.toString()))
+            BotConfiguration.botStorageMode = BotStorageMode.LOCAL;
+
         GOOGLE_APPLICATION_NAME = google_app_name;
         GOOGLE_SERVICE_ACCOUNT_KEY_PATH = google_service_account_key;
         GOOGLE_API_PAUSE_LONG = Long.parseLong(google_api_pause_ms);

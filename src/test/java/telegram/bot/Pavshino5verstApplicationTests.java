@@ -2,15 +2,15 @@ package telegram.bot;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import telegram.bot.config.BotConfiguration;
+import telegram.bot.model.Participation;
+import telegram.bot.model.User;
 
-@SpringBootTest
+@SpringBootTest(classes = BotConfiguration.class)
 class Pavshino5verstApplicationTests {
 
     @Test
     void contextLoads() {
-    }
-
-
 //        var participation = Participation.builder()
 //                .user(User.builder()
 //                        .name("Елена")
@@ -22,6 +22,7 @@ class Pavshino5verstApplicationTests {
 //                .build();
 //
 //        saveParticipation(participation);
-
+//
 //        saveUser(User.builder().name("Петя").surname("Иванов").telegram("@noir74").code("74").build());
+    }
 }

@@ -1,6 +1,7 @@
 package telegram.bot.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Arrays;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class User {
     // Имя

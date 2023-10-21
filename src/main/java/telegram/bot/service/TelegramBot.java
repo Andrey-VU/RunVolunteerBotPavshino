@@ -11,15 +11,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
-import telegram.bot.config.BotConfiguration;
-import telegram.bot.config.BotModes;
 
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
     private final TelegramBotStorage storage;
-
-    private final static BotModes mode = BotConfiguration.getMode();
 
     /**
      * Собственно API бота
