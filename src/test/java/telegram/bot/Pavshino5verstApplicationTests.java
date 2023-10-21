@@ -1,16 +1,39 @@
 package telegram.bot;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
-import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 
-@SpringBootTest(classes = BotConfiguration.class)
+import java.time.LocalDate;
+
+//@SpringBootTest(classes = BotConfiguration.class)
 class Pavshino5verstApplicationTests {
 
+    private static TelegramBotStorage telegramBotStorage;
+
+    @BeforeAll
+    static void init() {
+        ApplicationContext ctx = new AnnotationConfigApplicationContext(BotConfiguration.class);
+        telegramBotStorage = ctx.getBean(TelegramBotStorage.class);
+    }
+
     @Test
-    void contextLoads() {
+    void saveUserTest() {
+        telegramBotStorage.saveUser(
+                User.builder()
+                        .name("Петя")
+                        .surname("Иванов")
+                        .telegram("@noir74")
+                        .code("74").build());
+    }
+
+
+    @Test
+    void saveParticipationTest() {
 //        var participation = Participation.builder()
 //                .user(User.builder()
 //                        .name("Елена")
@@ -20,9 +43,10 @@ class Pavshino5verstApplicationTests {
 //                .role("Фотограф2")
 //                .rowNumber(7)
 //                .build();
-//
-//        saveParticipation(participation);
-//
-//        saveUser(User.builder().name("Петя").surname("Иванов").telegram("@noir74").code("74").build());
+        //telegramBotStorage.saveParticipation(participation);
+    }
+
+    private LocalDate string2LocalDate(String value) {
+        return LocalDate.parse(value, BotConfiguration.DATE_FORMATTER);
     }
 }
