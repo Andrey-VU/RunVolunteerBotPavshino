@@ -139,7 +139,7 @@ public class LocalExcelUtils implements StorageUtils {
 
     @Override
     public LocalDateTime getSheetLastUpdateTime() {
-        return null;
+        return LocalDateTime.now().minusYears(1);
     }
 
     private void writeContactsToExcel(Map<String, User> contacts) {

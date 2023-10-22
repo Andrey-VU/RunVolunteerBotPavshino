@@ -75,7 +75,7 @@ public class GoogleSheetUtils implements StorageUtils {
 
     @Override
     public LocalDateTime getSheetLastUpdateTime() {
-        return null;
+        return LocalDateTime.now().minusYears(1);
     }
 
     private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {

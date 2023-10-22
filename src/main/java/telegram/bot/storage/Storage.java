@@ -1,5 +1,6 @@
 package telegram.bot.storage;
 
+import lombok.extern.slf4j.Slf4j;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
@@ -12,15 +13,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
-    protected LocalDateTime sheetLastUpdateTime;
+    protected LocalDateTime cacheLastUpdateTime;
+    private boolean isStorageSyncStarted = false;
 
     @Override
     public User saveUser(User user) {
-        if (checkIfCacheObsolete()) return null;
+        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return null;
         if (contacts.containsKey(user.getFullName()))
             return null;
 
@@ -41,31 +44,31 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public User getUserByTelegram(String telegram) {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return contacts.values().stream().filter(user -> Objects.equals(user.getTelegram(), telegram)).findFirst().orElse(null);
     }
 
     @Override
     public User getUserByCode(String code) {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return contacts.values().stream().filter(user -> Objects.equals(user.getCode(), code)).findFirst().orElse(null);
     }
 
     @Override
     public List<User> getUsers() {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return new LinkedList<>(contacts.values());
     }
 
     @Override
     public List<Participation> getParticipantsByDate(LocalDate date) {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return events.get(date).getParticipants();
     }
 
     @Override
     public List<Participation> getAvailableParticipationByDate(LocalDate date) {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return events.get(date).getParticipants()
                 .stream()
                 .filter(participation -> Objects.isNull(participation.getUser()))
@@ -74,7 +77,7 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public Participation saveParticipation(Participation participation) {
-        if (checkIfCacheObsolete()) return null;
+        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return null;
         var event = events.get(participation.getEventDate());
         if (Objects.isNull(event)) return null;
 
@@ -100,7 +103,7 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public void deleteParticipation(Participation participation) {
-        checkIfCacheObsolete();
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
         var cellAddress = getCellAddress(participation.getSheetRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
         if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
@@ -116,11 +119,16 @@ public abstract class Storage implements TelegramBotStorage {
     synchronized public void loadDataFromStorage() {
         loadContacts();
         loadEvents();
-        sheetLastUpdateTime = LocalDateTime.now();
+        cacheLastUpdateTime = LocalDateTime.now();
+
+        if (!isStorageSyncStarted) {
+            new Thread(new SyncStorageRunner()).start();
+            isStorageSyncStarted = true;
+        }
     }
 
-    protected boolean checkIfCacheObsolete() {
-        if (storageUtils.getSheetLastUpdateTime().isAfter(sheetLastUpdateTime)) {
+    protected boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
+        if (cacheLastUpdateTime.isBefore(storageUtils.getSheetLastUpdateTime())) {
             loadDataFromStorage();
             return true;
         }
@@ -227,4 +235,23 @@ public abstract class Storage implements TelegramBotStorage {
         var columnAddress = Objects.isNull(columnNumber) ? "" : columnPrefix + columnNumber;
         return rowAddress + columnAddress;
     }
+
+    class SyncStorageRunner implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    log.info("sleep begin");
+                    Thread.sleep(BotConfiguration.getBotStorageSheetSyncInterval());
+                    log.info("sleep end");
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info("checkIfCacheIsObsoletedAndUpdateIfNeeded() begin");
+                checkIfCacheIsObsoletedAndUpdateIfNeeded();
+                log.info("checkIfCacheIsObsoletedAndUpdateIfNeeded() end");
+            }
+        }
+    }
 }
+
