@@ -18,8 +18,8 @@ public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
-    protected LocalDateTime cacheLastUpdateTime;
-    private boolean isStorageSyncStarted = false;
+    protected volatile LocalDateTime cacheLastUpdateTime;
+    private volatile boolean isStorageSyncStarted = false;
 
     @Override
     public User saveUser(User user) {
