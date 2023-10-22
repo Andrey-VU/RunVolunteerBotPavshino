@@ -66,25 +66,26 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public Participation saveParticipation(Participation participation) {
-        loadDataFromStorage();
         var event = events.get(participation.getEventDate());
-        if (Objects.isNull(event))
-            return null;
+        if (Objects.isNull(event)) return null;
+
+        var cellAddress = getCellAddress(participation.getSheetRowNumber(), event.getColumnNumber());
+
+        if (!storageUtils.writeCellValue(
+                BotConfiguration.getSheetVolunteers(),
+                cellAddress,
+                Optional.ofNullable(participation.getUser())
+                        .orElse(User.builder().build())
+                        .getFullName())) return null;
 
         var participant = event.getParticipants()
                 .stream()
                 .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())
-                .findFirst().orElse(null);
+                .findFirst();
 
-        assert participant != null;
-        if (!Objects.isNull(participant.getUser()))
-            return null;
+        if (participant.isEmpty()) return null;
+        else participant.get().setUser(participation.getUser());
 
-        var cellAddress = getCellAddress(participation.getSheetRowNumber(), event.getColumnNumber());
-        if (!storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, participation.getUser().getFullName()))
-            return null;
-
-        participant.setUser(participation.getUser());
         return participation;
     }
 
