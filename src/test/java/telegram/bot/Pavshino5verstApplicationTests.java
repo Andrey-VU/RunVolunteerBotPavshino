@@ -1,18 +1,19 @@
 package telegram.bot;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.*;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
+import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 
 import java.time.LocalDate;
 
-//@SpringBootTest(classes = BotConfiguration.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class Pavshino5verstApplicationTests {
-
     private static TelegramBotStorage telegramBotStorage;
 
     @BeforeAll
@@ -22,28 +23,30 @@ class Pavshino5verstApplicationTests {
     }
 
     @Test
+    @Order(1)
     void saveUserTest() {
         telegramBotStorage.saveUser(
                 User.builder()
                         .name("Петя")
-                        .surname("Иванов")
-                        .telegram("@noir74")
-                        .code("74").build());
+                        .surname("ИВАНОВ")
+                        .telegram("@ivanov")
+                        .code("0000").build());
     }
 
 
     @Test
+    @Order(2)
     void saveParticipationTest() {
-//        var participation = Participation.builder()
-//                .user(User.builder()
-//                        .name("Елена")
-//                        .surname("ДЕНИСКИН").build()
-//                )
-//                .eventDate(string2LocalDate("22.04.2023"))
-//                .role("Фотограф2")
-//                .rowNumber(7)
-//                .build();
-        //telegramBotStorage.saveParticipation(participation);
+        var participation = Participation.builder()
+                .user(User.builder()
+                        .name("Петя")
+                        .surname("ИВАНОВ").build()
+                )
+                .eventDate(string2LocalDate("21.10.2023"))
+                .role("Маршал2 дальний разворот")
+                .rowNumber(7)
+                .build();
+        telegramBotStorage.saveParticipation(participation);
     }
 
     private LocalDate string2LocalDate(String value) {

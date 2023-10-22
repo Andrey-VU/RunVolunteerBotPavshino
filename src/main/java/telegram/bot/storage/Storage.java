@@ -120,24 +120,24 @@ public abstract class Storage implements TelegramBotStorage {
 
     protected void loadEvents() {
         events = new HashMap<>();
-        var roles = getRoles();
-        var dates = getEventsDate();
-        var volunteers = getVolunteers(roles, dates);
-        prepareEvents(roles, dates, volunteers);
+        var eventRoles = getEventRoles();
+        var eventDates = getEventDates();
+        var eventVolunteers = getEventVolunteers(eventRoles, eventDates);
+        prepareEvents(eventRoles, eventDates, eventVolunteers);
     }
 
-    protected List<String> getRoles() {
+    protected List<String> getEventRoles() {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart(), BotConfiguration.getSheetVolunteersRoleColumn());
         var rangeEnd = getCellAddress(null, BotConfiguration.getSheetVolunteersRoleColumn());
         return storageUtils.readValuesList(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
-    protected List<String> getEventsDate() {
+    protected List<String> getEventDates() {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), BotConfiguration.getSheetVolunteersEventColumnStart());
         var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), null);
-        var dates = storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd).get(0);
-        addSaturdaysIfNeeded(dates);
-        return dates;
+        var eventDates = storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd).get(0);
+        addSaturdaysIfNeeded(eventDates);
+        return eventDates;
     }
 
     protected void addSaturdaysIfNeeded(List<String> dates) {
@@ -158,23 +158,23 @@ public abstract class Storage implements TelegramBotStorage {
         }
     }
 
-    protected List<List<String>> getVolunteers(List<String> roles, List<String> dates) {
+    protected List<List<String>> getEventVolunteers(List<String> eventRoles, List<String> eventDates) {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart(), BotConfiguration.getSheetVolunteersRoleColumn() + 1);
-        var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart() + roles.size() - 1, BotConfiguration.getSheetVolunteersRoleColumn() + dates.size());
+        var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart() + eventRoles.size() - 1, BotConfiguration.getSheetVolunteersRoleColumn() + eventDates.size());
         return storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
-    protected void prepareEvents(List<String> roles, List<String> dates, List<List<String>> volunteers) {
+    protected void prepareEvents(List<String> eventRoles, List<String> eventDates, List<List<String>> eventVolunteers) {
         var dateIndex = 0;
-        for (String stringDate : dates) {
+        for (String stringDate : eventDates) {
             var date = string2LocalDate(stringDate);
             List<Participation> participants = new LinkedList<>();
             var roleIndex = 0;
-            for (String stringRole : roles) {
+            for (String stringRole : eventRoles) {
                 participants.add(Participation.builder()
                         .eventDate(date)
-                        .role(roles.get(roleIndex))
-                        .user(getVolunteerForEvent(volunteers.get(roleIndex), dateIndex))
+                        .role(eventRoles.get(roleIndex))
+                        .user(getVolunteerForEvent(eventVolunteers.get(roleIndex), dateIndex))
                         .rowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
                 roleIndex++;
             }
