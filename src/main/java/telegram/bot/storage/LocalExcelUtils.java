@@ -61,10 +61,16 @@ public class LocalExcelUtils implements StorageUtils {
         // Проверка существования листа
         int sheetIndex = workbook.getSheetIndex(sheetName);
         if (sheetIndex != -1) {
-            Sheet sheet = workbook.createSheet(sheetName);
-            Row row = sheet.getRow(getNumberCell(cellAddress, 1, -1));
-            Cell cell = row.getCell(getNumberCell(cellAddress, 2, -1));
-            cell.setCellValue((Date) values);
+            Sheet sheet = workbook.getSheet(sheetName);
+            int offsetRow = getNumberCell(cellAddress, 1, -1) - 1;
+            int offsetCell = getNumberCell(cellAddress, 2, -1) - 1;
+            for (int i = 0; i < values.size(); i++) {
+                for (int j = 0; j < values.get(i).size(); j++) {
+                    Row row = sheet.getRow(i + offsetRow);
+                    Cell cell = row.getCell(j + offsetCell);
+                    cell.setCellValue(values.get(i).get(i).toString());
+                }
+            }
         } else {
             log.info("Лист '" + sheetName + "' не существует.");
             return false;
