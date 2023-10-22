@@ -8,6 +8,7 @@ import telegram.bot.model.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,9 +16,11 @@ public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
+    protected LocalDateTime sheetLastUpdateTime;
 
     @Override
     public User saveUser(User user) {
+        if (checkIfCacheObsolete()) return null;
         if (contacts.containsKey(user.getFullName()))
             return null;
 
@@ -38,26 +41,31 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public User getUserByTelegram(String telegram) {
+        checkIfCacheObsolete();
         return contacts.values().stream().filter(user -> Objects.equals(user.getTelegram(), telegram)).findFirst().orElse(null);
     }
 
     @Override
     public User getUserByCode(String code) {
+        checkIfCacheObsolete();
         return contacts.values().stream().filter(user -> Objects.equals(user.getCode(), code)).findFirst().orElse(null);
     }
 
     @Override
     public List<User> getUsers() {
+        checkIfCacheObsolete();
         return new LinkedList<>(contacts.values());
     }
 
     @Override
     public List<Participation> getParticipantsByDate(LocalDate date) {
+        checkIfCacheObsolete();
         return events.get(date).getParticipants();
     }
 
     @Override
     public List<Participation> getAvailableParticipationByDate(LocalDate date) {
+        checkIfCacheObsolete();
         return events.get(date).getParticipants()
                 .stream()
                 .filter(participation -> Objects.isNull(participation.getUser()))
@@ -66,6 +74,7 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public Participation saveParticipation(Participation participation) {
+        if (checkIfCacheObsolete()) return null;
         var event = events.get(participation.getEventDate());
         if (Objects.isNull(event)) return null;
 
@@ -91,6 +100,7 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public void deleteParticipation(Participation participation) {
+        checkIfCacheObsolete();
         var cellAddress = getCellAddress(participation.getSheetRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
         if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
@@ -103,9 +113,18 @@ public abstract class Storage implements TelegramBotStorage {
         }
     }
 
-    public void loadDataFromStorage() {
+    synchronized public void loadDataFromStorage() {
         loadContacts();
         loadEvents();
+        sheetLastUpdateTime = LocalDateTime.now();
+    }
+
+    protected boolean checkIfCacheObsolete() {
+        if (storageUtils.getSheetLastUpdateTime().isAfter(sheetLastUpdateTime)) {
+            loadDataFromStorage();
+            return true;
+        }
+        return false;
     }
 
     protected void loadContacts() {
