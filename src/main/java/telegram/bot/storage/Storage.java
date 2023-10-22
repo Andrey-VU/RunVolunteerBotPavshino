@@ -127,7 +127,7 @@ public abstract class Storage implements TelegramBotStorage {
         }
     }
 
-    protected boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
+    private boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
         if (cacheLastUpdateTime.isBefore(storageUtils.getSheetLastUpdateTime())) {
             loadDataFromStorage();
             return true;
