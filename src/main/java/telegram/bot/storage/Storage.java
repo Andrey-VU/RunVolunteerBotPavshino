@@ -73,14 +73,14 @@ public abstract class Storage implements TelegramBotStorage {
 
         var participant = event.getParticipants()
                 .stream()
-                .filter(obj -> obj.getRowNumber() == participation.getRowNumber())
+                .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())
                 .findFirst().orElse(null);
 
         assert participant != null;
         if (!Objects.isNull(participant.getUser()))
             return null;
 
-        var cellAddress = getCellAddress(participation.getRowNumber(), event.getColumnNumber());
+        var cellAddress = getCellAddress(participation.getSheetRowNumber(), event.getColumnNumber());
         if (!storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, participation.getUser().getFullName()))
             return null;
 
@@ -90,11 +90,11 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public void deleteParticipation(Participation participation) {
-        var cellAddress = getCellAddress(participation.getRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
+        var cellAddress = getCellAddress(participation.getSheetRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
         if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
                     .stream()
-                    .filter(obj -> obj.getRowNumber() == participation.getRowNumber())
+                    .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())
                     .findFirst()
                     .orElse(null);
             assert participant != null;
@@ -132,20 +132,23 @@ public abstract class Storage implements TelegramBotStorage {
         return storageUtils.readValuesList(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
-    protected List<String> getEventDates() {
+    protected List<LocalDate> getEventDates() {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), BotConfiguration.getSheetVolunteersEventColumnStart());
         var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), null);
-        var eventDates = storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd).get(0);
+        var eventDates = storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd)
+                .get(0)
+                .stream()
+                .map(eventDateString -> LocalDate.parse(eventDateString, BotConfiguration.DATE_FORMATTER))
+                .collect(Collectors.toCollection(LinkedList::new));
         addSaturdaysIfNeeded(eventDates);
         return eventDates;
     }
 
-    protected void addSaturdaysIfNeeded(List<String> dates) {
+    protected void addSaturdaysIfNeeded(List<LocalDate> eventDates) {
         var nextSaturdaysCounter = 0;
         var saturdayColumn = BotConfiguration.getSheetVolunteersEventColumnStart();
         LocalDate saturday = LocalDate.now();
-        for (String stringDate : dates) {
-            saturday = string2LocalDate(stringDate);
+        for (LocalDate eventDate : eventDates) {
             nextSaturdaysCounter += saturday.isEqual(LocalDate.now()) || saturday.isAfter(LocalDate.now()) ? 1 : 0;
             saturdayColumn++;
         }
@@ -153,49 +156,42 @@ public abstract class Storage implements TelegramBotStorage {
             saturday = getNextSaturday(saturday);
             var cellAddress = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), saturdayColumn++);
             storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, saturday.format(BotConfiguration.DATE_FORMATTER));
-            dates.add(localDate2String(saturday));
+            eventDates.add(saturday);
             nextSaturdaysCounter++;
         }
     }
 
-    protected List<List<String>> getEventVolunteers(List<String> eventRoles, List<String> eventDates) {
+    protected List<List<String>> getEventVolunteers(List<String> eventRoles, List<LocalDate> eventDates) {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart(), BotConfiguration.getSheetVolunteersRoleColumn() + 1);
         var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersRoleRowStart() + eventRoles.size() - 1, BotConfiguration.getSheetVolunteersRoleColumn() + eventDates.size());
         return storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd);
     }
 
-    protected void prepareEvents(List<String> eventRoles, List<String> eventDates, List<List<String>> eventVolunteers) {
-        var dateIndex = 0;
-        for (String stringDate : eventDates) {
-            var date = string2LocalDate(stringDate);
+    protected void prepareEvents(List<String> eventRoles, List<LocalDate> eventDates, List<List<String>> eventVolunteers) {
+        for (int dateIndex = 0; dateIndex < eventDates.size(); dateIndex++) {
+            var eventDate = eventDates.get(dateIndex);
             List<Participation> participants = new LinkedList<>();
-            var roleIndex = 0;
-            for (String stringRole : eventRoles) {
+            for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) {
+                var eventRole = eventRoles.get(roleIndex);
                 participants.add(Participation.builder()
-                        .eventDate(date)
-                        .role(eventRoles.get(roleIndex))
-                        .user(getVolunteerForEvent(eventVolunteers.get(roleIndex), dateIndex))
-                        .rowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
-                roleIndex++;
+                        .eventDate(eventDate)
+                        .eventRole(eventRole)
+                        .user(getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers))
+                        .sheetRowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
             }
-            events.put(date, Event.builder()
-                    .eventDate(date)
+            events.put(eventDate, Event.builder()
+                    .eventDate(eventDate)
                     .participants(participants)
                     .columnNumber(BotConfiguration.getSheetVolunteersEventColumnStart() + dateIndex).build());
-            dateIndex++;
         }
     }
 
-    protected User getVolunteerForEvent(List<String> roleVolunteers, int dateIndex) {
-        return !Objects.isNull(roleVolunteers) && roleVolunteers.size() >= dateIndex + 1 ? contacts.get(roleVolunteers.get(dateIndex)) : null;
-    }
-
-    protected LocalDate string2LocalDate(String value) {
-        return LocalDate.parse(value, BotConfiguration.DATE_FORMATTER);
-    }
-
-    protected String localDate2String(LocalDate value) {
-        return value.format(BotConfiguration.DATE_FORMATTER);
+    protected User getVolunteerForEvent(int roleIndex, int dateIndex, List<List<String>> roleVolunteers) {
+        return !Objects.isNull(roleVolunteers) &&
+                roleVolunteers.size() >= roleIndex + 1 &&
+                roleVolunteers.get(roleIndex).size() >= dateIndex + 1
+                ? contacts.get(roleVolunteers.get(roleIndex).get(dateIndex))
+                : null;
     }
 
     protected LocalDate getNextSaturday(LocalDate day) {

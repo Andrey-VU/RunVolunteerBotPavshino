@@ -204,12 +204,12 @@ public class LocalExcelUtils implements StorageUtils {
 
             List<Participation> members = value.getParticipants();
             members.forEach(member -> {
-                Row row = sheet.getRow(member.getRowNumber() - rowNumberCorrection);
+                Row row = sheet.getRow(member.getSheetRowNumber() - rowNumberCorrection);
                 Cell roleCell = (row.getCell(0) == null) ? row.createCell(0) : row.getCell(0);
                 Cell cell = row.createCell(value.getColumnNumber() - colNumberCorrection);
                 String cellValue = member.getUser() != null ? member.getUser().getFullName() : "";
-                if (!member.getRole().isBlank()) {
-                    roleCell.setCellValue(member.getRole());
+                if (!member.getEventRole().isBlank()) {
+                    roleCell.setCellValue(member.getEventRole());
                 }
                 cell.setCellValue(cellValue);
                 // System.out.println(cellValue);
@@ -291,16 +291,16 @@ public class LocalExcelUtils implements StorageUtils {
 
     private int findMaxRowNumber(Map<LocalDate, Event> events) {
         Event maxEvent = events.values().stream().max(Comparator.comparingInt(event -> event.getParticipants().stream()
-                .max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
+                .max(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber())).get();
 
-        return maxEvent.getParticipants().stream().max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+        return maxEvent.getParticipants().stream().max(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber();
     }
 
     private int findMinRowNumber(Map<LocalDate, Event> events) {
         Event minEvent = events.values().stream().min(Comparator.comparingInt(event -> event.getParticipants().stream()
-                .min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
+                .min(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber())).get();
 
-        return minEvent.getParticipants().stream().min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+        return minEvent.getParticipants().stream().min(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber();
     }
 
     private int findMinColNumber(Map<LocalDate, Event> events) {

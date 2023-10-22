@@ -1,8 +1,6 @@
 package telegram.bot;
 
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.*;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import telegram.bot.adapter.TelegramBotStorage;
@@ -43,8 +41,8 @@ class Pavshino5verstApplicationTests {
                         .surname("ИВАНОВ").build()
                 )
                 .eventDate(string2LocalDate("21.10.2023"))
-                .role("Маршал2 дальний разворот")
-                .rowNumber(7)
+                .eventRole("Маршал2 дальний разворот")
+                .sheetRowNumber(7)
                 .build();
         telegramBotStorage.saveParticipation(participation);
     }
