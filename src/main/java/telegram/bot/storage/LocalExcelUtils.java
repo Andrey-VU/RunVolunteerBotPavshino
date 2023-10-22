@@ -10,7 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import telegram.bot.config.SheetConfig;
+import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
@@ -140,7 +140,7 @@ public class LocalExcelUtils implements StorageUtils {
     private void writeContactsToExcel(Map<String, User> contacts) {
         XSSFWorkbook workbook = new XSSFWorkbook();
 
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetContacts());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetContacts());
         for (int i = 0; i < 4; i++) {
             sheet.setColumnWidth(i, 6000);
         }
@@ -186,7 +186,7 @@ public class LocalExcelUtils implements StorageUtils {
             log.info("Error creating FileInputStream");
             throw new RuntimeException(e);
         }
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetVolunteers());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetVolunteers());
         //Формируем первую строку
         Row headRow = sheet.createRow(0);
         sheet.setColumnWidth(0, 6000);
@@ -204,12 +204,12 @@ public class LocalExcelUtils implements StorageUtils {
 
             List<Participation> members = value.getParticipants();
             members.forEach(member -> {
-                Row row = sheet.getRow(member.getRowNumber() - rowNumberCorrection);
+                Row row = sheet.getRow(member.getSheetRowNumber() - rowNumberCorrection);
                 Cell roleCell = (row.getCell(0) == null) ? row.createCell(0) : row.getCell(0);
                 Cell cell = row.createCell(value.getColumnNumber() - colNumberCorrection);
                 String cellValue = member.getUser() != null ? member.getUser().getFullName() : "";
-                if (!member.getRole().isBlank()) {
-                    roleCell.setCellValue(member.getRole());
+                if (!member.getEventRole().isBlank()) {
+                    roleCell.setCellValue(member.getEventRole());
                 }
                 cell.setCellValue(cellValue);
                 // System.out.println(cellValue);
@@ -235,7 +235,7 @@ public class LocalExcelUtils implements StorageUtils {
             log.info("Error creating FileInputStream");
             throw new RuntimeException(e);
         }
-        Sheet sheet = workbook.createSheet(SheetConfig.getSheetVolunteers());
+        Sheet sheet = workbook.createSheet(BotConfiguration.getSheetVolunteers());
         AtomicInteger countColumn = new AtomicInteger(0);
         //Формируем первую строку
         Row row = sheet.createRow(0);
@@ -291,16 +291,16 @@ public class LocalExcelUtils implements StorageUtils {
 
     private int findMaxRowNumber(Map<LocalDate, Event> events) {
         Event maxEvent = events.values().stream().max(Comparator.comparingInt(event -> event.getParticipants().stream()
-                .max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
+                .max(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber())).get();
 
-        return maxEvent.getParticipants().stream().max(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+        return maxEvent.getParticipants().stream().max(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber();
     }
 
     private int findMinRowNumber(Map<LocalDate, Event> events) {
         Event minEvent = events.values().stream().min(Comparator.comparingInt(event -> event.getParticipants().stream()
-                .min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber())).get();
+                .min(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber())).get();
 
-        return minEvent.getParticipants().stream().min(Comparator.comparingInt(Participation::getRowNumber)).get().getRowNumber();
+        return minEvent.getParticipants().stream().min(Comparator.comparingInt(Participation::getSheetRowNumber)).get().getSheetRowNumber();
     }
 
     private int findMinColNumber(Map<LocalDate, Event> events) {
