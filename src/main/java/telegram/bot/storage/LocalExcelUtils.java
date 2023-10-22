@@ -17,6 +17,7 @@ import telegram.bot.model.User;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -79,7 +80,6 @@ public class LocalExcelUtils implements StorageUtils {
         }
     }
 
-
     @Override
     public List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd) {
         return readValuesFromList(sheetName, rangeBegin, rangeEnd, 0);
@@ -135,6 +135,11 @@ public class LocalExcelUtils implements StorageUtils {
             throw new RuntimeException(e);
         }
         return values;
+    }
+
+    @Override
+    public LocalDateTime getSheetLastUpdateTime() {
+        return null;
     }
 
     private void writeContactsToExcel(Map<String, User> contacts) {

@@ -6,6 +6,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import telegram.bot.config.BotConfiguration;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,6 +71,11 @@ public class GoogleSheetUtils implements StorageUtils {
         }
         pause();
         return values;
+    }
+
+    @Override
+    public LocalDateTime getSheetLastUpdateTime() {
+        return null;
     }
 
     private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
