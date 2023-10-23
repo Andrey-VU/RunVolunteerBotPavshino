@@ -31,13 +31,20 @@ public class LocalExcelUtils implements StorageUtils {
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public void initExcelFile(Map<String, User> contacts, Map<LocalDate, Event> events) {
-        File f = new File(pathToExcelFile);
+        /*File f = new File(pathToExcelFile);
         if (!f.exists()) {
             writeContactsToExcel(contacts);
             writeVolunteersToExcel(events);
         } else {
             log.info("File exists");
-        }
+        }*/
+        File f = new File(pathToExcelFile);
+        //if (!f.exists()) {
+            writeContactsToExcel(contacts);
+            writeVolunteersToExcel(events);
+       // } else {
+          //  log.info("File exists");
+        //}
     }
 
     @Override
@@ -62,10 +69,22 @@ public class LocalExcelUtils implements StorageUtils {
         // Проверка существования листа
         int sheetIndex = workbook.getSheetIndex(sheetName);
         if (sheetIndex != -1) {
-            Sheet sheet = workbook.createSheet(sheetName);
-            Row row = sheet.getRow(getNumberCell(cellAddress, 1, -1));
-            Cell cell = row.getCell(getNumberCell(cellAddress, 2, -1));
-            cell.setCellValue((Date) values);
+            Sheet sheet = workbook.getSheet(sheetName);
+            int offsetRow = getNumberCell(cellAddress, 1, -1) - 1;
+            int offsetCell = getNumberCell(cellAddress, 2, -1) - 1;
+            for (int i = 0; i < values.size(); i++) {
+                for (int j = 0; j < values.get(i).size(); j++) {
+                    Row row = sheet.getRow(i + offsetRow);
+                    if (row==null){
+                        row=sheet.createRow(i + offsetRow);
+                    }
+                    Cell cell = row.getCell(j + offsetCell);
+                    if (cell==null){
+                        cell=row.createCell(j + offsetCell);
+                    }
+                    cell.setCellValue(values.get(i).get(j).toString());
+                }
+            }
         } else {
             log.info("Лист '" + sheetName + "' не существует.");
             return false;
