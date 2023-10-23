@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
@@ -36,6 +38,9 @@ class LocalExcelUtilsTest {
 
     @Test
     void writesValues() {
+        localExcelUtils = new LocalExcelUtils(pathToExcelFile);
+        List<List<Object>> user =List.of(List.of("Тест Имя", "@testTelegram", "1234567890"));
+        localExcelUtils.writesValues("Контакты", "R3C1", user);
     }
 
     @Test
