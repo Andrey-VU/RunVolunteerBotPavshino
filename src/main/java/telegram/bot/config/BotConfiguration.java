@@ -26,7 +26,7 @@ public class BotConfiguration {
      * Режим бота
      */
     private static BotStorageMode botStorageMode;
-    private static long BOT_STORAGE_SHEET_SYNC_INTERVAL;
+    private static long BOT_STORAGE_SHEET_SYNC_INTERVAL_ms;
     private static String GOOGLE_APPLICATION_NAME;
     private static String GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
     private static long GOOGLE_API_PAUSE_LONG;
@@ -83,7 +83,7 @@ public class BotConfiguration {
         else if (bot_storage_mode.equals(BotStorageMode.LOCAL.toString()))
             BotConfiguration.botStorageMode = BotStorageMode.LOCAL;
 
-        BOT_STORAGE_SHEET_SYNC_INTERVAL = Long.parseLong(String.valueOf(bot_storage_sheet_sync_interval_sec)) * 1000;
+        BOT_STORAGE_SHEET_SYNC_INTERVAL_ms = Long.parseLong(String.valueOf(bot_storage_sheet_sync_interval_sec)) * 1000;
 
         GOOGLE_APPLICATION_NAME = google_app_name;
         GOOGLE_SERVICE_ACCOUNT_KEY_PATH = google_service_account_key;
@@ -101,8 +101,8 @@ public class BotConfiguration {
         SHEET_SATURDAYS_AHEAD = Integer.parseInt(sheet_saturdays_ahead);
     }
 
-    public static long getBotStorageSheetSyncInterval() {
-        return BOT_STORAGE_SHEET_SYNC_INTERVAL;
+    public static long getBotStorageSheetSyncIntervalMilliSec() {
+        return BOT_STORAGE_SHEET_SYNC_INTERVAL_ms;
     }
 
     public static String getGoogleApplicationName() {

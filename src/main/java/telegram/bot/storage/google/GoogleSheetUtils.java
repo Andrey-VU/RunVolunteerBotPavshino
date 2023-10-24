@@ -9,10 +9,9 @@ import telegram.bot.config.BotConfiguration;
 import telegram.bot.storage.StorageUtils;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,23 +82,22 @@ public class GoogleSheetUtils implements StorageUtils {
     }
 
     @Override
-    public ZonedDateTime getSheetLastUpdateTime() {
-        ZonedDateTime modifiedZonedDateTime = null;
+    public LocalDateTime getSheetLastUpdateTime() {
+        LocalDateTime modifiedLocalDateTime;
         try {
-            var modifiedDateTimeString = driveService
+            var modifiedDateTimeEpoch = driveService
                     .files()
                     .get(BotConfiguration.getGoogleSheetId())
                     .setFields("modifiedTime")
                     .execute()
                     .getModifiedTime()
-                    .toString();
-            var dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-            var modifiedLocalDateTime = LocalDateTime.parse(modifiedDateTimeString, dateTimeFormatter);
-            modifiedZonedDateTime = ZonedDateTime.of(modifiedLocalDateTime, ZoneId.systemDefault());
+                    .getValue();
+            var modifiedDateTimeInstant = Instant.ofEpochMilli(modifiedDateTimeEpoch);
+            modifiedLocalDateTime = modifiedDateTimeInstant.atZone(ZoneId.systemDefault()).toLocalDateTime();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return modifiedZonedDateTime;
+        return modifiedLocalDateTime;
     }
 
     private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {

@@ -9,7 +9,7 @@ import telegram.bot.model.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,7 +18,7 @@ public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
-    protected volatile ZonedDateTime cacheLastUpdateTime;
+    protected volatile LocalDateTime cacheLastUpdateTime;
     private volatile boolean isStorageSyncStarted = false;
 
     @Override
@@ -39,7 +39,7 @@ public abstract class Storage implements TelegramBotStorage {
             return null;
 
         contacts.put(user.getFullName(), user);
-        cacheLastUpdateTime = ZonedDateTime.now();
+        cacheLastUpdateTime = LocalDateTime.now();
         return user;
     }
 
@@ -98,7 +98,7 @@ public abstract class Storage implements TelegramBotStorage {
 
         if (participant.isEmpty()) return null;
         else participant.get().setUser(participation.getUser());
-        cacheLastUpdateTime = ZonedDateTime.now();
+        cacheLastUpdateTime = LocalDateTime.now();
 
         return participation;
     }
@@ -115,14 +115,14 @@ public abstract class Storage implements TelegramBotStorage {
                     .orElse(null);
             assert participant != null;
             participant.setUser(null);
-            cacheLastUpdateTime = ZonedDateTime.now();
+            cacheLastUpdateTime = LocalDateTime.now();
         }
     }
 
     synchronized public void loadDataFromStorage() {
         loadContacts();
         loadEvents();
-        cacheLastUpdateTime = ZonedDateTime.now();
+        cacheLastUpdateTime = LocalDateTime.now();
 
         if (!isStorageSyncStarted) {
             new Thread(new SyncStorageRunner()).start();
@@ -131,14 +131,24 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     private boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
-        if (cacheLastUpdateTime.isBefore(storageUtils.getSheetLastUpdateTime())) {
+        log.info("checking cache..");
+
+        var sheetLastUpdateTime = storageUtils.getSheetLastUpdateTime();
+
+        log.info("cacheLastUpdateTime {}: ", cacheLastUpdateTime);
+        log.info("sheetLastUpdateTime {}: ", sheetLastUpdateTime);
+
+        if (cacheLastUpdateTime.isBefore(sheetLastUpdateTime)) {
+            log.info("cache is obsoleted");
             loadDataFromStorage();
             return true;
         }
+        log.info("cache is actual");
         return false;
     }
 
     protected void loadContacts() {
+        log.info("loadContacts is started");
         contacts = new HashMap<>();
         var rangeBegin = getCellAddress(BotConfiguration.getSheetContactsRowStart(), BotConfiguration.getSheetContactsColumnFirst());
         var rangeEnd = getCellAddress(null, BotConfiguration.getSheetContactsColumnLast());
@@ -147,14 +157,17 @@ public abstract class Storage implements TelegramBotStorage {
                     var user = User.createFrom(userProperty);
                     contacts.put(user.getFullName(), user);
                 });
+        log.info("loadContacts is finished");
     }
 
     protected void loadEvents() {
+        log.info("loadEvents is started");
         events = new HashMap<>();
         var eventRoles = getEventRoles();
         var eventDates = getEventDates();
         var eventVolunteers = getEventVolunteers(eventRoles, eventDates);
         prepareEvents(eventRoles, eventDates, eventVolunteers);
+        log.info("loadEvents is finished");
     }
 
     protected List<String> getEventRoles() {
@@ -244,15 +257,12 @@ public abstract class Storage implements TelegramBotStorage {
         public void run() {
             while (true) {
                 try {
-                    log.info("sleep begin");
-                    Thread.sleep(BotConfiguration.getBotStorageSheetSyncInterval());
-                    log.info("sleep end");
+                    log.info("waiting for {} sec", BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() / 1000);
+                    Thread.sleep(BotConfiguration.getBotStorageSheetSyncIntervalMilliSec());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                log.info("checkIfCacheIsObsoletedAndUpdateIfNeeded() begin");
                 checkIfCacheIsObsoletedAndUpdateIfNeeded();
-                log.info("checkIfCacheIsObsoletedAndUpdateIfNeeded() end");
             }
         }
     }
