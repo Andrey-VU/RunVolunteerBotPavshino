@@ -39,6 +39,7 @@ public abstract class Storage implements TelegramBotStorage {
             return null;
 
         contacts.put(user.getFullName(), user);
+        cacheLastUpdateTime = LocalDateTime.now();
         return user;
     }
 
@@ -97,6 +98,7 @@ public abstract class Storage implements TelegramBotStorage {
 
         if (participant.isEmpty()) return null;
         else participant.get().setUser(participation.getUser());
+        cacheLastUpdateTime = LocalDateTime.now();
 
         return participation;
     }
@@ -113,6 +115,7 @@ public abstract class Storage implements TelegramBotStorage {
                     .orElse(null);
             assert participant != null;
             participant.setUser(null);
+            cacheLastUpdateTime = LocalDateTime.now();
         }
     }
 
