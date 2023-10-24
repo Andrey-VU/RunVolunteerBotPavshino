@@ -17,7 +17,6 @@ import telegram.bot.model.User;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,10 +39,10 @@ public class LocalExcelUtils implements StorageUtils {
         }*/
         File f = new File(pathToExcelFile);
         //if (!f.exists()) {
-            writeContactsToExcel(contacts);
-            writeVolunteersToExcel(events);
-       // } else {
-          //  log.info("File exists");
+        writeContactsToExcel(contacts);
+        writeVolunteersToExcel(events);
+        // } else {
+        //  log.info("File exists");
         //}
     }
 
@@ -75,12 +74,12 @@ public class LocalExcelUtils implements StorageUtils {
             for (int i = 0; i < values.size(); i++) {
                 for (int j = 0; j < values.get(i).size(); j++) {
                     Row row = sheet.getRow(i + offsetRow);
-                    if (row==null){
-                        row=sheet.createRow(i + offsetRow);
+                    if (row == null) {
+                        row = sheet.createRow(i + offsetRow);
                     }
                     Cell cell = row.getCell(j + offsetCell);
-                    if (cell==null){
-                        cell=row.createCell(j + offsetCell);
+                    if (cell == null) {
+                        cell = row.createCell(j + offsetCell);
                     }
                     cell.setCellValue(values.get(i).get(j).toString());
                 }
@@ -154,11 +153,6 @@ public class LocalExcelUtils implements StorageUtils {
             throw new RuntimeException(e);
         }
         return values;
-    }
-
-    @Override
-    public LocalDateTime getSheetLastUpdateTime() {
-        return LocalDateTime.now().minusYears(1);
     }
 
     private void writeContactsToExcel(Map<String, User> contacts) {

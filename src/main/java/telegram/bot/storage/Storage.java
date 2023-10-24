@@ -9,7 +9,7 @@ import telegram.bot.model.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,7 +18,7 @@ public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
-    protected volatile LocalDateTime cacheLastUpdateTime;
+    protected volatile ZonedDateTime cacheLastUpdateTime;
     private volatile boolean isStorageSyncStarted = false;
 
     @Override
@@ -39,7 +39,7 @@ public abstract class Storage implements TelegramBotStorage {
             return null;
 
         contacts.put(user.getFullName(), user);
-        cacheLastUpdateTime = LocalDateTime.now();
+        cacheLastUpdateTime = ZonedDateTime.now();
         return user;
     }
 
@@ -98,7 +98,7 @@ public abstract class Storage implements TelegramBotStorage {
 
         if (participant.isEmpty()) return null;
         else participant.get().setUser(participation.getUser());
-        cacheLastUpdateTime = LocalDateTime.now();
+        cacheLastUpdateTime = ZonedDateTime.now();
 
         return participation;
     }
@@ -115,14 +115,14 @@ public abstract class Storage implements TelegramBotStorage {
                     .orElse(null);
             assert participant != null;
             participant.setUser(null);
-            cacheLastUpdateTime = LocalDateTime.now();
+            cacheLastUpdateTime = ZonedDateTime.now();
         }
     }
 
     synchronized public void loadDataFromStorage() {
         loadContacts();
         loadEvents();
-        cacheLastUpdateTime = LocalDateTime.now();
+        cacheLastUpdateTime = ZonedDateTime.now();
 
         if (!isStorageSyncStarted) {
             new Thread(new SyncStorageRunner()).start();

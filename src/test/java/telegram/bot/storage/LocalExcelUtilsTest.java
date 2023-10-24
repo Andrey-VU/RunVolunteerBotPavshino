@@ -40,7 +40,7 @@ class LocalExcelUtilsTest {
     @Test
     void writesValues() {
         localExcelUtils = new LocalExcelUtils(pathToExcelFile);
-        List<List<Object>> user =List.of(List.of("Тест Имя", "@testTelegram", "1234567890"));
+        List<List<Object>> user = List.of(List.of("Тест Имя", "@testTelegram", "1234567890"));
         localExcelUtils.writesValues("Контакты", "R3C1", user);
     }
 

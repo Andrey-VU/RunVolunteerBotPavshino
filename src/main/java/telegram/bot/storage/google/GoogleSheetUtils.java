@@ -10,6 +10,9 @@ import telegram.bot.storage.StorageUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,15 +83,23 @@ public class GoogleSheetUtils implements StorageUtils {
     }
 
     @Override
-    public LocalDateTime getSheetLastUpdateTime() {
+    public ZonedDateTime getSheetLastUpdateTime() {
+        ZonedDateTime modifiedZonedDateTime = null;
         try {
-            var val = driveService.files().get(BotConfiguration.getGoogleSheetId()).setFields("modifiedTime").execute();
-            log.info(String.valueOf(val));
+            var modifiedDateTimeString = driveService
+                    .files()
+                    .get(BotConfiguration.getGoogleSheetId())
+                    .setFields("modifiedTime")
+                    .execute()
+                    .getModifiedTime()
+                    .toString();
+            var dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            var modifiedLocalDateTime = LocalDateTime.parse(modifiedDateTimeString, dateTimeFormatter);
+            modifiedZonedDateTime = ZonedDateTime.of(modifiedLocalDateTime, ZoneId.systemDefault());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return LocalDateTime.now().minusYears(1);
+        return modifiedZonedDateTime;
     }
 
     private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {

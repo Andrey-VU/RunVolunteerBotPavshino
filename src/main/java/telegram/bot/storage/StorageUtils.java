@@ -1,6 +1,6 @@
 package telegram.bot.storage;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface StorageUtils {
@@ -21,6 +21,8 @@ public interface StorageUtils {
     // reads matrix of String from 'rangeBegin' to 'rangeEnd' at 'sheetName'
     List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd);
 
-    LocalDateTime getSheetLastUpdateTime();
+    default ZonedDateTime getSheetLastUpdateTime() {
+        return ZonedDateTime.now().minusYears(1);
+    }
 }
 
