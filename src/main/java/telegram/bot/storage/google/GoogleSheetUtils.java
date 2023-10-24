@@ -1,9 +1,12 @@
-package telegram.bot.storage;
+package telegram.bot.storage.google;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import lombok.extern.slf4j.Slf4j;
 import telegram.bot.config.BotConfiguration;
+import telegram.bot.storage.StorageUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -12,11 +15,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class GoogleSheetUtils implements StorageUtils {
     private final Sheets sheetService;
+    private final Drive driveService;
 
-    public GoogleSheetUtils(Sheets sheetService) {
-        this.sheetService = sheetService;
+    public GoogleSheetUtils(GoogleConnection googleConnection) {
+        sheetService = googleConnection.getSheetService();
+        driveService = googleConnection.getDriveService();
     }
 
     @Override
@@ -75,6 +81,13 @@ public class GoogleSheetUtils implements StorageUtils {
 
     @Override
     public LocalDateTime getSheetLastUpdateTime() {
+        try {
+            var val = driveService.files().get(BotConfiguration.getGoogleSheetId()).setFields("modifiedTime").execute();
+            log.info(String.valueOf(val));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         return LocalDateTime.now().minusYears(1);
     }
 

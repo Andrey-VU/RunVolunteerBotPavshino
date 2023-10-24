@@ -1,7 +1,7 @@
 package telegram.bot.adapter.google;
 
 import lombok.extern.slf4j.Slf4j;
-import telegram.bot.storage.GoogleSheetUtils;
+import telegram.bot.storage.google.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 

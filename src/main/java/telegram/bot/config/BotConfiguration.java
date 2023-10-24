@@ -1,13 +1,5 @@
 package telegram.bot.config;
 
-
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,13 +8,11 @@ import org.springframework.context.annotation.PropertySource;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.adapter.google.TelegramBotStorageGoogleTableImpl;
 import telegram.bot.adapter.local.TelegramBotStorageLocalDBImpl;
-import telegram.bot.storage.GoogleSheetUtils;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
+import telegram.bot.storage.google.GoogleConnection;
+import telegram.bot.storage.google.GoogleSheetUtils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.format.DateTimeFormatter;
 
 @Slf4j
@@ -61,7 +51,7 @@ public class BotConfiguration {
         Storage telegramBotStorage;
 
         if (botStorageMode == BotStorageMode.GOOGLE)
-            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(connectionToGoogleStorage()), new LocalExcelUtils(LOCAL_STORAGE_PATH));
+            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(new GoogleConnection()), new LocalExcelUtils(LOCAL_STORAGE_PATH));
         else if (botStorageMode == BotStorageMode.LOCAL)
             telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_STORAGE_PATH));
         else throw new RuntimeException("error choosing Storage");
@@ -169,24 +159,5 @@ public class BotConfiguration {
 
     public static int getSheetSaturdaysAhead() {
         return SHEET_SATURDAYS_AHEAD;
-    }
-
-    private Sheets connectionToGoogleStorage() {
-        GoogleCredentials googleCredentials;
-        HttpRequestInitializer requestInitializer;
-        NetHttpTransport netHttpTransport;
-
-        try {
-            System.out.println(BotConfiguration.getGoogleServiceAccountKeyPath());
-            googleCredentials = GoogleCredentials.fromStream(new FileInputStream(BotConfiguration.getGoogleServiceAccountKeyPath()));
-            requestInitializer = new HttpCredentialsAdapter(googleCredentials);
-            netHttpTransport = GoogleNetHttpTransport.newTrustedTransport();
-        } catch (IOException | GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new Sheets.Builder(netHttpTransport, GsonFactory.getDefaultInstance(), requestInitializer)
-                .setApplicationName(BotConfiguration.getGoogleApplicationName())
-                .build();
     }
 }
