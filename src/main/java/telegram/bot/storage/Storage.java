@@ -124,7 +124,7 @@ public abstract class Storage implements TelegramBotStorage {
         loadEvents();
         cacheLastUpdateTime = LocalDateTime.now();
 
-        if (!isStorageSyncStarted) {
+        if (!isStorageSyncStarted && BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() != 0) {
             new Thread(new SyncStorageRunner()).start();
             isStorageSyncStarted = true;
         }
