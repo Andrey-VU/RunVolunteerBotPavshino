@@ -18,9 +18,8 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 @Configuration
 @PropertySource(value = "classpath:application.properties")
-@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/bot-config.properties", ignoreResourceNotFound = false)
-@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/googleSheet.properties", ignoreResourceNotFound = false, encoding = "UTF-8")
-@PropertySource(value = "file:${LOCAL_CONFIG_DIR}/localExcel.properties", ignoreResourceNotFound = false, encoding = "UTF-8")
+@PropertySource(value = "file:${RunVolunteerBotPavshinoLocalConfigDir}/bot-config.properties", ignoreResourceNotFound = false)
+@PropertySource(value = "file:${RunVolunteerBotPavshinoLocalConfigDir}/sheet.properties", ignoreResourceNotFound = false, encoding = "UTF-8")
 public class BotConfiguration {
     /**
      * Режим бота
@@ -43,17 +42,17 @@ public class BotConfiguration {
     private static int SHEET_SATURDAYS_AHEAD;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    @Value("${local.storage.path}")
-    String LOCAL_STORAGE_PATH;
+    @Value("${local.excel.file.path}")
+    String LOCAL_EXCEL_FILE_PATH;
 
     @Bean
     public TelegramBotStorage getTelegramBotStorage() {
         Storage telegramBotStorage;
 
         if (botStorageMode == BotStorageMode.GOOGLE)
-            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(new GoogleConnection()), new LocalExcelUtils(LOCAL_STORAGE_PATH));
+            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(new GoogleConnection()), new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH));
         else if (botStorageMode == BotStorageMode.LOCAL)
-            telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_STORAGE_PATH));
+            telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH));
         else throw new RuntimeException("error choosing Storage");
 
         telegramBotStorage.loadDataFromStorage();

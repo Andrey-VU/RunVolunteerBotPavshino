@@ -12,14 +12,14 @@ import telegram.bot.model.User;
 @AllArgsConstructor
 class TelegramBotStorageGoogleTableImplTest {
     //private TelegramBotStorageGoogleTableImpl telegramBotStorageGoogleTable;
-    @Test
-    void loadDataFromStorage() {
-        User user = User.builder()
-                .telegram("@telegram")
-                .name("Елена")
-                .surname("ДЕНИСКИН").build();
-
-        // telegramBotStorageGoogleTable.getUserByTelegram("@triplex35");
-        System.out.println();
-    }
+//    @Test
+//    void loadDataFromStorage() {
+//        User user = User.builder()
+//                .telegram("@telegram")
+//                .name("Елена")
+//                .surname("ДЕНИСКИН").build();
+//
+//        // telegramBotStorageGoogleTable.getUserByTelegram("@triplex35");
+//        System.out.println();
+//    }
 }

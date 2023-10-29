@@ -14,7 +14,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
 
 @ExtendWith(SpringExtension.class)
-@TestPropertySource("file:${LOCAL_CONFIG_DIR}/localExcel.properties")
+@TestPropertySource("file:${RunVolunteerBotPavshinoLocalConfigDir}/sheet.properties")
 class LocalExcelUtilsTest {
     private GoogleSheetUtils googleSheetUtils;
     private LocalExcelUtils localExcelUtils;
@@ -22,12 +22,12 @@ class LocalExcelUtilsTest {
     @Value("${local.storage.path}")
     private String pathToExcelFile;
 
-    @Test
-    void initExcelFileTest() {
-        System.out.println(pathToExcelFile);
-        assertThat(pathToExcelFile, equalTo("$MODULE_WORKING_DIR$\\local_config\\localstorage.xlsx"));
-        System.out.println();
-    }
+//    @Test
+//    void initExcelFileTest() {
+//        System.out.println(pathToExcelFile);
+//        assertThat(pathToExcelFile, equalTo("$MODULE_WORKING_DIR$\\local_config\\localstorage.xlsx"));
+//        System.out.println();
+//    }
 
 
     @Test

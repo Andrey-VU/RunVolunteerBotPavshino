@@ -131,6 +131,8 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     private boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
+        if (BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() == 0) return false;
+
         log.info("checking cache..");
 
         var sheetLastUpdateTime = storageUtils.getSheetLastUpdateTime();
