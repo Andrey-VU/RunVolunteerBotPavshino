@@ -1,10 +1,22 @@
 FROM  openjdk:17.0.2-jdk-slim-buster
-ENV PREFIX=/RunVolunteerBotPavshino
-ENV LOCAL_CONFIGDI_R=$RunVolunteerBotPavshinoDir/local_config
-ENV LOCAL_STORAGE_DIR=$PREFIX/local_storage
-RUN mkdir -p $LOCAL_CONFIG_DIR
-RUN mkdir -p $LOCAL_STORAGE_DIR
-COPY target/*.jar $PREFIX/app.jar
-COPY local_config/* $LOCAL_CONFIG_DIR
-COPY local_data/* $LOCAL_STORAGE_DIR
-ENTRYPOINT ["java","-jar","/RunVolunteerBotPavshino/app.jar"]
+
+ENV prefix=/bot
+
+ENV TZ="Europe/Moscow"
+RUN echo $TZ > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+
+ENV RunVolunteerBotPavshinoLocalConfigDir=$prefix/local_config
+ENV RunVolunteerBotPavshinoLocalStorageDir=$prefix/local_storage
+
+RUN mkdir -p $RunVolunteerBotPavshinoLocalConfigDir
+RUN mkdir -p $RunVolunteerBotPavshinoLocalStorageDir
+
+COPY local_config/* $RunVolunteerBotPavshinoLocalConfigDir
+COPY local_storage/* $RunVolunteerBotPavshinoLocalStorageDir
+
+VOLUME $RunVolunteerBotPavshinoLocalConfigDir
+VOLUME $RunVolunteerBotPavshinoLocalStorageDir
+
+COPY target/*.jar $prefix/app.jar
+
+ENTRYPOINT ["java","-jar","/bot/app.jar"]
