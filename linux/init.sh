@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-./delete_all.sh || exit 1
+./remove_all.sh || exit 1
 
 ./build_image.sh && ./push_image.sh || exit 1
 
