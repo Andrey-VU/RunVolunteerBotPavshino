@@ -14,9 +14,6 @@ RUN mkdir -p $RunVolunteerBotPavshinoLocalStorageDir
 COPY local_config/* $RunVolunteerBotPavshinoLocalConfigDir
 COPY local_storage/* $RunVolunteerBotPavshinoLocalStorageDir
 
-VOLUME $RunVolunteerBotPavshinoLocalConfigDir
-VOLUME $RunVolunteerBotPavshinoLocalStorageDir
-
 COPY target/*.jar $prefix/app.jar
 
 ENTRYPOINT ["java","-jar","/bot/app.jar"]
