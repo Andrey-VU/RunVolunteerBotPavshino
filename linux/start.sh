@@ -1,3 +1,5 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-docker container start $APP_CONTAINER_NAME
+./remove_container.sh && create_volume.sh && ./run_image.sh || exit 1
+
+exit 0

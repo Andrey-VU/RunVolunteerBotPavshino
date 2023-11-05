@@ -1,4 +1,10 @@
 #!/usr/bin/bash
 
-docker build -t $APP_IMAGE_NAME $APP_BUILD_PATH
-docker container create --name $APP_CONTAINER_NAME $APP_IMAGE_NAME
+./delete_all.sh || exit 1
+
+./build_image.sh && ./push_image.sh || exit 1
+
+./create_volumes.sh || exit 1
+
+exit 0
+

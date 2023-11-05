@@ -1,4 +1,5 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-docker container stop $APP_CONTAINER_NAME
+./remove_container.sh || exit 1
 
+exit 0
