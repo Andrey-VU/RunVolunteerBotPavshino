@@ -11,8 +11,8 @@ ENV RunVolunteerBotPavshinoLocalStorageDir=$prefix/local_storage
 RUN mkdir -p $RunVolunteerBotPavshinoLocalConfigDir
 RUN mkdir -p $RunVolunteerBotPavshinoLocalStorageDir
 
-COPY local_config/* $RunVolunteerBotPavshinoLocalConfigDir
-COPY local_storage/* $RunVolunteerBotPavshinoLocalStorageDir
+#COPY local_config/* $RunVolunteerBotPavshinoLocalConfigDir
+#COPY local_storage/* $RunVolunteerBotPavshinoLocalStorageDir
 
 COPY target/*.jar $prefix/app.jar
 
