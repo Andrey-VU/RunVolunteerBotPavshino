@@ -16,8 +16,8 @@ public class Participation {
     private LocalDate eventDate;
 
     // Позиция
-    private String role;
+    private String eventRole;
 
-    // номер строки в sheet
-    private int rowNumber;
+    // номер строки в таблице на закладке "Волонтеры"
+    private int sheetRowNumber;
 }

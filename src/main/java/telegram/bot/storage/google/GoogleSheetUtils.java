@@ -1,33 +1,44 @@
-package telegram.bot.storage;
+package telegram.bot.storage.google;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import telegram.bot.config.SheetConfig;
+import lombok.extern.slf4j.Slf4j;
+import telegram.bot.config.BotConfiguration;
+import telegram.bot.storage.StorageUtils;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-public class GoogleSheetUtils {
+@Slf4j
+public class GoogleSheetUtils implements StorageUtils {
     private final Sheets sheetService;
+    private final Drive driveService;
 
-    public GoogleSheetUtils(Sheets sheetService) {
-        this.sheetService = sheetService;
+    public GoogleSheetUtils(GoogleConnection googleConnection) {
+        sheetService = googleConnection.getSheetService();
+        driveService = googleConnection.getDriveService();
     }
 
+    @Override
     public boolean writeCellValue(String sheetName, String cellAddress, String cellValue) {
         return writesValues(sheetName, cellAddress, List.of(List.of(cellValue)));
     }
 
+    @Override
     public boolean writesValues(String sheetName, String cellAddress, List<List<Object>> values) {
         try {
             var range = sheetName + "!" + cellAddress;
             var body = new ValueRange().setValues(values);
             UpdateValuesResponse result = sheetService.spreadsheets().values()
-                    .update(SheetConfig.getGoogleSheetId(), range, body)
+                    .update(BotConfiguration.getGoogleSheetId(), range, body)
                     .setValueInputOption("RAW")
                     .execute();
             pause();
@@ -38,16 +49,12 @@ public class GoogleSheetUtils {
         return true;
     }
 
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd) {
-        return reagValuesList(sheetName, rangeBegin, rangeEnd, 0);
+    @Override
+    public List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd) {
+        return readValuesList(sheetName, rangeBegin, rangeEnd, 0);
     }
 
-    public List<String> reagValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
-        List<String> valuesList = new LinkedList<>();
-        readValuesRange(sheetName, rangeBegin, rangeEnd).forEach(values -> valuesList.add(!values.isEmpty() && values.size() >= index + 1 ? values.get(index) : ""));
-        return valuesList;
-    }
-
+    @Override
     public List<List<String>> readValuesRange(String sheetName, String rangeBegin, String rangeEnd) {
         List<List<String>> values = new LinkedList<>();
         try {
@@ -57,7 +64,7 @@ public class GoogleSheetUtils {
                     .ofNullable(
                             sheetService.spreadsheets()
                                     .values()
-                                    .get(SheetConfig.getGoogleSheetId(), range)
+                                    .get(BotConfiguration.getGoogleSheetId(), range)
                                     .execute()
                                     .getValues())
                     .orElse(Collections.emptyList());
@@ -74,10 +81,35 @@ public class GoogleSheetUtils {
         return values;
     }
 
+    @Override
+    public LocalDateTime getSheetLastUpdateTime() {
+        LocalDateTime modifiedLocalDateTime;
+        try {
+            var modifiedDateTimeEpoch = driveService
+                    .files()
+                    .get(BotConfiguration.getGoogleSheetId())
+                    .setFields("modifiedTime")
+                    .execute()
+                    .getModifiedTime()
+                    .getValue();
+            var modifiedDateTimeInstant = Instant.ofEpochMilli(modifiedDateTimeEpoch);
+            modifiedLocalDateTime = modifiedDateTimeInstant.atZone(ZoneId.systemDefault()).toLocalDateTime();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return modifiedLocalDateTime;
+    }
+
+    private List<String> readValuesList(String sheetName, String rangeBegin, String rangeEnd, int index) {
+        List<String> valuesList = new LinkedList<>();
+        readValuesRange(sheetName, rangeBegin, rangeEnd).forEach(values -> valuesList.add(!values.isEmpty() && values.size() >= index + 1 ? values.get(index) : ""));
+        return valuesList;
+    }
+
     private void pause() {
         Thread thread = new Thread(() -> {
             try {
-                Thread.sleep(SheetConfig.getGoogleApiPauseLong());
+                Thread.sleep(BotConfiguration.getGoogleApiPauseLong());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

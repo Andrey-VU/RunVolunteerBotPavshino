@@ -1,8 +1,8 @@
 package telegram.bot.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -11,20 +11,16 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
-import telegram.bot.config.BotConfiguration;
-import telegram.bot.config.BotModes;
 
+@Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
-
-    private final static BotModes mode = BotConfiguration.getMode();
+    private final TelegramBotStorage storage;
 
     /**
      * Собственно API бота
      */
     private final TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-
-    private final TelegramBotStorage storage;
 
     /**
      * Токен телеграма
@@ -39,13 +35,13 @@ public class TelegramBot extends TelegramLongPollingBot {
     private String botName;
 
     @Autowired
-    public TelegramBot(@Qualifier("local") TelegramBotStorage storage) throws TelegramApiException {
+    public TelegramBot(TelegramBotStorage storage) throws TelegramApiException {
         this.storage = storage;
     }
 
     @PostConstruct
     private void init() throws TelegramApiException {
-        telegramBotsApi.registerBot(this); // Регистрируем бота
+        // telegramBotsApi.registerBot(this); // Регистрируем бота
     }
 
     @Override

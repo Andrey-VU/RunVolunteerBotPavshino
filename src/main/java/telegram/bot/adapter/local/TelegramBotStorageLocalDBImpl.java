@@ -1,56 +1,12 @@
 package telegram.bot.adapter.local;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import telegram.bot.adapter.TelegramBotStorage;
-import telegram.bot.model.Participation;
-import telegram.bot.model.User;
 import telegram.bot.storage.Storage;
-
-import java.time.LocalDate;
-import java.util.List;
+import telegram.bot.storage.StorageUtils;
 
 @Slf4j
-@Component("local")
-public class TelegramBotStorageLocalDBImpl extends Storage implements TelegramBotStorage {
-
-    @Override
-    public User saveUser(User user) {
-        return null;
-    }
-
-    @Override
-    public User getUserByTelegram(String telegram) {
-        return null;
-    }
-
-    @Override
-    public User getUserByCode(String code) {
-        return null;
-    }
-
-    @Override
-    public List<User> getUsers() {
-        return null;
-    }
-
-    @Override
-    public List<Participation> getParticipantsByDate(LocalDate date) {
-        return null;
-    }
-
-    @Override
-    public List<Participation> getAvailableParticipationByDate(LocalDate date) {
-        return null;
-    }
-
-    @Override
-    public Participation saveParticipation(Participation participation) {
-        return null;
-    }
-
-    @Override
-    public void deleteParticipation(Participation participation) {
-
+public class TelegramBotStorageLocalDBImpl extends Storage {
+    public TelegramBotStorageLocalDBImpl(StorageUtils storageUtils) {
+        this.storageUtils = storageUtils;
     }
 }

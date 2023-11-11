@@ -163,6 +163,8 @@ buildNumber.properties
 .classpath
 
 local_config/
+local_data/
+local_storage/
 bot-config.*
 
 # End of https://www.toptal.com/developers/gitignore/api/java,maven,intellij
