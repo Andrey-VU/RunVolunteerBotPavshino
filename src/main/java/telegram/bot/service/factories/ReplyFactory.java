@@ -55,7 +55,11 @@ public class ReplyFactory {
     }
 
     public SendMessage selectDatesReply(long chatId, Callbackcommands command) {
-        return SendMessage.builder().chatId(chatId).text(SELECT_DATES_MESSAGE).build();
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(SELECT_DATES_MESSAGE)
+                .replyMarkup(keyboardFactory.getFourDatesButton(command))
+                .build();
     }
 
     public SendMessage registrationRequired(long chatId) {
