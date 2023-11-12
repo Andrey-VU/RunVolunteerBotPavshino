@@ -1,6 +1,7 @@
 package telegram.bot.service.factories;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import telegram.bot.service.enums.Callbackcommands;
 
 public class ReplyFactory {
 
@@ -20,6 +21,8 @@ public class ReplyFactory {
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
 
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
+
+    private static final String REGISTERATION_DONE_MESSAGE = "Вы зарегистрированы";
 
     private static final String VOLUNTEER_MESSAGE = "Вы хотите записаться, на участие в марафоне.";
 
@@ -47,12 +50,32 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_MESSAGE).build();
     }
 
-    public SendMessage selectDatesReply(long chatId) {
+    public SendMessage alreadyRegisteredReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ALREADY_REGISTERED_MESSAGE).build();
+    }
+
+    public SendMessage selectDatesReply(long chatId, Callbackcommands command) {
         return SendMessage.builder().chatId(chatId).text(SELECT_DATES_MESSAGE).build();
     }
 
     public SendMessage registrationRequired(long chatId) {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_REQUIRED_MESSAGE).build();
+    }
+
+    public SendMessage enterNameReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ENTER_NAME_MESSAGE).build();
+    }
+
+    public SendMessage enterSurNameReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ENTER_SURNAME_MESSAGE).build();
+    }
+
+    public SendMessage enterCodeReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ENTER_5VERST_CODE_MESSAGE).build();
+    }
+
+    public SendMessage registrationDoneReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTERATION_DONE_MESSAGE).build();
     }
 
     public SendMessage errorMessage(long chatId) {

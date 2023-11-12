@@ -12,6 +12,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
+import telegram.bot.model.User;
+import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
 
 import java.util.AbstractMap;
@@ -68,8 +71,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("recieved update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         if(!isKnownUser(userKeys)) {
+            log.info("user unknown.");
             if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
+                log.info("user unknown /start command.");
                 answerToUser(reply.startCommandReply(getChatId(update)));
+            } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
+                log.info("user unknown /register command.");
+                registration(update);
+                return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
         } else if(update.hasMessage()) {
@@ -128,7 +137,30 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void handleCommand(Update update) {
+        log.info("Hadling command!");
+        long chatId = getChatId(update);
+        Map.Entry<Long, String> userKeys = getUserKeys(update);
+        switch (update.getMessage().getText()) {
+            case "/start" -> {
+                answerToUser(reply.startCommandReply(getChatId(update)));
+            }
+            case "/register" -> {
+                if(storage.getUserByTelegram(userKeys.getValue()) != null) {
+                    answerToUser(reply.alreadyRegisteredReply(chatId));
+                } else {
+                    registration(update);
+                }
+            }
+            case "/show_volunteers" -> {
+                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.SHOW));
+            }
+            case "/volunteer" -> {
 
+            }
+            default -> {
+                answerToUser(reply.commandNeededMessage(chatId));
+            }
+        }
     }
 
     private void handleCallback(Update update) {
@@ -136,7 +168,45 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void registration(Update update) {
-
+        log.info("Registration progress.");
+        long chatId = getChatId(update);
+        Map.Entry<Long, String> userKeys = getUserKeys(update);
+        RegistrationForm form;
+        if (forms.containsKey(userKeys.getKey())) {
+            form = forms.get(userKeys.getKey());
+        } else {
+            form = new RegistrationForm();
+            answerToUser(reply.registerCommandReply(chatId));
+            forms.put(userKeys.getKey(), form);
+        }
+        switch (form.getStage()) {
+            case NEW -> {
+                answerToUser(reply.enterNameReply(chatId));
+                form.setStage(RegistrationStages.NAME);
+            }
+            case NAME -> {
+                form.setName(update.getMessage().getText());
+                answerToUser(reply.enterSurNameReply(chatId));
+                form.setStage(RegistrationStages.SURNAME);
+            }
+            case SURNAME -> {
+                form.setSurname(update.getMessage().getText());
+                answerToUser(reply.enterCodeReply(chatId));
+                form.setStage(RegistrationStages.CODE);
+            }
+            case CODE -> {
+                User user = storage.saveUser(
+                        User.builder()
+                                .name(form.getName())
+                                .surname(form.getSurname())
+                                .code(form.getCode())
+                                .telegram(userKeys.getValue())
+                                .build()
+                );
+                forms.remove(userKeys.getValue());
+                answerToUser(reply.registrationDoneReply(chatId));
+            }
+        }
     }
 
 }
