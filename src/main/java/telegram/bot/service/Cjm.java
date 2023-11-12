@@ -17,8 +17,8 @@ public class Cjm {
         var userId = !Objects.isNull(update.getCallbackQuery()) ? update.getCallbackQuery().getFrom().getId() : update.getMessage().getFrom().getId();
         var buttonName = !Objects.isNull(update.getCallbackQuery()) ? update.getCallbackQuery().getData() : null;
 
-        if (!Objects.isNull(buttonName))
-            bot.sendText(userId, buttonName);
+//        if (!Objects.isNull(buttonName))
+//            bot.sendText(userId, buttonName);
 
         bot.sendMenu(userId, "Выберите действие", elements.getMainMenu());
     }
