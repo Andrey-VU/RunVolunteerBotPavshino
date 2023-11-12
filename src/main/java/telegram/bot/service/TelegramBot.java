@@ -1,5 +1,7 @@
 package telegram.bot.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
+import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.RegistrationStages;
@@ -19,7 +22,9 @@ import telegram.bot.service.factories.ReplyFactory;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -155,7 +160,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.selectDatesReply(chatId, Callbackcommands.SHOW));
             }
             case "/volunteer" -> {
-
+                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.VOLUNTEER));
             }
             default -> {
                 answerToUser(reply.commandNeededMessage(chatId));
@@ -164,7 +169,50 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void handleCallback(Update update) {
-
+        log.info("Hadling command!");
+        long chatId = getChatId(update);
+        Map.Entry<Long, String> userKeys = getUserKeys(update);
+        ObjectMapper mapper = new ObjectMapper();
+        CallbackPayload payload;
+        try {
+             payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error reading payload");
+            return;
+        }
+        switch (payload.getCommand()) {
+            case SHOW -> {
+                answerToUser(
+                        reply.showVolunTeersReply(
+                                chatId,
+                                payload.getDate(),
+                                storage.getParticipantsByDate(payload.getDate())
+                                        .stream()
+                                        .filter(part -> part.getUser() != null)
+                                        .collect(Collectors.toList())));
+            }
+            case VOLUNTEER -> {
+                List<Participation> participations = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getUser() == null)
+                        .toList();
+                if (participations.isEmpty()) {
+                    answerToUser(reply.allSlotsTakenReply(chatId));
+                } else {
+                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), participations));
+                }
+            }
+            case ROLE -> {
+                // Вот тут из-за общей модели проблема
+                int rowNum = storage.getParticipantsByDate(payload.getDate())
+                                .stream()
+                        .filter(participation -> participation.getEventRole().equals(payload.getRole()))
+                                .findFirst().orElseThrow(() -> new RuntimeException("No role!")).getSheetRowNumber();
+                storage.saveParticipation(Participation.builder()
+                        .user(storage.getUserByTelegram(userKeys.getValue()))
+                        .eventDate(payload.getDate()).eventRole(payload.getRole()).sheetRowNumber(rowNum).build());
+            }
+        }
     }
 
     private void registration(Update update) {
@@ -201,6 +249,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 .surname(form.getSurname())
                                 .code(form.getCode())
                                 .telegram(userKeys.getValue())
+                                .comment("useless comment")
                                 .build()
                 );
                 forms.remove(userKeys.getValue());

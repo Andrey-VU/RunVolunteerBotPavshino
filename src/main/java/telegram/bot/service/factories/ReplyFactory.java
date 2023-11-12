@@ -1,7 +1,12 @@
 package telegram.bot.service.factories;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import telegram.bot.model.Participation;
 import telegram.bot.service.enums.Callbackcommands;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class ReplyFactory {
 
@@ -58,7 +63,7 @@ public class ReplyFactory {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(SELECT_DATES_MESSAGE)
-                .replyMarkup(keyboardFactory.getFourDatesButton(command))
+                .replyMarkup(keyboardFactory.getFourDatesMarkup(command))
                 .build();
     }
 
@@ -80,6 +85,25 @@ public class ReplyFactory {
 
     public SendMessage registrationDoneReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(REGISTERATION_DONE_MESSAGE).build();
+    }
+
+    public SendMessage showVolunTeersReply(long chatId, LocalDate date, List<Participation> participats) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("На ").append(date.format(DateTimeFormatter.ISO_LOCAL_DATE)).append(" записаны:\n");
+        for (Participation part : participats) {
+            builder.append(part.getEventRole() + " - ").append(part.getUser().getFullName() + "\n");
+        }
+        return SendMessage.builder().chatId(chatId)
+                .text(builder.toString()).build();
+    }
+
+    public SendMessage allSlotsTakenReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ALL_SLOTS_TAKEN_MESSAGE).build();
+    }
+
+    public SendMessage showVacantRoles(long chatId, LocalDate date, List<Participation> participats) {
+        return SendMessage.builder().chatId(chatId).text(SELECT_ROLE_MESSAGE)
+                .replyMarkup(keyboardFactory.getVacantRolesMarkup(date, participats)).build();
     }
 
     public SendMessage errorMessage(long chatId) {
