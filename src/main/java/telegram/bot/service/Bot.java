@@ -16,12 +16,12 @@ import telegram.bot.config.BotConfiguration;
 @Slf4j
 @Component
 public class Bot extends TelegramLongPollingBot {
-    private final Cjm cjm;
+    private final BotManager botManager;
 
     @Autowired
-    public Bot(Cjm cjm) {
+    public Bot(BotManager botManager) {
         super(BotConfiguration.getTelegramBotToken());
-        this.cjm = cjm;
+        this.botManager = botManager;
     }
 
     @PostConstruct
@@ -36,7 +36,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        cjm.handler(this, update);
+        botManager.handler(this, update);
     }
 
     public void sendMenu(Long userId, String caption, ReplyKeyboard kb) {

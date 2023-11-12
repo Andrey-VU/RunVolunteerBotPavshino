@@ -28,6 +28,10 @@ public class User {
     // Примечание
     private String comment;
 
+    public static User createFrom(String name, String surname, String telegram, String code) {
+        return new User(name, surname, telegram, code, null);
+    }
+
     public static User createFrom(List<String> userProperties) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
         return new User(

@@ -61,10 +61,8 @@ public interface TelegramBotStorage {
      * Записываем участие
      *
      * @param participation - участие
-     * @return Возвращаем участие записанное
-     * Если вернуди null - запсь не уадалсь
      */
-    Participation saveParticipation(Participation participation);
+    void saveParticipation(Participation participation);
 
     /**
      * Отменяем участие

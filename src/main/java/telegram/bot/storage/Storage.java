@@ -77,10 +77,10 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     @Override
-    public Participation saveParticipation(Participation participation) {
-        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return null;
+    public void saveParticipation(Participation participation) {
+        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return;
         var event = events.get(participation.getEventDate());
-        if (Objects.isNull(event)) return null;
+        if (Objects.isNull(event)) return;
 
         var cellAddress = getCellAddress(participation.getSheetRowNumber(), event.getColumnNumber());
 
@@ -89,18 +89,17 @@ public abstract class Storage implements TelegramBotStorage {
                 cellAddress,
                 Optional.ofNullable(participation.getUser())
                         .orElse(User.builder().build())
-                        .getFullName())) return null;
+                        .getFullName())) return;
 
         var participant = event.getParticipants()
                 .stream()
                 .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())
                 .findFirst();
 
-        if (participant.isEmpty()) return null;
+        if (participant.isEmpty()) return;
         else participant.get().setUser(participation.getUser());
         cacheLastUpdateTime = LocalDateTime.now();
 
-        return participation;
     }
 
     @Override

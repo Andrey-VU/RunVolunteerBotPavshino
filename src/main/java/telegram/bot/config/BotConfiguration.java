@@ -65,8 +65,8 @@ public class BotConfiguration {
         return telegramBotStorage;
     }
 
-    public BotConfiguration(@Value("${telegram.bot.token}") String telegram_bot_token,
-                            @Value("${telegram.bot.name}") String telegram_bot_name,
+    public BotConfiguration(@Value("${telegram.token}") String telegram_bot_token,
+                            @Value("${telegram.bot_name}") String telegram_bot_name,
                             @Value("${bot.storage.mode}") String bot_storage_mode,
                             @Value("${bot.storage.sheet.sync.interval.sec}") String bot_storage_sheet_sync_interval_sec,
                             @Value("${google.app.name}") String google_app_name,

@@ -17,7 +17,7 @@ import java.util.List;
 
 @Getter
 @Component
-public class Elements {
+public class BotElement {
     private Collection<InlineKeyboardButton> saturdays;
 
     private InlineKeyboardButton saveChooser;
