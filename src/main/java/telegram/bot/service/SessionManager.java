@@ -53,7 +53,7 @@ public class SessionManager {
             case PROMPT_FOR_SATURDAY -> {
                 switch (session.getBotActionType()) {
                     case SAVE ->
-                            session.setBotActionStage(!Objects.isNull(session.getUser()) ? BotActionStage.PROMPT_FOR_ROLE : BotActionStage.PROMPT_FOR_NAME);
+                            session.setBotActionStage(Objects.isNull(session.getUser()) ? BotActionStage.PROMPT_FOR_NAME : BotActionStage.PROMPT_FOR_ROLE);
                     case SHOW -> session.setBotActionStage(BotActionStage.LIST_BUSY_ROLES);
                 }
             }
