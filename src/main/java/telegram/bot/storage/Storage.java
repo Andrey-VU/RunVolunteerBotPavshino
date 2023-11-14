@@ -34,7 +34,7 @@ public abstract class Storage implements TelegramBotStorage {
                 cellRangeBegin + ":" + cellRangeEnd,
                 List.of(List.of(
                         user.getFullName(),
-                        user.getTelegram(),
+                        user.getUserName(),
                         user.getCode()))))
             return null;
 
@@ -46,7 +46,7 @@ public abstract class Storage implements TelegramBotStorage {
     @Override
     public User getUserByTelegram(String telegram) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
-        return contacts.values().stream().filter(user -> Objects.equals(user.getTelegram(), telegram)).findFirst().orElse(null);
+        return contacts.values().stream().filter(user -> Objects.equals(user.getUserName(), telegram)).findFirst().orElse(null);
     }
 
     @Override
@@ -106,7 +106,7 @@ public abstract class Storage implements TelegramBotStorage {
     public void deleteParticipation(Participation participation) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
         var cellAddress = getCellAddress(participation.getSheetRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
-        if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
+        if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getUserName())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
                     .stream()
                     .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())

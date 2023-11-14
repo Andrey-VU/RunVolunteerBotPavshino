@@ -19,8 +19,11 @@ public class User {
     // Фамилия
     private String surname;
 
-    // Телеграм пользователя
-    private String telegram;
+    // Телеграм пользователя (@userName)
+    private String userName;
+
+    // Телеграм пользователя (userId)
+    private String userId;
 
     // Идентификатор пользователя в системе 5 верст
     private String code;
@@ -28,8 +31,8 @@ public class User {
     // Примечание
     private String comment;
 
-    public static User createFrom(String name, String surname, String telegram, String code) {
-        return new User(name, surname, telegram, code, null);
+    public static User createFrom(String name, String surname, String userName, String code) {
+        return new User(name, surname, userName, null, code, null);
     }
 
     public static User createFrom(List<String> userProperties) {
@@ -38,6 +41,7 @@ public class User {
                 getValueFromList(fullNameList, 0),
                 getValueFromList(fullNameList, 1),
                 getValueFromList(userProperties, 1),
+                null,
                 getValueFromList(userProperties, 2),
                 getValueFromList(userProperties, 3));
     }
@@ -60,7 +64,7 @@ public class User {
 
         if (!name.equals(user.name)) return false;
         if (!surname.equals(user.surname)) return false;
-        if (!telegram.equals(user.telegram)) return false;
+        if (!userName.equals(user.userName)) return false;
         if (!code.equals(user.code)) return false;
         return comment.equals(user.comment);
     }
@@ -69,7 +73,7 @@ public class User {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + surname.hashCode();
-        result = 31 * result + telegram.hashCode();
+        result = 31 * result + userName.hashCode();
         result = 31 * result + code.hashCode();
         result = 31 * result + comment.hashCode();
         return result;

@@ -87,7 +87,7 @@ class Pavshino5verstApplicationTests {
         return User.builder()
                 .name("Петя")
                 .surname("ИВАНОВ" + " " + LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))
-                .telegram("@ivanov")
+                .userName("@ivanov")
                 .code("0000").build();
     }
 

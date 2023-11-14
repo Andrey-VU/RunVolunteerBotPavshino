@@ -177,7 +177,7 @@ public class LocalExcelUtils implements StorageUtils {
             Cell cell = row.createCell(0);
             cell.setCellValue(key);
             cell = row.createCell(1);
-            cell.setCellValue(value.getTelegram());
+            cell.setCellValue(value.getUserName());
             cell = row.createCell(2);
             cell.setCellValue(value.getCode());
             cell = row.createCell(3);
