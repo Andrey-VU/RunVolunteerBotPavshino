@@ -23,7 +23,7 @@ public class User {
     private String userName;
 
     // Телеграм пользователя (userId)
-    private String userId;
+    private Long userId;
 
     // Идентификатор пользователя в системе 5 верст
     private String code;

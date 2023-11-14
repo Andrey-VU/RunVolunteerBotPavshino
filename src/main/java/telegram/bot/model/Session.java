@@ -8,7 +8,7 @@ import telegram.bot.service.enums.BotActionStage;
 
 @Data
 @Builder
-public class BotUser {
+public class Session {
     private Bot bot;
     private User user;
     private BotActionType botActionType;

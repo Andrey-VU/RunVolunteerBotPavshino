@@ -8,8 +8,13 @@ public enum BotActionType {
     SAVE("Записаться в волонтеры"),
     SHOW("Показать, кто уже записан");
 
-    private final String menuCaption = "Выберите действие";
+    @Getter
+    private static final String menuCaption = "Выберите действие";
     private final String buttonCaption;
+
+    public static BotActionType getBotActionType(String botActionTypeValue) {
+        return BotActionType.valueOf(botActionTypeValue);
+    }
 
     BotActionType(String buttonCaption) {
         this.buttonCaption = buttonCaption;
