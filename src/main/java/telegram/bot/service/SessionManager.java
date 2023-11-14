@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.Session;
 import telegram.bot.service.enums.BotActionStage;
@@ -30,24 +29,29 @@ public class SessionManager {
     synchronized public void handler(Bot bot, Update update) {
         var userId = getUser(update).getId();
         var userName = "@" + getUser(update).getUserName();
+        var userInput = !Objects.isNull(update.getCallbackQuery()) ? update.getCallbackQuery().getData() : update.getMessage().getText();
 
-        var session = sessions.putIfAbsent(
-                userId,
-                Session.builder()
-                        .bot(bot)
-                        .user(telegramBotStorage.getUserByTelegram(userName))
-                        .botActionType(BotActionType.UNDEFINED)
-                        .botActionStage(BotActionStage.UNDEFINED)
-                        .build());
+        Session session;
+        if (sessions.containsKey(userId)) {
+            session = sessions.get(userId);
+            session.setLastUserInput(userInput);
+        } else {
+            sessions.put(userId, Session.builder()
+                    .user(telegramBotStorage.getUserByTelegram(userName))
+                    .botActionStage(BotActionStage.UNDEFINED)
+                    .lastUserInput(userInput)
+                    .build());
+            session = sessions.get(userId);
+        }
 
-        assert session != null;
-        chooseNextStage(session);
-        proceedBotAction(session);
+
+        setStage(session);
+        proceedBotAction(bot, session);
     }
 
-    private void chooseNextStage(Session session) {
+    private void setStage(Session session) {
         switch (session.getBotActionStage()) {
-            case UNDEFINED, LIST_BUSY_ROLES, PROMPT_FOR_ROLE ->
+            case UNDEFINED, LIST_BUSY_ROLES, ROLE_CONFIRMATION ->
                     session.setBotActionStage(BotActionStage.PROMPT_FOR_ACTION_TYPE);
             case PROMPT_FOR_ACTION_TYPE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SATURDAY);
             case PROMPT_FOR_SATURDAY -> {
@@ -60,37 +64,38 @@ public class SessionManager {
             case PROMPT_FOR_NAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SURNAME);
             case PROMPT_FOR_SURNAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_CODE);
             case PROMPT_FOR_CODE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_ROLE);
+            case PROMPT_FOR_ROLE -> session.setBotActionStage(BotActionStage.ROLE_CONFIRMATION);
         }
     }
 
-    private void proceedBotAction(Session session) {
+    private void proceedBotAction(Bot bot, Session session) {
         switch (session.getBotActionStage()) {
-            case PROMPT_FOR_ACTION_TYPE -> session.setBotActionType(
-                    BotActionType.getBotActionType(
-                            getUserPressedButton(
-                                    session,
-                                    BotActionType.getMenuCaption(),
-                                    botElement.getMainMenu())));
+            case PROMPT_FOR_ACTION_TYPE ->
+                    bot.sendMenu(session.getUser().getUserId(), BotActionType.getMenuCaption(), botElement.getMainMenu());
             case PROMPT_FOR_SATURDAY -> {
+                session.setBotActionType(BotActionType.getBotActionType(session.getLastUserInput()));
+                // послать меню суббот
             }
             case PROMPT_FOR_NAME -> {
+                // послать промпт для ввода имени
             }
             case PROMPT_FOR_SURNAME -> {
+                // послать промпт для ввода фамилии
             }
             case PROMPT_FOR_CODE -> {
+                // послать промпт для ввода кода
             }
             case PROMPT_FOR_ROLE -> {
+                // созать юзера если его еще нет
+                // послать промпт для выбора роли
+            }
+            case ROLE_CONFIRMATION -> {
+                // вывести
+            }
+            case LIST_BUSY_ROLES -> {
+                // послать список ролей
             }
         }
-    }
-
-    private String getUserPressedButton(Session session, String prompt, ReplyKeyboard replyKeyboard) {
-        session.getBot().sendMenu(session.getUser().getUserId(), prompt, replyKeyboard);
-        return null;
-    }
-
-    private String getUserEnteredString() {
-        return null;
     }
 
     private User getUser(Update update) {

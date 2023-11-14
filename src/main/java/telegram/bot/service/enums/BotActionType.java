@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum BotActionType {
-    UNDEFINED(null),
     SAVE("Записаться в волонтеры"),
     SHOW("Показать, кто уже записан");
 

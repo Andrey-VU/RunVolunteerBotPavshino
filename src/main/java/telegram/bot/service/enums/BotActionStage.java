@@ -8,5 +8,6 @@ public enum BotActionStage {
     PROMPT_FOR_SURNAME,
     PROMPT_FOR_CODE,
     PROMPT_FOR_ROLE,
+    ROLE_CONFIRMATION,
     LIST_BUSY_ROLES
 }
