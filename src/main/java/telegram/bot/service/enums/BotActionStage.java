@@ -1,6 +1,6 @@
 package telegram.bot.service.enums;
 
-public enum BotUserPathStage {
+public enum BotActionStage {
     UNDEFINED,
     PROMPTED_FOR_ACTION_TYPE,
     PROMPTED_FOR_SATURDAY,

@@ -7,18 +7,18 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import telegram.bot.config.BotConfiguration;
+import telegram.bot.service.enums.BotActionType;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 @Getter
 @Component
 public class BotElement {
-    private Collection<InlineKeyboardButton> saturdays;
+    private List<InlineKeyboardButton> saturdays;
 
     private InlineKeyboardButton saveChooser;
     private InlineKeyboardButton showChooser;
@@ -27,13 +27,13 @@ public class BotElement {
     private void init() {
         saturdays = new LinkedList<>();
         saveChooser = InlineKeyboardButton.builder()
-                .text("Записаться в волонтеры")
-                .callbackData("save")
+                .text(BotActionType.SAVE.getButtonCaption())
+                .callbackData(BotActionType.SAVE.name())
                 .build();
 
         showChooser = InlineKeyboardButton.builder()
-                .text("Показать, кто уже записан")
-                .callbackData("show")
+                .text(BotActionType.SHOW.getButtonCaption())
+                .callbackData(BotActionType.SAVE.name())
                 .build();
 
     }
@@ -44,17 +44,24 @@ public class BotElement {
                 .build();
     }
 
-    public Collection<InlineKeyboardButton> getSaturdays() {
+    public ReplyKeyboard getSaturdaysMenu() {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(getSaturdays())
+                .build();
+    }
+
+    public List<InlineKeyboardButton> getSaturdays() {
         saturdays.clear();
 
+        var datePatternString = "dd.MM.yyyy";
         var nextSaturdaysCounter = 0;
         LocalDate saturday = LocalDate.now();
 
         while (nextSaturdaysCounter < BotConfiguration.getSheetSaturdaysAhead()) {
             saturday = getNextSaturday(saturday);
             saturdays.add(InlineKeyboardButton.builder()
-                    .text(saturday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
-                    .callbackData(saturday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
+                    .text(saturday.format(DateTimeFormatter.ofPattern(datePatternString)))
+                    .callbackData(saturday.format(DateTimeFormatter.ofPattern(datePatternString)))
                     .build());
             nextSaturdaysCounter++;
         }

@@ -8,7 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.BotUser;
 import telegram.bot.service.enums.BotActionType;
-import telegram.bot.service.enums.BotUserPathStage;
+import telegram.bot.service.enums.BotActionStage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +35,17 @@ public class BotManager {
                 userId,
                 BotUser.builder()
                         .botActionType(BotActionType.UNDEFINED)
-                        .botUserPathStage(BotUserPathStage.UNDEFINED)
+                        .botActionStage(BotActionStage.UNDEFINED)
                         .user(telegramBotStorage.getUserByTelegram(userName))
                         .build());
 
-        bot.sendMenu(userId, "Выберите действие", botElement.getMainMenu());
+        botActionChooser(botUser);
+
+        bot.sendMenu(userId, BotActionType.SHOW.getMenuCaption(), botElement.getMainMenu());
+    }
+
+    private void botActionChooser(BotUser botUser) {
+
     }
 
     private User getUser(Update update) {
