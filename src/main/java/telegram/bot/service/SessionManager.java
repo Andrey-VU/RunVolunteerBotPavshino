@@ -44,31 +44,11 @@ public class SessionManager {
             session = sessions.get(userId);
         }
 
-
-        setStage(session);
         proceedBotAction(bot, session);
     }
 
-    private void setStage(Session session) {
-        switch (session.getBotActionStage()) {
-            case UNDEFINED, LIST_BUSY_ROLES, ROLE_CONFIRMATION ->
-                    session.setBotActionStage(BotActionStage.PROMPT_FOR_ACTION_TYPE);
-            case PROMPT_FOR_ACTION_TYPE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SATURDAY);
-            case PROMPT_FOR_SATURDAY -> {
-                switch (session.getBotActionType()) {
-                    case SAVE ->
-                            session.setBotActionStage(Objects.isNull(session.getUser()) ? BotActionStage.PROMPT_FOR_NAME : BotActionStage.PROMPT_FOR_ROLE);
-                    case SHOW -> session.setBotActionStage(BotActionStage.LIST_BUSY_ROLES);
-                }
-            }
-            case PROMPT_FOR_NAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SURNAME);
-            case PROMPT_FOR_SURNAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_CODE);
-            case PROMPT_FOR_CODE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_ROLE);
-            case PROMPT_FOR_ROLE -> session.setBotActionStage(BotActionStage.ROLE_CONFIRMATION);
-        }
-    }
-
     private void proceedBotAction(Bot bot, Session session) {
+        setNextStage(session);
         switch (session.getBotActionStage()) {
             case PROMPT_FOR_ACTION_TYPE ->
                     bot.sendMenu(session.getUser().getUserId(), BotActionType.getMenuCaption(), botElement.getMainMenu());
@@ -95,6 +75,25 @@ public class SessionManager {
             case LIST_BUSY_ROLES -> {
                 // послать список ролей
             }
+        }
+    }
+
+    private void setNextStage(Session session) {
+        switch (session.getBotActionStage()) {
+            case UNDEFINED, LIST_BUSY_ROLES, ROLE_CONFIRMATION ->
+                    session.setBotActionStage(BotActionStage.PROMPT_FOR_ACTION_TYPE);
+            case PROMPT_FOR_ACTION_TYPE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SATURDAY);
+            case PROMPT_FOR_SATURDAY -> {
+                switch (session.getBotActionType()) {
+                    case SAVE ->
+                            session.setBotActionStage(Objects.isNull(session.getUser()) ? BotActionStage.PROMPT_FOR_NAME : BotActionStage.PROMPT_FOR_ROLE);
+                    case SHOW -> session.setBotActionStage(BotActionStage.LIST_BUSY_ROLES);
+                }
+            }
+            case PROMPT_FOR_NAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_SURNAME);
+            case PROMPT_FOR_SURNAME -> session.setBotActionStage(BotActionStage.PROMPT_FOR_CODE);
+            case PROMPT_FOR_CODE -> session.setBotActionStage(BotActionStage.PROMPT_FOR_ROLE);
+            case PROMPT_FOR_ROLE -> session.setBotActionStage(BotActionStage.ROLE_CONFIRMATION);
         }
     }
 
