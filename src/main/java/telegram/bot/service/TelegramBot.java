@@ -243,6 +243,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 form.setStage(RegistrationStages.CODE);
             }
             case CODE -> {
+                form.setCode(update.getMessage().getText());
                 User user = storage.saveUser(
                         User.builder()
                                 .name(form.getName())
