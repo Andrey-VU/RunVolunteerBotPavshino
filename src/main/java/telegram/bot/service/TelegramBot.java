@@ -2,6 +2,7 @@ package telegram.bot.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -169,16 +170,19 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void handleCallback(Update update) {
-        log.info("Hadling command!");
+        log.info("Handling command!");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         CallbackPayload payload;
         try {
+            var pr = update.getCallbackQuery().getData();
              payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
         } catch (JsonProcessingException e) {
             log.error("Error reading payload");
-            return;
+            throw new RuntimeException();
+            //return;
         }
         switch (payload.getCommand()) {
             case SHOW -> {
