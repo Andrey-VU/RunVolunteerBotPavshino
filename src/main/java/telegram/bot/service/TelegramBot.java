@@ -114,7 +114,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             this.execute(message);
         } catch (TelegramApiException e) {
-            log.error("Can't send answer! - " + message.toString());
+            throw new RuntimeException();
+            //log.error("Can't send answer! - " + message.toString());
         }
     }
 
@@ -143,7 +144,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void handleCommand(Update update) {
-        log.info("Hadling command!");
+        log.info("Handling command!");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         switch (update.getMessage().getText()) {
@@ -181,8 +182,7 @@ public class TelegramBot extends TelegramLongPollingBot {
              payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
         } catch (JsonProcessingException e) {
             log.error("Error reading payload");
-            throw new RuntimeException();
-            //return;
+            return;
         }
         switch (payload.getCommand()) {
             case SHOW -> {

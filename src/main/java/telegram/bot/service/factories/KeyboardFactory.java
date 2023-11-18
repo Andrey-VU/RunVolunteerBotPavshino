@@ -2,6 +2,7 @@ package telegram.bot.service.factories;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import telegram.bot.model.Participation;
@@ -15,8 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KeyboardFactory {
+    ObjectMapper mapper;
 
-    ObjectMapper mapper = new ObjectMapper();
+    public KeyboardFactory() {
+        mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+    }
 
     public InlineKeyboardMarkup getFourDatesMarkup(Callbackcommands command) {
         List<LocalDate> dates = DatesCalculator.getNextEventDates();
