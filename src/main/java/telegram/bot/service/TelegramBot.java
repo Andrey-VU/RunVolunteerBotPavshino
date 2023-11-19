@@ -211,10 +211,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
-                                .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
+                        .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
                 storage.saveParticipation(Participation.builder()
                         .user(storage.getUserByTelegram(userKeys.getValue()))
                         .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
+                answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole));
             }
         }
     }

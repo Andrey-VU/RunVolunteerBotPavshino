@@ -7,7 +7,8 @@ import java.util.List;
 
 public class DatesCalculator {
 
-    private DatesCalculator() {}
+    private DatesCalculator() {
+    }
 
     public static List<LocalDate> getNextEventDates() {
         LocalDate nearest = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.SATURDAY));

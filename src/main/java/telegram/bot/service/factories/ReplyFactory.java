@@ -106,6 +106,10 @@ public class ReplyFactory {
                 .replyMarkup(keyboardFactory.getVacantRolesMarkup(date, participats)).build();
     }
 
+    public SendMessage roleReservationDoneReply(long chatId, LocalDate eventDate, String eventRole) {
+        return SendMessage.builder().chatId(chatId).text("Вы записаны на " + eventDate.format(DateTimeFormatter.ISO_DATE) + " на позицию " + eventRole).build();
+    }
+
     public SendMessage errorMessage(long chatId) {
         return SendMessage.builder().chatId(chatId).text(ERROR_MESSAGE).build();
     }
