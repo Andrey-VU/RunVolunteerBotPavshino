@@ -31,10 +31,12 @@ public class KeyboardFactory {
     }
 
     public InlineKeyboardMarkup getVacantRolesMarkup(LocalDate date, List<Participation> participations) {
-        return InlineKeyboardMarkup.builder().keyboard(
-                List.of(
-                        participations.stream()
-                                .map(participation -> getRoleButton(date, participation)).toList())).build();
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.setKeyboard(
+                participations.stream()
+                        .map(participation -> List.of(getRoleButton(date, participation)))
+                        .toList());
+        return inlineKeyboardMarkup;
     }
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
