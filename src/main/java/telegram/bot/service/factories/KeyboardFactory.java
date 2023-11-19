@@ -39,7 +39,7 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).role(participation.getEventRole()).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
+                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
         try {
             return InlineKeyboardButton.builder()
                     .text(participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
