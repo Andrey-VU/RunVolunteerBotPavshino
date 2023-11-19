@@ -42,6 +42,8 @@ public class KeyboardFactory {
         CallbackPayload payload = CallbackPayload.builder()
                 .date(date).role(role).command(Callbackcommands.ROLE).build();
         try {
+            //System.out.println(mapper.writeValueAsString(payload).length() + " " + mapper.writeValueAsString(payload));
+
             return InlineKeyboardButton.builder()
                     .text(role).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {

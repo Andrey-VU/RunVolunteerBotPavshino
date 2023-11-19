@@ -1,6 +1,7 @@
 package telegram.bot.service;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,10 +15,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 public class CallbackPayload {
+    @JsonProperty("c")
     private final Callbackcommands command;
 
+    @JsonProperty("d")
     @JsonFormat(pattern = "dd.MM.yyyy")
     private final LocalDate date;
 
+    @JsonProperty("r")
     private String role;
 }

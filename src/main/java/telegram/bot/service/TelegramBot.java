@@ -114,8 +114,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             this.execute(message);
         } catch (TelegramApiException e) {
+            log.error("Can't send answer! - " + message.toString());
             throw new RuntimeException();
-            //log.error("Can't send answer! - " + message.toString());
         }
     }
 
