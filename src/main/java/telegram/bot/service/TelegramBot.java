@@ -76,7 +76,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         log.info("recieved update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
-        if(!isKnownUser(userKeys)) {
+        if (!isKnownUser(userKeys)) {
             log.info("user unknown.");
             if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
                 log.info("user unknown /start command.");
@@ -87,7 +87,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
-        } else if(update.hasMessage()) {
+        } else if (update.hasMessage()) {
             if (update.getMessage().getText().startsWith("/")) {
                 handleCommand(update);
             } else if (forms.containsKey(userKeys.getKey())) {
@@ -95,7 +95,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else {
                 answerToUser(reply.commandNeededMessage(getChatId(update)));
             }
-        } else if(update.hasCallbackQuery()) {
+        } else if (update.hasCallbackQuery()) {
             handleCallback(update);
         }
     }
@@ -152,7 +152,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.startCommandReply(getChatId(update)));
             }
             case "/register" -> {
-                if(storage.getUserByTelegram(userKeys.getValue()) != null) {
+                if (storage.getUserByTelegram(userKeys.getValue()) != null) {
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 } else {
                     registration(update);
@@ -179,7 +179,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         CallbackPayload payload;
         try {
             var pr = update.getCallbackQuery().getData();
-             payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
+            payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
         } catch (JsonProcessingException e) {
             log.error("Error reading payload");
             return;
@@ -208,13 +208,13 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             case ROLE -> {
                 // Вот тут из-за общей модели проблема
-                int rowNum = storage.getParticipantsByDate(payload.getDate())
-                                .stream()
-                        .filter(participation -> participation.getEventRole().equals(payload.getRole()))
-                                .findFirst().orElseThrow(() -> new RuntimeException("No role!")).getSheetRowNumber();
+                String eventRole = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
+                                .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
                 storage.saveParticipation(Participation.builder()
                         .user(storage.getUserByTelegram(userKeys.getValue()))
-                        .eventDate(payload.getDate()).eventRole(payload.getRole()).sheetRowNumber(rowNum).build());
+                        .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
             }
         }
     }

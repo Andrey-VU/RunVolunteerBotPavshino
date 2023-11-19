@@ -12,7 +12,6 @@ import telegram.bot.service.enums.Callbackcommands;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class KeyboardFactory {
@@ -34,18 +33,16 @@ public class KeyboardFactory {
     public InlineKeyboardMarkup getVacantRolesMarkup(LocalDate date, List<Participation> participations) {
         return InlineKeyboardMarkup.builder().keyboard(
                 List.of(
-                    participations.stream()
-                            .map(part -> getRoleButton(date, part.getEventRole())).toList())).build();
+                        participations.stream()
+                                .map(participation -> getRoleButton(date, participation)).toList())).build();
     }
 
-    private InlineKeyboardButton getRoleButton(LocalDate date, String role) {
+    private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).role(role).command(Callbackcommands.ROLE).build();
+                .date(date).role(participation.getEventRole()).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
         try {
-            //System.out.println(mapper.writeValueAsString(payload).length() + " " + mapper.writeValueAsString(payload));
-
             return InlineKeyboardButton.builder()
-                    .text(role).callbackData(mapper.writeValueAsString(payload)).build();
+                    .text(participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

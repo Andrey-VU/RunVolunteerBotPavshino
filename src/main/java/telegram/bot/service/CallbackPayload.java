@@ -1,6 +1,7 @@
 package telegram.bot.service;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,9 @@ public class CallbackPayload {
     @JsonFormat(pattern = "dd.MM.yyyy")
     private final LocalDate date;
 
-    @JsonProperty("r")
+    @JsonIgnore
     private String role;
+
+    @JsonProperty("r")
+    private int sheetRowNumber;
 }
