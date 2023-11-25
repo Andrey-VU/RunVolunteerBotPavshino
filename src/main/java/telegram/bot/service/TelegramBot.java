@@ -21,10 +21,7 @@ import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -207,15 +204,26 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
             case ROLE -> {
-                // Вот тут из-за общей модели проблема
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
                         .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
-                storage.saveParticipation(Participation.builder()
-                        .user(storage.getUserByTelegram(userKeys.getValue()))
-                        .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
-                answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole));
+
+
+                var existingUSer = storage.getParticipantsByDate(payload.getDate()) // берем список участников на указанную субботу
+                        .stream()
+                        .filter(participant -> !Objects.isNull(participant.getUser()))
+                        .filter(participant -> participant.getUser().getTelegram().equals(userKeys.getValue())) // ищем нашего волонтера
+                        .findFirst().orElse(null);
+
+                Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если данный волонтер уже записан на какую роль
+                                answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole())) // тогда отравляем в бот сообщение об этом
+                        , () -> { // иначе записываем его на запрошенную роль
+                            storage.saveParticipation(Participation.builder() // записываем в файл
+                                    .user(storage.getUserByTelegram(userKeys.getValue()))
+                                    .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
+                            answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
+                        });
             }
         }
     }

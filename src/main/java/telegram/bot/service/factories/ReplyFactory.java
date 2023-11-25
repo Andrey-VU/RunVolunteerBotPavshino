@@ -27,19 +27,13 @@ public class ReplyFactory {
 
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
 
-    private static final String REGISTERATION_DONE_MESSAGE = "Вы зарегистрированы";
-
-    private static final String VOLUNTEER_MESSAGE = "Вы хотите записаться, на участие в марафоне.";
+    private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
 
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую.";
 
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
 
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
-
-    private static final String SHOW_PARTICIPANTS_MESSAGE = "На какую дату вас интересует список участников";
-
-    // public static final String PARTICIPATION_SUCCESSFULL_MESSAGE = "В";
 
     private static final String ERROR_MESSAGE = "Что-то пошло не так.";
 
@@ -84,7 +78,7 @@ public class ReplyFactory {
     }
 
     public SendMessage registrationDoneReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(REGISTERATION_DONE_MESSAGE).build();
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_DONE_MESSAGE).build();
     }
 
     public SendMessage showVolunTeersReply(long chatId, LocalDate date, List<Participation> participats) {
@@ -108,6 +102,10 @@ public class ReplyFactory {
 
     public SendMessage roleReservationDoneReply(long chatId, LocalDate eventDate, String eventRole) {
         return SendMessage.builder().chatId(chatId).text("Вы записаны на " + eventDate.format(DateTimeFormatter.ISO_DATE) + " на позицию " + eventRole).build();
+    }
+
+    public SendMessage volunteerIsEngagedAlready(long chatId, LocalDate eventDate, String eventRole) {
+        return SendMessage.builder().chatId(chatId).text(eventDate.format(DateTimeFormatter.ISO_DATE) + " вы уже записаны на роль " + eventRole).build();
     }
 
     public SendMessage errorMessage(long chatId) {
