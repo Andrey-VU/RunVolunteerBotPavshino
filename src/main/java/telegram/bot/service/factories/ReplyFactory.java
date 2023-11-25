@@ -7,7 +7,6 @@ import telegram.bot.service.enums.Callbackcommands;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ReplyFactory {
@@ -103,7 +102,7 @@ public class ReplyFactory {
     }
 
     public SendMessage roleReservationDoneReply(long chatId, LocalDate eventDate, String eventRole) {
-        return SendMessage.builder().chatId(chatId).text("Вы записаны на " + eventDate.format(DateTimeFormatter.ISO_DATE) + " на позицию " + eventRole).build();
+        return SendMessage.builder().chatId(chatId).text("Вы записаны на " + Event.getDateLocalized(eventDate) + " на позицию " + eventRole).build();
     }
 
     public SendMessage volunteerIsEngagedAlready(long chatId, LocalDate eventDate, String eventRole) {
