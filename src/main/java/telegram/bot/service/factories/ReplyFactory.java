@@ -1,9 +1,11 @@
 package telegram.bot.service.factories;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.service.enums.Callbackcommands;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -81,11 +83,11 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_DONE_MESSAGE).build();
     }
 
-    public SendMessage showVolunTeersReply(long chatId, LocalDate date, List<Participation> participats) {
+    public SendMessage showVolunteersReply(long chatId, LocalDate date, List<Participation> participationList) {
         StringBuilder builder = new StringBuilder();
-        builder.append("На ").append(date.format(DateTimeFormatter.ISO_LOCAL_DATE)).append(" записаны:\n");
-        for (Participation part : participats) {
-            builder.append(part.getEventRole() + " - ").append(part.getUser().getFullName() + "\n");
+        builder.append("На ").append(Event.getDateLocalized(date)).append(" записаны:\n\n");
+        for (Participation participation : participationList) {
+            builder.append(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8)).append(" ").append(participation.getEventRole()).append(" - ").append(participation.getUser().getFullName()).append("\n\n");
         }
         return SendMessage.builder().chatId(chatId)
                 .text(builder.toString()).build();
@@ -105,7 +107,7 @@ public class ReplyFactory {
     }
 
     public SendMessage volunteerIsEngagedAlready(long chatId, LocalDate eventDate, String eventRole) {
-        return SendMessage.builder().chatId(chatId).text(eventDate.format(DateTimeFormatter.ISO_DATE) + " вы уже записаны на роль " + eventRole).build();
+        return SendMessage.builder().chatId(chatId).text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x97}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(eventDate) + " вы уже записаны на роль " + eventRole).build();
     }
 
     public SendMessage errorMessage(long chatId) {

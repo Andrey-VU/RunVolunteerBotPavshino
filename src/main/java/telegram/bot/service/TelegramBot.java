@@ -184,7 +184,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         switch (payload.getCommand()) {
             case SHOW -> {
                 answerToUser(
-                        reply.showVolunTeersReply(
+                        reply.showVolunteersReply(
                                 chatId,
                                 payload.getDate(),
                                 storage.getParticipantsByDate(payload.getDate())
