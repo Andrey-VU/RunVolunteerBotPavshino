@@ -180,11 +180,11 @@ public abstract class Storage implements TelegramBotStorage {
         var lastEvent = events.get(events.keySet().stream().max(LocalDate::compareTo).orElse(null));
         var newEventColumnNumber = lastEvent.getColumnNumber() + 1;
         var newEventParticipants = lastEvent.getParticipants().stream()
-                .map(participation -> Participation.builder()
+                .map(lastParticipation -> Participation.builder()
                         .user(null)
                         .eventDate(newEventDate)
-                        .eventRole(participation.getEventRole())
-                        .sheetRowNumber(participation.getSheetRowNumber()).build())
+                        .eventRole(lastParticipation.getEventRole())
+                        .sheetRowNumber(lastParticipation.getSheetRowNumber()).build())
                 .toList();
         var newEvent = Event.builder()
                 .eventDate(newEventDate)
