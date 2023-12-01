@@ -71,7 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        log.info("recieved update!");
+        log.info("received update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         if (!isKnownUser(userKeys)) {
             log.info("user unknown.");
