@@ -65,9 +65,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @PostConstruct
     private void init() throws TelegramApiException {
-        log.info("Registerung bot...");
+        log.info("Registering bot...");
         telegramBotsApi.registerBot(this); // Регистрируем бота
-        log.info("Registrartion successfull!!");
+        log.info("Registration successful!!");
     }
 
     @Override
@@ -233,7 +233,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void makeConfirmation(long chatId, LocalDate date, String eventRole) {   // метод для подтверждения введённых данных
         log.info("Confirmation income data");
         answerToUser(reply.makeConfirmation(chatId, date, eventRole));
-
     }
 
     private void registration(Update update) {

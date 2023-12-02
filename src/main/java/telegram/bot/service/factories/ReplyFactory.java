@@ -24,7 +24,7 @@ public class ReplyFactory {
 
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
 
-    private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные! Вы записываетесь на дату: ";
+    private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы записываетесь на дату: ";
 
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
 
@@ -74,7 +74,9 @@ public class ReplyFactory {
 
     public SendMessage makeConfirmation(long chatId, LocalDate date, String eventRole) {
         return SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
-            + " На роль: \"" + eventRole + "\"").build();
+            + "\nНа роль: \"" + eventRole + "\""
+        + "\nЕсли всё верно, отправьте мне в сообщении: \"Да\"!" +
+            "\nЕсли нужны исправления, сообщите мне своё: \"Нет\"").build();
     }
 
     public SendMessage enterSurNameReply(long chatId) {
