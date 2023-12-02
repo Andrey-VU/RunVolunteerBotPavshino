@@ -10,6 +10,7 @@ import telegram.bot.model.User;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,12 +65,14 @@ public abstract class Storage implements TelegramBotStorage {
     @Override
     public List<Participation> getParticipantsByDate(LocalDate date) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
+        if (Objects.isNull(events.get(date))) addNewEvent(date);
         return events.get(date).getParticipants();
     }
 
     @Override
     public List<Participation> getAvailableParticipationByDate(LocalDate date) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
+        if (Objects.isNull(events.get(date))) addNewEvent(date);
         return events.get(date).getParticipants()
                 .stream()
                 .filter(participation -> Objects.isNull(participation.getUser()))
@@ -164,12 +167,32 @@ public abstract class Storage implements TelegramBotStorage {
 
     protected void loadEvents() {
         log.info("loadEvents is started");
-        events = new HashMap<>();
+        events = new LinkedHashMap<>();
         var eventRoles = getEventRoles();
         var eventDates = getEventDates();
+        addSaturdaysIfNeeded(eventDates);
         var eventVolunteers = getEventVolunteers(eventRoles, eventDates);
         prepareEvents(eventRoles, eventDates, eventVolunteers);
         log.info("loadEvents is finished");
+    }
+
+    protected void addNewEvent(LocalDate newEventDate) {
+        var lastEvent = events.get(events.keySet().stream().max(LocalDate::compareTo).orElse(null));
+        var newEventColumnNumber = lastEvent.getColumnNumber() + 1;
+        var newEventParticipants = lastEvent.getParticipants().stream()
+                .map(lastParticipation -> Participation.builder()
+                        .user(null)
+                        .eventDate(newEventDate)
+                        .eventRole(lastParticipation.getEventRole())
+                        .sheetRowNumber(lastParticipation.getSheetRowNumber()).build())
+                .toList();
+        var newEvent = Event.builder()
+                .eventDate(newEventDate)
+                .columnNumber(newEventColumnNumber)
+                .participants(newEventParticipants).build();
+        events.put(newEventDate, newEvent);
+        var cellAddress = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), newEventColumnNumber);
+        storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, newEventDate.format(BotConfiguration.DATE_FORMATTER));
     }
 
     protected List<String> getEventRoles() {
@@ -181,28 +204,29 @@ public abstract class Storage implements TelegramBotStorage {
     protected List<LocalDate> getEventDates() {
         var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), BotConfiguration.getSheetVolunteersEventColumnStart());
         var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), null);
-        var eventDates = storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd)
+        return storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd)
                 .get(0)
                 .stream()
                 .map(eventDateString -> LocalDate.parse(eventDateString, BotConfiguration.DATE_FORMATTER))
                 .collect(Collectors.toCollection(LinkedList::new));
-        addSaturdaysIfNeeded(eventDates);
-        return eventDates;
     }
 
     protected void addSaturdaysIfNeeded(List<LocalDate> eventDates) {
         var nextSaturdaysCounter = 0;
         var saturdayColumn = BotConfiguration.getSheetVolunteersEventColumnStart();
-        LocalDate saturday = LocalDate.now();
+        LocalDate lastSaturday = null;
         for (LocalDate eventDate : eventDates) {
-            nextSaturdaysCounter += saturday.isEqual(LocalDate.now()) || saturday.isAfter(LocalDate.now()) ? 1 : 0;
+            nextSaturdaysCounter += eventDate.isAfter(LocalDate.now()) ? 1 : 0;
+            lastSaturday = eventDate;
             saturdayColumn++;
         }
+
+        assert lastSaturday != null;
         while (nextSaturdaysCounter < BotConfiguration.getSheetSaturdaysAhead()) {
-            saturday = getNextSaturday(saturday);
+            lastSaturday = lastSaturday.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
             var cellAddress = getCellAddress(BotConfiguration.getSheetVolunteersEventRow(), saturdayColumn++);
-            storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, saturday.format(BotConfiguration.DATE_FORMATTER));
-            eventDates.add(saturday);
+            storageUtils.writeCellValue(BotConfiguration.getSheetVolunteers(), cellAddress, lastSaturday.format(BotConfiguration.DATE_FORMATTER));
+            eventDates.add(lastSaturday);
             nextSaturdaysCounter++;
         }
     }
@@ -238,12 +262,6 @@ public abstract class Storage implements TelegramBotStorage {
                 roleVolunteers.get(roleIndex).size() >= dateIndex + 1
                 ? contacts.get(roleVolunteers.get(roleIndex).get(dateIndex))
                 : null;
-    }
-
-    protected LocalDate getNextSaturday(LocalDate day) {
-        do day = day.plusDays(1);
-        while (day.getDayOfWeek() != DayOfWeek.SATURDAY);
-        return day;
     }
 
     protected String getCellAddress(Integer rowNumber, Integer columnNumber) {
