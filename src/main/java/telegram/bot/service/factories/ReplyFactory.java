@@ -15,14 +15,16 @@ public class ReplyFactory {
             " 5 верст в парке Павшино.";
 
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу." +
-            "Введите комманду /register";
+            "Введите команду /register";
 
-    private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Фамилиля, Имя и ваш код " +
+    private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Имя, Фамилия и ваш код " +
             "в Системе 5 верст";
 
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
 
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
+
+    private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные! Вы записываетесь на дату: ";
 
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
 
@@ -30,15 +32,15 @@ public class ReplyFactory {
 
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
 
-    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую.";
+    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую";
 
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
 
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
 
-    private static final String ERROR_MESSAGE = "Что-то пошло не так.";
+    private static final String ERROR_MESSAGE = "Что-то пошло не так";
 
-    private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
+    private static final String COMMAND_REQUIRED_MESSAGE = "Введите команду!";
 
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
@@ -68,6 +70,11 @@ public class ReplyFactory {
 
     public SendMessage enterNameReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(ENTER_NAME_MESSAGE).build();
+    }
+
+    public SendMessage makeConfirmation(long chatId, LocalDate date, String eventRole) {
+        return SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
+            + " На роль: \"" + eventRole + "\"").build();
     }
 
     public SendMessage enterSurNameReply(long chatId) {

@@ -21,6 +21,7 @@ import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -216,9 +217,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                         .filter(participant -> participant.getUser().getTelegram().equals(userKeys.getValue())) // ищем нашего волонтера
                         .findFirst().orElse(null);
 
-                Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если данный волонтер уже записан на какую роль
+                Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если данный волонтер уже записан на какую-то роль
                                 answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole())) // тогда отравляем в бот сообщение об этом
                         , () -> { // иначе записываем его на запрошенную роль
+                            makeConfirmation(chatId, payload.getDate(), eventRole);
                             storage.saveParticipation(Participation.builder() // записываем в файл
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
@@ -226,6 +228,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                         });
             }
         }
+    }
+
+    private void makeConfirmation(long chatId, LocalDate date, String eventRole) {   // метод для подтверждения введённых данных
+        log.info("Confirmation income data");
+        answerToUser(reply.makeConfirmation(chatId, date, eventRole));
+
     }
 
     private void registration(Update update) {
