@@ -221,6 +221,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole())) // тогда отравляем в бот сообщение об этом
                         , () -> { // иначе записываем его на запрошенную роль
                             makeConfirmation(chatId, payload.getDate(), eventRole);
+
                             storage.saveParticipation(Participation.builder() // записываем в файл
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
@@ -230,10 +231,18 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void makeConfirmation(long chatId, LocalDate date, String eventRole) {   // метод для подтверждения введённых данных
+    /**
+     * Подтверждение введённых пользователем данных
+     * @param date
+     * @param eventRole
+     */
+    private void makeConfirmation(long chatId, LocalDate date, String eventRole) {
         log.info("Confirmation income data");
-        answerToUser(reply.makeConfirmation(chatId, date, eventRole));
+        SendMessage message = reply.makeConfirmation(chatId, date, eventRole);
+
+        answerToUser(message);
     }
+    //.setReplyMarkup()
 
     private void registration(Update update) {
         log.info("Registration progress.");

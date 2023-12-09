@@ -3,6 +3,7 @@ package telegram.bot.service.factories;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import telegram.bot.model.Event;
@@ -13,6 +14,7 @@ import telegram.bot.service.enums.Callbackcommands;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class KeyboardFactory {
@@ -40,12 +42,42 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
+    public InlineKeyboardMarkup getApproveDeclineButtonsMarkup() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.setKeyboard(getApproveDeclineButtons());
+
+        return inlineKeyboardMarkup;
+    }
+
+    private List<List<InlineKeyboardButton>> getApproveDeclineButtons() {
+
+        List<List<InlineKeyboardButton>> approveDeclineButtons = new ArrayList<>();
+        List<InlineKeyboardButton> buttons = new ArrayList<>();
+
+        try {
+            InlineKeyboardButton approveButton = new InlineKeyboardButton("Подтверждаю!");
+            approveButton.setCallbackData("YES");
+            InlineKeyboardButton declineButton = new InlineKeyboardButton("Нужно исправить!");
+            declineButton.setCallbackData("NO");
+
+            buttons.add(approveButton);
+            buttons.add(declineButton);
+
+            approveDeclineButtons.add(buttons);
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+        return approveDeclineButtons;
+    }
+
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
                 .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
         try {
             return InlineKeyboardButton.builder()
-                    .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8) + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
+                    .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
+                        + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

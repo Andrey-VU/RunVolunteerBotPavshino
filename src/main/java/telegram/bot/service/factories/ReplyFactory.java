@@ -73,10 +73,13 @@ public class ReplyFactory {
     }
 
     public SendMessage makeConfirmation(long chatId, LocalDate date, String eventRole) {
-        return SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
-            + "\nНа роль: \"" + eventRole + "\""
-        + "\nЕсли всё верно, отправьте мне в сообщении: \"Да\"!" +
-            "\nЕсли нужны исправления, сообщите мне своё: \"Нет\"").build();
+        SendMessage message = SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
+                + "\nНа роль: \"" + eventRole + "\""
+                + "\nЕсли всё верно, отправьте мне в сообщении: \"Подтверждаю\"!" +
+                "\nЕсли что-то пошло не так, сообщите мне об этом: \"Нужно исправить\"!")
+            .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
+            .build();
+        return message;
     }
 
     public SendMessage enterSurNameReply(long chatId) {
