@@ -42,16 +42,27 @@ public class KeyboardFactory {
     }
 
     public InlineKeyboardMarkup getConfirmationButtons() {
-        return InlineKeyboardMarkup.builder().keyboard(List.of(
-                List.of(
-                        InlineKeyboardButton.builder()
-                                .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
-                                .callbackData(ConfirmationFeedback.YES.name()).build(),
-                        InlineKeyboardButton.builder()
-                                .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
-                                .callbackData(ConfirmationFeedback.NO.name()).build()
-                ))
-        ).build();
+        try {
+            return InlineKeyboardMarkup.builder().keyboard(List.of(
+                    List.of(
+                            InlineKeyboardButton.builder()
+                                    .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
+                                    .callbackData(mapper.writeValueAsString(
+                                            CallbackPayload.builder()
+                                                    .command(Callbackcommands.CONFIRMATION)
+                                                    .confirmationAnswer(ConfirmationFeedback.YES.name()).build())
+                                    ).build(),
+                            InlineKeyboardButton.builder()
+                                    .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
+                                    .callbackData(mapper.writeValueAsString(
+                                            CallbackPayload.builder()
+                                                    .command(Callbackcommands.CONFIRMATION)
+                                                    .confirmationAnswer(ConfirmationFeedback.NO.name()).build())
+                                    ).build()))
+            ).build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {

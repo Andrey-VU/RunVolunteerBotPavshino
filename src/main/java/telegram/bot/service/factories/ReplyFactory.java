@@ -31,6 +31,8 @@ public class ReplyFactory {
 
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
 
+    private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
+
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую.";
 
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
@@ -81,6 +83,10 @@ public class ReplyFactory {
 
     public SendMessage registrationDoneReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_DONE_MESSAGE).build();
+    }
+
+    public SendMessage registrationCancelReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_CANCEL_MESSAGE).build();
     }
 
     public SendMessage showVolunteersReply(long chatId, LocalDate date, List<Participation> participationList) {
