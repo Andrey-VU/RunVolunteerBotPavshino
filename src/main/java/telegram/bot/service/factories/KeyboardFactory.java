@@ -10,6 +10,7 @@ import telegram.bot.model.Participation;
 import telegram.bot.service.CallbackPayload;
 import telegram.bot.service.DatesCalculator;
 import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.ConfirmationFeedback;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -40,6 +41,19 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
+    public InlineKeyboardMarkup getConfirmationButtons() {
+        return InlineKeyboardMarkup.builder().keyboard(List.of(
+                List.of(
+                        InlineKeyboardButton.builder()
+                                .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
+                                .callbackData(ConfirmationFeedback.YES.name()).build(),
+                        InlineKeyboardButton.builder()
+                                .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
+                                .callbackData(ConfirmationFeedback.NO.name()).build()
+                ))
+        ).build();
+    }
+
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
                 .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
@@ -54,9 +68,9 @@ public class KeyboardFactory {
     private InlineKeyboardButton getDateButton(LocalDate date, Callbackcommands command) {
         CallbackPayload payload = CallbackPayload.builder().date(date).command(command).build();
         try {
-            var cation = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);
+            var caption = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);
             return InlineKeyboardButton.builder()
-                    .text(cation)
+                    .text(caption)
                     .callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

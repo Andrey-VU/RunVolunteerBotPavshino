@@ -8,5 +8,7 @@ public enum RegistrationStages {
 
     SURNAME,
 
-    CODE;
+    CODE,
+
+    CONFIRMATION;
 }

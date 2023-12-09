@@ -257,6 +257,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             case CODE -> {
                 form.setCode(update.getMessage().getText());
+                String confirmationMessage = "Сохранить данные: " +
+                        forms.get(userKeys.getKey()).getName() + " " +
+                        forms.get(userKeys.getKey()).getSurname() + ", " +
+                        forms.get(userKeys.getKey()).getCode() + "?";
+                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage));
+                form.setStage(RegistrationStages.CONFIRMATION);
+            }
+            case CONFIRMATION -> {
                 User user = storage.saveUser(
                         User.builder()
                                 .name(form.getName())

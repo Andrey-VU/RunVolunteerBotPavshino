@@ -1,6 +1,7 @@
 package telegram.bot.service.factories;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.service.enums.Callbackcommands;
@@ -115,5 +116,13 @@ public class ReplyFactory {
 
     public SendMessage commandNeededMessage(long chatId) {
         return SendMessage.builder().chatId(chatId).text(COMMAND_REQUIRED_MESSAGE).build();
+    }
+
+    public SendMessage selectConfirmationChoice(long chatId,  String message) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(message)
+                .replyMarkup(keyboardFactory.getConfirmationButtons())
+                .build();
     }
 }
