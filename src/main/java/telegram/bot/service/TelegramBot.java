@@ -277,17 +277,22 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
                 switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
                     case YES -> {
-                        User user = storage.saveUser(
-                                User.builder()
-                                        .name(form.getName())
-                                        .surname(form.getSurname())
-                                        .code(form.getCode())
-                                        .telegram(userKeys.getValue())
-                                        .comment("useless comment")
-                                        .build()
-                        );
-                        forms.remove(userKeys.getValue());
-                        answerToUser(reply.registrationDoneReply(chatId));
+                        if (isNameAndSurnameAreCorrect(form.getName(), form.getSurname())) {
+                            User user = storage.saveUser(
+                                    User.builder()
+                                            .name(form.getName())
+                                            .surname(form.getSurname())
+                                            .code(form.getCode())
+                                            .telegram(userKeys.getValue())
+                                            .comment("useless comment")
+                                            .build()
+                            );
+                            forms.remove(userKeys.getValue());
+                            answerToUser(reply.registrationDoneReply(chatId));
+                        } else {
+                            forms.remove(userKeys.getValue());
+                            answerToUser(reply.registrationErrorReply(chatId));
+                        }
                     }
                     case NO -> {
                         forms.remove(userKeys.getValue());
@@ -296,6 +301,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
         }
+    }
+
+    private boolean isNameAndSurnameAreCorrect(String name, String surname) {
+        return true;
     }
 
 }
