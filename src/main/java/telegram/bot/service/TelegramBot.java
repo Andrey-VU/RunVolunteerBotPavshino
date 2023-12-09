@@ -23,6 +23,7 @@ import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -304,7 +305,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private boolean isNameAndSurnameAreCorrect(String name, String surname) {
-        return true;
+        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-Я]+$", Pattern.UNICODE_CASE);
+        return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
     }
 
 }
