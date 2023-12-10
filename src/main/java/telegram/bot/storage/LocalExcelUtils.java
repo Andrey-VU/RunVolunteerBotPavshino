@@ -141,7 +141,6 @@ public class LocalExcelUtils implements StorageUtils {
                     }
                     cell = (XSSFCell) cells.next();
                     fromRow.add(cell.getStringCellValue());
-                    // System.out.print(cell.getStringCellValue() + " ");
                     columnNum++;
                 }
                 dataFromListExcel.put(rowNum, fromRow);
@@ -230,7 +229,6 @@ public class LocalExcelUtils implements StorageUtils {
                     roleCell.setCellValue(member.getEventRole());
                 }
                 cell.setCellValue(cellValue);
-                // System.out.println(cellValue);
             });
 
         });
@@ -288,7 +286,6 @@ public class LocalExcelUtils implements StorageUtils {
                 while (cells.hasNext()) {
                     cell = (XSSFCell) cells.next();
                     fromRow.add(cell.getStringCellValue());
-                    //System.out.print(cell.getStringCellValue() + " ");
                 }
                 dataFromListExcel.put(countRow, fromRow);
                 countRow++;

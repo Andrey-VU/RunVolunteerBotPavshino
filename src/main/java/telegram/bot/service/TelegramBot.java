@@ -20,7 +20,9 @@ import telegram.bot.model.User;
 import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
+import telegram.bot.storage.OrganizerInformer;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         log.info("received update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
+
         if (!isKnownUser(userKeys)) {
             log.info("user unknown.");
             if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
@@ -81,6 +84,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
                 log.info("user unknown /register command.");
                 registration(update);
+                OrganizerInformer.saveOrganizer(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
                 return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
@@ -223,6 +227,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
+                            informingOrganizers(payload.getDate(), eventRole); // отправляем сообщение организаторам
                         });
             }
         }
@@ -232,6 +237,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Registration progress.");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
+        //  OrganizerInformer.saveOrganizer(userKeys.getValue() + ";" + userKeys.getKey() + System.lineSeparator());
         RegistrationForm form;
         if (forms.containsKey(userKeys.getKey())) {
             form = forms.get(userKeys.getKey());
@@ -271,5 +277,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         }
     }
-
+    private void informingOrganizers(LocalDate date, String eventRole) {
+        List<Long> organizersIds = OrganizerInformer.getOrganizersIds(date);
+        organizersIds.stream().forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId)));
+    }
 }

@@ -40,6 +40,8 @@ public class ReplyFactory {
 
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
 
+    private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = "Произошла запись в волонтеры";
+
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
     public SendMessage startCommandReply(long chatId) {
@@ -115,5 +117,8 @@ public class ReplyFactory {
 
     public SendMessage commandNeededMessage(long chatId) {
         return SendMessage.builder().chatId(chatId).text(COMMAND_REQUIRED_MESSAGE).build();
+    }
+    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE).build();
     }
 }
