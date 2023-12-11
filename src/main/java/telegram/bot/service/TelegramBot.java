@@ -18,10 +18,12 @@ import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.ConfirmationFeedback;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,6 +58,8 @@ public class TelegramBot extends TelegramLongPollingBot {
      */
     private final ReplyFactory reply = new ReplyFactory();
 
+    ObjectMapper mapper = new ObjectMapper();
+
     @Autowired
     public TelegramBot(TelegramBotStorage storage) throws TelegramApiException {
         log.info("Bot bean created");
@@ -67,6 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Registerung bot...");
         telegramBotsApi.registerBot(this); // Регистрируем бота
         log.info("Registrartion successfull!!");
+        mapper.registerModule(new JavaTimeModule());
     }
 
     @Override
@@ -171,8 +176,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Handling command!");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
         CallbackPayload payload;
         try {
             var pr = update.getCallbackQuery().getData();
@@ -225,6 +228,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
                         });
             }
+            case CONFIRMATION -> registration(update);
         }
     }
 
@@ -257,19 +261,52 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             case CODE -> {
                 form.setCode(update.getMessage().getText());
-                User user = storage.saveUser(
-                        User.builder()
-                                .name(form.getName())
-                                .surname(form.getSurname())
-                                .code(form.getCode())
-                                .telegram(userKeys.getValue())
-                                .comment("useless comment")
-                                .build()
-                );
-                forms.remove(userKeys.getValue());
-                answerToUser(reply.registrationDoneReply(chatId));
+                String confirmationMessage = "Сохранить данные: " +
+                        forms.get(userKeys.getKey()).getName() + " " +
+                        forms.get(userKeys.getKey()).getSurname() + ", " +
+                        forms.get(userKeys.getKey()).getCode() + "?";
+                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage));
+                form.setStage(RegistrationStages.CONFIRMATION);
+            }
+            case CONFIRMATION -> {
+                form.setStage(RegistrationStages.NEW);
+                CallbackPayload payload;
+                try {
+                    payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
+                    case YES -> {
+                        if (isNameAndSurnameAreCorrect(form.getName(), form.getSurname())) {
+                            User user = storage.saveUser(
+                                    User.builder()
+                                            .name(form.getName())
+                                            .surname(form.getSurname())
+                                            .code(form.getCode())
+                                            .telegram(userKeys.getValue())
+                                            .comment("useless comment")
+                                            .build()
+                            );
+                            forms.remove(userKeys.getValue());
+                            answerToUser(reply.registrationDoneReply(chatId));
+                        } else {
+                            forms.remove(userKeys.getValue());
+                            answerToUser(reply.registrationErrorReply(chatId));
+                        }
+                    }
+                    case NO -> {
+                        forms.remove(userKeys.getValue());
+                        answerToUser(reply.registrationCancelReply(chatId));
+                    }
+                }
             }
         }
+    }
+
+    private boolean isNameAndSurnameAreCorrect(String name, String surname) {
+        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-Я]+$", Pattern.UNICODE_CASE);
+        return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
     }
 
 }

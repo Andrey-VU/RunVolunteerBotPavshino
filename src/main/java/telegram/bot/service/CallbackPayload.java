@@ -24,4 +24,7 @@ public class CallbackPayload {
 
     @JsonProperty("r")
     private int sheetRowNumber;
+
+    @JsonProperty("a")
+    private String confirmationAnswer;
 }

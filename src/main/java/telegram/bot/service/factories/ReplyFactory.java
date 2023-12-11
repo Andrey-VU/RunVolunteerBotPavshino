@@ -10,36 +10,21 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class ReplyFactory {
-
-    private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон" +
-            " 5 верст в парке Павшино.";
-
-    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу." +
-            "Введите комманду /register";
-
-    private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Фамилиля, Имя и ваш код " +
-            "в Системе 5 верст";
-
+    private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон 5 верст в парке Павшино.";
+    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
+    private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Фамилия, Имя и ваш код в Системе 5 верст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
-
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
-
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
-
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
-
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
-
+    private static final String REGISTRATION_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
+    private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую.";
-
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
-
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
-
     private static final String ERROR_MESSAGE = "Что-то пошло не так.";
-
-    private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
-
+    private static final String COMMAND_REQUIRED_MESSAGE = "Введите команду!";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
     public SendMessage startCommandReply(long chatId) {
@@ -82,6 +67,14 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_DONE_MESSAGE).build();
     }
 
+    public SendMessage registrationErrorReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_ERROR_MESSAGE).build();
+    }
+
+    public SendMessage registrationCancelReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_CANCEL_MESSAGE).build();
+    }
+
     public SendMessage showVolunteersReply(long chatId, LocalDate date, List<Participation> participationList) {
         StringBuilder builder = new StringBuilder();
         builder.append("На ").append(Event.getDateLocalized(date)).append(" записаны:\n\n");
@@ -115,5 +108,13 @@ public class ReplyFactory {
 
     public SendMessage commandNeededMessage(long chatId) {
         return SendMessage.builder().chatId(chatId).text(COMMAND_REQUIRED_MESSAGE).build();
+    }
+
+    public SendMessage selectConfirmationChoice(long chatId, String message) {
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(message)
+                .replyMarkup(keyboardFactory.getConfirmationButtons())
+                .build();
     }
 }
