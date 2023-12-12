@@ -43,9 +43,11 @@ public class OrganizerInformer {
     }
 
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
-        return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName));
+        return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userName));
     }
-
+    boolean isListContainsUserId(List<String> orgInfo, String userId) {
+        return orgInfo.stream().map(OrganizerInformer::userIdFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userId));
+    }
     String userNameFromOrgInfo(String orgInfo) {
         String username = "";
         if (!orgInfo.isBlank()) {
@@ -53,6 +55,14 @@ public class OrganizerInformer {
             username = removeLineSeparator(parts[1]);
         }
         return username;
+    }
+    String userIdFromOrgInfo(String orgInfo) {
+        String userId = "";
+        if (!orgInfo.isBlank()) {
+            String[] parts = orgInfo.split(";");
+            userId = parts[0];
+        }
+        return userId;
     }
 
     private String removeLineSeparator(String line) {

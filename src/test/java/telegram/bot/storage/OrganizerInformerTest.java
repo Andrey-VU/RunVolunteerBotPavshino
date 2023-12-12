@@ -18,11 +18,15 @@ class OrganizerInformerTest {
         List<String> organizers = new ArrayList<>();
         organizers.add(orgInfo);
         organizers.add(orgInfoOther);
-
         assertTrue(OrganizerInformer.isListContainsUserName(organizers, "molyavkin"));
         assertFalse(OrganizerInformer.isListContainsUserName(organizers, "olyavkin"));
         assertTrue(OrganizerInformer.isListContainsUserName(organizers, "username"));
         assertFalse(OrganizerInformer.isListContainsUserName(organizers, "usernam"));
+
+        assertTrue(OrganizerInformer.isListContainsUserId(organizers, "119649111"));
+        assertFalse(OrganizerInformer.isListContainsUserId(organizers, "11964911"));
+        assertTrue(OrganizerInformer.isListContainsUserId(organizers, "111111111"));
+        assertFalse(OrganizerInformer.isListContainsUserId(organizers, "11111111"));
     }
 
     @Test

@@ -208,11 +208,15 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
             case ROLE -> {
+                List<Participation> organizers = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getEventRole().equals("Организатор")) // ищем организаторов на эту дату
+                        .toList();
+
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
                         .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
-
 
                 var existingUSer = storage.getParticipantsByDate(payload.getDate()) // берем список участников на указанную субботу
                         .stream()
@@ -227,7 +231,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
-                            informingOrganizers(payload.getDate(), eventRole); // отправляем сообщение организаторам
+                            informingOrganizers(organizers, payload.getDate(), eventRole); // отправляем сообщение организаторам
                         });
             }
         }
@@ -277,7 +281,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         }
     }
-    private void informingOrganizers(LocalDate date, String eventRole) {
+
+    private void informingOrganizers(List<Participation> organizers, LocalDate date, String eventRole) {
         List<Long> organizersIds = OrganizerInformer.getOrganizersIds(date);
         organizersIds.stream().forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId)));
     }
