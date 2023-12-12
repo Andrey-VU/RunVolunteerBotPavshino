@@ -40,11 +40,11 @@ public class OrganizerInformer {
     }
 
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
-        return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userName));
+        return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName));
     }
 
     boolean isListContainsUserId(List<String> orgInfo, String userId) {
-        return orgInfo.stream().map(OrganizerInformer::userIdFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userId));
+        return orgInfo.stream().map(OrganizerInformer::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId));
     }
 
     String userNameFromOrgInfo(String orgInfo) {
@@ -82,8 +82,6 @@ public class OrganizerInformer {
         } else {
             try {
                 lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-
-                lines.forEach(System.out::println);
             } catch (IOException e) {
                 e.printStackTrace();
             }
