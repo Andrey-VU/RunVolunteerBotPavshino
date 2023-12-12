@@ -118,7 +118,8 @@ public class ReplyFactory {
     public SendMessage commandNeededMessage(long chatId) {
         return SendMessage.builder().chatId(chatId).text(COMMAND_REQUIRED_MESSAGE).build();
     }
-    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE).build();
+
+    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId, LocalDate date) {
+        return SendMessage.builder().chatId(chatId).text(INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE + " на дату " + date).build();
     }
 }

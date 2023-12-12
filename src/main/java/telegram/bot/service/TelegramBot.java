@@ -75,7 +75,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         log.info("received update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
-
         if (!isKnownUser(userKeys)) {
             log.info("user unknown.");
             if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
@@ -84,7 +83,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
                 log.info("user unknown /register command.");
                 registration(update);
-                OrganizerInformer.saveOrganizer(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
+                // OrganizerInformer.saveOrganizer(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
                 return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
@@ -148,6 +147,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Handling command!");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
+        OrganizerInformer.addOrganizer(userKeys);
         switch (update.getMessage().getText()) {
             case "/start" -> {
                 answerToUser(reply.startCommandReply(getChatId(update)));
@@ -241,7 +241,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Registration progress.");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
-        //  OrganizerInformer.saveOrganizer(userKeys.getValue() + ";" + userKeys.getKey() + System.lineSeparator());
         RegistrationForm form;
         if (forms.containsKey(userKeys.getKey())) {
             form = forms.get(userKeys.getKey());
@@ -283,7 +282,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void informingOrganizers(List<Participation> organizers, LocalDate date, String eventRole) {
-        List<Long> organizersIds = OrganizerInformer.getOrganizersIds(date);
-        organizersIds.stream().forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId)));
+        List<Long> organizersIds = OrganizerInformer.getOrganizersIdsTelegram(organizers);
+        organizersIds.forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId, date)));
     }
 }

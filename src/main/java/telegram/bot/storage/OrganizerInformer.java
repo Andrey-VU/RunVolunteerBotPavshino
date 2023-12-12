@@ -2,52 +2,51 @@ package telegram.bot.storage;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import telegram.bot.model.Participation;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
 @UtilityClass
 //@RequiredArgsConstructor
 public class OrganizerInformer {
-    private final Map<String, String> organizers = new HashMap<>();
     // private final String pathToFileOrganizer;
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
 
-    public void saveOrganizer(String organizerId) {
-        if (!isUserCodeInDatabase(organizerId)) {
-            WriteToFile(organizerId);
-            log.info("organizer id saved");
-        }
+    private boolean isUserIdInDatabase(String userId) {
+        List<String> savedOrganizers = ReadFile();
+
+        return isListContainsUserId(savedOrganizers, userId);
     }
 
-    private boolean isUserCodeInDatabase(String userName) {
-        List<String> organizers = ReadFile();
-
-        return isListContainsUserName(organizers, userName);
-    }
-
-    public List<Long> getOrganizersIds(LocalDate date) {
-        List<String> organizers = ReadFile();
-        return organizers.stream().map(OrganizerInformer::idFromOrgInfo).toList();
-    }
 
     private long idFromOrgInfo(String orgInfo) {
         String[] parts = orgInfo.split(";");
         return Long.parseLong(parts[0]);
     }
 
+    long idFromListOrgInfo(List<String> infoOrganizers, String usernameTelegram) {
+
+        return infoOrganizers
+                .stream()
+                .filter(orgInfo -> orgInfo.contains(usernameTelegram))
+                .map(OrganizerInformer::idFromOrgInfo)
+                .findFirst().orElse(0L);
+    }
+
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
         return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userName));
     }
+
     boolean isListContainsUserId(List<String> orgInfo, String userId) {
         return orgInfo.stream().map(OrganizerInformer::userIdFromOrgInfo).peek(System.out::println).anyMatch(l -> l.equalsIgnoreCase(userId));
     }
+
     String userNameFromOrgInfo(String orgInfo) {
         String username = "";
         if (!orgInfo.isBlank()) {
@@ -56,6 +55,7 @@ public class OrganizerInformer {
         }
         return username;
     }
+
     String userIdFromOrgInfo(String orgInfo) {
         String userId = "";
         if (!orgInfo.isBlank()) {
@@ -97,5 +97,25 @@ public class OrganizerInformer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void addOrganizer(Map.Entry<Long, String> userKeys) {
+        if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
+            log.info("Organizer is already recorded");
+        } else {
+            WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
+            log.info("Organizer saved");
+        }
+    }
+
+    public static List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
+        List<String> savedOrganizers = ReadFile();
+        //идем по списку organizers и для каждого достаем код чата из списка savedOrganizers и кладем его в список
+        return organizers.stream()
+                .filter(participant -> !Objects.isNull(participant.getUser()))
+                .map(participant -> participant.getUser().getTelegram())
+                .map(telegram -> idFromListOrgInfo(savedOrganizers, telegram))
+                .filter(id -> !id.equals(0L))
+                .toList();
     }
 }
