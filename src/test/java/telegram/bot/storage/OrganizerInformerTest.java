@@ -14,6 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrganizerInformerTest {
+    private final OrganizerInformer organizerInformer = new OrganizerInformer();
     private final String orgInfo = "119649111" + ";" + "molyavkin" + System.lineSeparator();
     private final String orgInfoOther = "111111111" + ";" + "username" + System.lineSeparator();
     private final String emptyOrgInfoSep = System.lineSeparator();
@@ -58,15 +59,15 @@ class OrganizerInformerTest {
     @Test
     void isListContainsLineTest() {
         List<String> organizers = createOrganizers();
-        assertTrue(OrganizerInformer.isListContainsUserName(organizers, "molyavkin"));
-        assertFalse(OrganizerInformer.isListContainsUserName(organizers, "olyavkin"));
-        assertTrue(OrganizerInformer.isListContainsUserName(organizers, "username"));
-        assertFalse(OrganizerInformer.isListContainsUserName(organizers, "usernam"));
+        assertTrue(organizerInformer.isListContainsUserName(organizers, "molyavkin"));
+        assertFalse(organizerInformer.isListContainsUserName(organizers, "olyavkin"));
+        assertTrue(organizerInformer.isListContainsUserName(organizers, "username"));
+        assertFalse(organizerInformer.isListContainsUserName(organizers, "usernam"));
 
-        assertTrue(OrganizerInformer.isListContainsUserId(organizers, "119649111"));
-        assertFalse(OrganizerInformer.isListContainsUserId(organizers, "11964911"));
-        assertTrue(OrganizerInformer.isListContainsUserId(organizers, "111111111"));
-        assertFalse(OrganizerInformer.isListContainsUserId(organizers, "11111111"));
+        assertTrue(organizerInformer.isListContainsUserId(organizers, "119649111"));
+        assertFalse(organizerInformer.isListContainsUserId(organizers, "11964911"));
+        assertTrue(organizerInformer.isListContainsUserId(organizers, "111111111"));
+        assertFalse(organizerInformer.isListContainsUserId(organizers, "11111111"));
     }
 
     @Test
@@ -89,21 +90,21 @@ class OrganizerInformerTest {
         List<String> organizers = new ArrayList<>();
         organizers.add(orgInfo);
         organizers.add(orgInfoOther);
-        Long id = OrganizerInformer.idFromListOrgInfo(organizers, "molyavkin");
+        Long id = organizerInformer.idFromListOrgInfo(organizers, "molyavkin");
         assertEquals(id, 119649111);
 
-        id = OrganizerInformer.idFromListOrgInfo(organizers, "username");
+        id = organizerInformer.idFromListOrgInfo(organizers, "username");
         assertEquals(id, 111111111);
 
-        id = OrganizerInformer.idFromListOrgInfo(organizers, "unknown");
+        id = organizerInformer.idFromListOrgInfo(organizers, "unknown");
         assertEquals(id, 0L);
     }
 
     @Test
     void userNameFromOrgInfo() {
-        assertEquals(OrganizerInformer.userNameFromOrgInfo(orgInfo), "molyavkin");
-        assertEquals(OrganizerInformer.userNameFromOrgInfo(orgInfoOther), "username");
-        assertEquals(OrganizerInformer.userNameFromOrgInfo(emptyOrgInfoSep), "");
-        assertEquals(OrganizerInformer.userNameFromOrgInfo(emptyOrgInfo), "");
+        assertEquals(organizerInformer.userNameFromOrgInfo(orgInfo), "molyavkin");
+        assertEquals(organizerInformer.userNameFromOrgInfo(orgInfoOther), "username");
+        assertEquals(organizerInformer.userNameFromOrgInfo(emptyOrgInfoSep), "");
+        assertEquals(organizerInformer.userNameFromOrgInfo(emptyOrgInfo), "");
     }
 }

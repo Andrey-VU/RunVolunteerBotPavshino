@@ -47,7 +47,10 @@ public class TelegramBot extends TelegramLongPollingBot {
      */
     @Value("${telegram.bot_name}")
     private String botName;
-
+    /**
+     * Имя файла с телеграм-кодами организаторов
+     */
+    private final String pathToFileOrganizer = "./local_storage/organizer.txt";
     /**
      * Список активных регистраций
      */
@@ -57,6 +60,10 @@ public class TelegramBot extends TelegramLongPollingBot {
      * Класс формирующий ответы
      */
     private final ReplyFactory reply = new ReplyFactory();
+    /**
+     * Класс информирующий организаторов о записи волонтеров
+     */
+    private final OrganizerInformer organizerInformer = new OrganizerInformer();
 
     @Autowired
     public TelegramBot(TelegramBotStorage storage) throws TelegramApiException {
@@ -287,7 +294,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private SendMessage checkOrganizer(Map.Entry<Long, String> userKeys, long chatId) {
 
         List<String> organizers = storage.getOrganizers();
-        switch (OrganizerInformer.addOrganizer(userKeys, organizers)) {
+        switch (organizerInformer.addOrganizer(userKeys, organizers)) {
             case ADD -> {
                 return reply.addOrganizerSignupReply(chatId);
             }
@@ -302,7 +309,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void informingOrganizers(List<Participation> organizers, LocalDate date, String eventRole) {
-        List<Long> organizersIds = OrganizerInformer.getOrganizersIdsTelegram(organizers);
+        List<Long> organizersIds = organizerInformer.getOrganizersIdsTelegram(organizers);
         organizersIds.forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId, date, eventRole)));
     }
 }

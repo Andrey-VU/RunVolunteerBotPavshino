@@ -1,7 +1,8 @@
 package telegram.bot.storage;
 
-import lombok.experimental.UtilityClass;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import telegram.bot.model.Participation;
 import telegram.bot.service.enums.OrganizerResponse;
 
@@ -11,16 +12,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
-@UtilityClass
-//@RequiredArgsConstructor
+@Component
+@RequiredArgsConstructor
 public class OrganizerInformer {
-    // private final String pathToFileOrganizer;
+    //private final Map<Long, String> idStore = new HashMap<>();
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
 
     private boolean isUserIdInDatabase(String userId) {
-        List<String> savedOrganizers = ReadFile();
+        List<String> savedOrganizers = readFile();
 
         return isListContainsUserId(savedOrganizers, userId);
     }
@@ -36,16 +38,16 @@ public class OrganizerInformer {
         return infoOrganizers
                 .stream()
                 .filter(orgInfo -> orgInfo.contains(usernameTelegram))
-                .map(OrganizerInformer::idFromOrgInfo)
+                .map(this::idFromOrgInfo)
                 .findFirst().orElse(0L);
     }
 
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
-        return orgInfo.stream().map(OrganizerInformer::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName));
+        return orgInfo.stream().map(this::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName));
     }
 
     boolean isListContainsUserId(List<String> orgInfo, String userId) {
-        return orgInfo.stream().map(OrganizerInformer::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId));
+        return orgInfo.stream().map(this::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId));
     }
 
     String userNameFromOrgInfo(String orgInfo) {
@@ -73,7 +75,18 @@ public class OrganizerInformer {
         return line;
     }
 
-    private List<String> ReadFile() {
+    private Map<String, Long> prepareIdStore() {
+        Map<String, Long> result = new HashMap<>();
+        List<String> linesFromFile = readFile();
+
+        for (String s : linesFromFile) {
+            result.put(userNameFromOrgInfo(s), Long.valueOf(userIdFromOrgInfo(s)));
+        }
+
+        return result;
+    }
+
+    private List<String> readFile() {
         Path path = Paths.get(pathToFileOrganizer);
         List<String> lines = new ArrayList<>();
 
@@ -98,12 +111,12 @@ public class OrganizerInformer {
         }
     }
 
-    public static OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers) {
+    public OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers) {
         if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
             //userKeys xxxxxxxxx -> molyavkin
             log.info("Organizer is already recorded");
             return OrganizerResponse.PRESENT;
-        } else if (isOrganizer(userKeys.getValue(), organizers)){
+        } else if (isOrganizer(userKeys.getValue(), organizers)) {
             WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
             log.info("Organizer saved");
             return OrganizerResponse.ADD;
@@ -111,14 +124,14 @@ public class OrganizerInformer {
         return OrganizerResponse.REJECT;
     }
 
-    private static boolean isOrganizer(String usernameTelegram, List<String> organizers) {
+    private boolean isOrganizer(String usernameTelegram, List<String> organizers) {
         // TODO: 13.12.2023  To add check contains organizers usernameTelegram
         // you need to add a method that returns telegram by full name
         return true;
     }
 
-    public static List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
-        List<String> savedOrganizers = ReadFile();
+    public List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
+        List<String> savedOrganizers = readFile();
         //идем по списку organizers и для каждого достаем код чата из списка savedOrganizers и кладем его в список
         return organizers.stream()
                 .filter(participant -> !Objects.isNull(participant.getUser()))
