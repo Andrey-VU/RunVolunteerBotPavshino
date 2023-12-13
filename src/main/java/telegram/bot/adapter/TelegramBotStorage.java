@@ -49,6 +49,8 @@ public interface TelegramBotStorage {
      */
     List<Participation> getParticipantsByDate(LocalDate date);
 
+    List<String> getOrganizers();
+
     /**
      * Получаем список свободных позиций на дату
      *

@@ -3,6 +3,7 @@ package telegram.bot.storage;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import telegram.bot.model.Participation;
+import telegram.bot.service.enums.OrganizerResponse;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -97,13 +98,23 @@ public class OrganizerInformer {
         }
     }
 
-    public static void addOrganizer(Map.Entry<Long, String> userKeys) {
+    public static OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers) {
         if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
+            //userKeys xxxxxxxxx -> molyavkin
             log.info("Organizer is already recorded");
-        } else {
+            return OrganizerResponse.PRESENT;
+        } else if (isOrganizer(userKeys.getValue(), organizers)){
             WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
             log.info("Organizer saved");
+            return OrganizerResponse.ADD;
         }
+        return OrganizerResponse.REJECT;
+    }
+
+    private static boolean isOrganizer(String usernameTelegram, List<String> organizers) {
+        // TODO: 13.12.2023  To add check contains organizers usernameTelegram
+        // you need to add a method that returns telegram by full name
+        return true;
     }
 
     public static List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {

@@ -6,5 +6,7 @@ public enum Callbackcommands {
 
     VOLUNTEER,
 
-    ROLE;
+    ROLE,
+
+    ORGANIZER;
 }
