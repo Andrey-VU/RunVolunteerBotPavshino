@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import telegram.bot.model.Participation;
+import telegram.bot.model.User;
 import telegram.bot.service.enums.OrganizerResponse;
 
 import java.io.*;
@@ -12,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -20,6 +20,18 @@ import java.util.stream.Collectors;
 public class OrganizerInformer {
     //private final Map<Long, String> idStore = new HashMap<>();
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
+
+    public String getTelegramByFullName(List<User> users, String fullName) {
+        Optional<User> foundUser = users.stream().filter(user -> user.getFullName().equals(fullName)).findFirst();
+        if (foundUser.isPresent()) {
+            return foundUser.get().getTelegram();
+        }
+        return "Not found";
+    }
+
+    public List<String> getTelegramUsers(List<User> users) {
+        return users.stream().map(user -> user.getTelegram()).toList();
+    }
 
     private boolean isUserIdInDatabase(String userId) {
         List<String> savedOrganizers = readFile();
@@ -139,5 +151,13 @@ public class OrganizerInformer {
                 .map(telegram -> idFromListOrgInfo(savedOrganizers, telegram))
                 .filter(id -> !id.equals(0L))
                 .toList();
+    }
+
+    public String getUserFullNameByTelegram(List<User> allUsers, String telegram) {
+        return allUsers.stream()
+                .map(user->user.getTelegram())
+                .findFirst()
+                .filter(tg->tg.equals(telegram))
+                .orElse("Not found");
     }
 }

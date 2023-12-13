@@ -241,6 +241,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
+
                             informingOrganizers(organizers, payload.getDate(), eventRole); // отправляем сообщение организаторам
                         });
             }
@@ -292,8 +293,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private SendMessage checkOrganizer(Map.Entry<Long, String> userKeys, long chatId) {
-
+        List<User> allUsers = storage.getUsers();
+     //   List<String> usersTelegram = organizerInformer.getTelegramUsers(allUsers);
+        String userFullName = organizerInformer.getUserFullNameByTelegram(allUsers, userKeys.getValue());
         List<String> organizers = storage.getOrganizers();
+      // var v = organizerInformer.getTelegramByFullName()
         switch (organizerInformer.addOrganizer(userKeys, organizers)) {
             case ADD -> {
                 return reply.addOrganizerSignupReply(chatId);
