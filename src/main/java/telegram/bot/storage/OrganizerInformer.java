@@ -104,6 +104,7 @@ public class OrganizerInformer {
             return OrganizerResponse.ADD;
         }
         log.info("User is not added to the file because it is not the organizer");
+
         return OrganizerResponse.REJECT;
     }
 
