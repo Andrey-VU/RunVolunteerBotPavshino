@@ -47,10 +47,7 @@ public class TelegramBot extends TelegramLongPollingBot {
      */
     @Value("${telegram.bot_name}")
     private String botName;
-    /**
-     * Имя файла с телеграм-кодами организаторов
-     */
-    private final String pathToFileOrganizer = "./local_storage/organizer.txt";
+
     /**
      * Список активных регистраций
      */
@@ -294,11 +291,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private SendMessage checkOrganizer(Map.Entry<Long, String> userKeys, long chatId) {
         List<User> allUsers = storage.getUsers();
-     //   List<String> usersTelegram = organizerInformer.getTelegramUsers(allUsers);
-        String userFullName = organizerInformer.getUserFullNameByTelegram(allUsers, userKeys.getValue());
         List<String> organizers = storage.getOrganizers();
-      // var v = organizerInformer.getTelegramByFullName()
-        switch (organizerInformer.addOrganizer(userKeys, organizers)) {
+
+        switch (organizerInformer.addOrganizer(userKeys, organizers, allUsers)) {
             case ADD -> {
                 return reply.addOrganizerSignupReply(chatId);
             }

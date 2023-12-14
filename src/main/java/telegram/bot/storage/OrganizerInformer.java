@@ -18,27 +18,17 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class OrganizerInformer {
-    //private final Map<Long, String> idStore = new HashMap<>();
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
-
-    public String getTelegramByFullName(List<User> users, String fullName) {
-        Optional<User> foundUser = users.stream().filter(user -> user.getFullName().equals(fullName)).findFirst();
-        if (foundUser.isPresent()) {
-            return foundUser.get().getTelegram();
-        }
-        return "Not found";
-    }
-
-    public List<String> getTelegramUsers(List<User> users) {
-        return users.stream().map(user -> user.getTelegram()).toList();
-    }
+//
+//    public List<String> getTelegramUsers(List<User> users) {
+//        return users.stream().map(User::getTelegram).toList();
+//    }
 
     private boolean isUserIdInDatabase(String userId) {
         List<String> savedOrganizers = readFile();
 
         return isListContainsUserId(savedOrganizers, userId);
     }
-
 
     private long idFromOrgInfo(String orgInfo) {
         String[] parts = orgInfo.split(";");
@@ -47,11 +37,7 @@ public class OrganizerInformer {
 
     long idFromListOrgInfo(List<String> infoOrganizers, String usernameTelegram) {
 
-        return infoOrganizers
-                .stream()
-                .filter(orgInfo -> orgInfo.contains(usernameTelegram))
-                .map(this::idFromOrgInfo)
-                .findFirst().orElse(0L);
+        return infoOrganizers.stream().filter(orgInfo -> orgInfo.contains(usernameTelegram)).map(this::idFromOrgInfo).findFirst().orElse(0L);
     }
 
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
@@ -87,17 +73,6 @@ public class OrganizerInformer {
         return line;
     }
 
-    private Map<String, Long> prepareIdStore() {
-        Map<String, Long> result = new HashMap<>();
-        List<String> linesFromFile = readFile();
-
-        for (String s : linesFromFile) {
-            result.put(userNameFromOrgInfo(s), Long.valueOf(userIdFromOrgInfo(s)));
-        }
-
-        return result;
-    }
-
     private List<String> readFile() {
         Path path = Paths.get(pathToFileOrganizer);
         List<String> lines = new ArrayList<>();
@@ -123,23 +98,23 @@ public class OrganizerInformer {
         }
     }
 
-    public OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers) {
+    public OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers, List<User> allUsers) {
         if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
-            //userKeys xxxxxxxxx -> molyavkin
             log.info("Organizer is already recorded");
             return OrganizerResponse.PRESENT;
-        } else if (isOrganizer(userKeys.getValue(), organizers)) {
+        } else if (isOrganizer(userKeys.getValue(), organizers, allUsers)) {
             WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
-            log.info("Organizer saved");
+            log.info("Organizer is already recorded");
             return OrganizerResponse.ADD;
         }
+        log.info("User is not added to the file because it is not the organizer");
         return OrganizerResponse.REJECT;
     }
 
-    private boolean isOrganizer(String usernameTelegram, List<String> organizers) {
-        // TODO: 13.12.2023  To add check contains organizers usernameTelegram
-        // you need to add a method that returns telegram by full name
-        return true;
+    private boolean isOrganizer(String usernameTelegram, List<String> organizers, List<User> allUsers) {
+        String userFullName = getFullNameByTelegram(allUsers, usernameTelegram);
+
+        return organizers.stream().anyMatch(name -> name.equals(userFullName));
     }
 
     public List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
@@ -149,15 +124,11 @@ public class OrganizerInformer {
                 .filter(participant -> !Objects.isNull(participant.getUser()))
                 .map(participant -> participant.getUser().getTelegram())
                 .map(telegram -> idFromListOrgInfo(savedOrganizers, telegram))
-                .filter(id -> !id.equals(0L))
-                .toList();
+                .filter(id -> !id.equals(0L)).toList();
     }
 
-    public String getUserFullNameByTelegram(List<User> allUsers, String telegram) {
-        return allUsers.stream()
-                .map(user->user.getTelegram())
-                .findFirst()
-                .filter(tg->tg.equals(telegram))
-                .orElse("Not found");
+    public String getFullNameByTelegram(List<User> allUsers, String telegram) {
+
+        return allUsers.stream().filter(user -> user.getTelegram().equals(telegram)).map(User::getFullName).findFirst().orElse("Not found");
     }
 }
