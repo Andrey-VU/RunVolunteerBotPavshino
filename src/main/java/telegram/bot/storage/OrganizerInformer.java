@@ -19,10 +19,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrganizerInformer {
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
-//
-//    public List<String> getTelegramUsers(List<User> users) {
-//        return users.stream().map(User::getTelegram).toList();
-//    }
 
     private boolean isUserIdInDatabase(String userId) {
         List<String> savedOrganizers = readFile();
@@ -41,11 +37,11 @@ public class OrganizerInformer {
     }
 
     boolean isListContainsUserName(List<String> orgInfo, String userName) {
-        return orgInfo.stream().map(this::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName));
+        return orgInfo.stream().map(this::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName.trim()));
     }
 
     boolean isListContainsUserId(List<String> orgInfo, String userId) {
-        return orgInfo.stream().map(this::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId));
+        return orgInfo.stream().map(this::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId.trim()));
     }
 
     String userNameFromOrgInfo(String orgInfo) {
@@ -112,14 +108,14 @@ public class OrganizerInformer {
     }
 
     private boolean isOrganizer(String usernameTelegram, List<String> organizers, List<User> allUsers) {
-        String userFullName = getFullNameByTelegram(allUsers, usernameTelegram);
+        String userFullName = getFullNameByTelegram(allUsers, usernameTelegram).trim();
 
-        return organizers.stream().anyMatch(name -> name.equals(userFullName));
+        return organizers.stream().anyMatch(name -> name.equalsIgnoreCase(userFullName.trim()));
     }
 
     public List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
         List<String> savedOrganizers = readFile();
-        //идем по списку organizers и для каждого достаем код чата из списка savedOrganizers и кладем его в список
+
         return organizers.stream()
                 .filter(participant -> !Objects.isNull(participant.getUser()))
                 .map(participant -> participant.getUser().getTelegram())
@@ -127,8 +123,12 @@ public class OrganizerInformer {
                 .filter(id -> !id.equals(0L)).toList();
     }
 
-    public String getFullNameByTelegram(List<User> allUsers, String telegram) {
+    private String getFullNameByTelegram(List<User> allUsers, String telegram) {
 
-        return allUsers.stream().filter(user -> user.getTelegram().equals(telegram)).map(User::getFullName).findFirst().orElse("Not found");
+        return allUsers.stream()
+                .filter(user -> user.getTelegram().equalsIgnoreCase(telegram.trim()))
+                .map(User::getFullName)
+                .findFirst()
+                .orElse("Not found");
     }
 }
