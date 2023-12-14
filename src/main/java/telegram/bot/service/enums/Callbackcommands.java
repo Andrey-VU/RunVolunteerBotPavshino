@@ -8,5 +8,7 @@ public enum Callbackcommands {
 
     ROLE,
 
-    ORGANIZER;
+    ORGANIZER,
+
+    CONFIRMATION;
 }
