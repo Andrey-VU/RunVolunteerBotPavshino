@@ -14,32 +14,22 @@ public class ReplyFactory {
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
     private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Фамилия, Имя и ваш код в Системе 5 верст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
-
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
-
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
-
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
-
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
     private static final String REGISTRATION_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
     private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату все уже нет записей, попробуйте другую.";
-
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
-
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
-
     private static final String ERROR_MESSAGE = "Что-то пошло не так.";
-
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
-
     private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = "Произошла запись в волонтеры на позицию: ";
     private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписались на рассылку уведомлений о записи волонтеров";
     private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
-
     public SendMessage startCommandReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
     }
