@@ -255,11 +255,13 @@ public abstract class Storage implements TelegramBotStorage {
             var eventDate = eventDates.get(dateIndex);
             List<Participation> participants = new LinkedList<>();
             for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) {
-                var eventRole = eventRoles.get(roleIndex);
+                var roleForEvent = eventRoles.get(roleIndex);
+                var userForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers);
+                userForEvent.setIsOrganizer(eventRoles.get(roleIndex).equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()));
                 participants.add(Participation.builder()
                         .eventDate(eventDate)
-                        .eventRole(eventRole)
-                        .user(getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers))
+                        .eventRole(roleForEvent)
+                        .user(userForEvent)
                         .sheetRowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
             }
             events.put(eventDate, Event.builder()
