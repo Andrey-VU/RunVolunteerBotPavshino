@@ -28,6 +28,18 @@ public class User {
     // Примечание
     private String comment;
 
+    // id пользователя в телеграме
+    private Long userId;
+
+    // является ли пользователь организатором в какую-либо из суббот
+    private Boolean isOrganizer;
+
+    // подписан ли пользователь на оповещения о записях на роли
+    private Boolean isSubscribed;
+
+    // номер строки в таблице на закладке "Контакты"
+    private Integer sheetRowNumber;
+
     public static User createFrom(List<String> userProperties) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
         return new User(
@@ -35,7 +47,11 @@ public class User {
                 getValueFromList(fullNameList, 1),
                 getValueFromList(userProperties, 1),
                 getValueFromList(userProperties, 2),
-                getValueFromList(userProperties, 3));
+                getValueFromList(userProperties, 3),
+                Long.parseLong(Optional.ofNullable(getValueFromList(userProperties, 4)).orElse("0")),
+                Boolean.parseBoolean(getValueFromList(userProperties, 5)),
+                Boolean.parseBoolean(getValueFromList(userProperties, 6)),
+                null);
     }
 
     private static String getValueFromList(List<String> list, int elementIndex) {

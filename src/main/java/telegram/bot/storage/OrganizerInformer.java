@@ -20,6 +20,52 @@ import java.util.*;
 public class OrganizerInformer {
     private final String pathToFileOrganizer = "./local_storage/organizer.txt";
 
+    public List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
+        List<String> savedOrganizers = readFile();
+
+        return organizers.stream()
+                .filter(participant -> !Objects.isNull(participant.getUser()))
+                .map(participant -> participant.getUser().getTelegram())
+                .map(telegram -> idFromListOrgInfo(savedOrganizers, telegram))
+                .filter(id -> !id.equals(0L)).toList();
+    }
+
+    public long idFromListOrgInfo(List<String> infoOrganizers, String usernameTelegram) {
+
+        return infoOrganizers.stream().filter(orgInfo -> orgInfo.contains(usernameTelegram)).map(this::idFromOrgInfo).findFirst().orElse(0L);
+    }
+
+    public boolean isListContainsUserName(List<String> orgInfo, String userName) {
+        return orgInfo.stream().map(this::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName.trim()));
+    }
+
+    public boolean isListContainsUserId(List<String> orgInfo, String userId) {
+        return orgInfo.stream().map(this::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId.trim()));
+    }
+
+    public String userNameFromOrgInfo(String orgInfo) {
+        String username = "";
+        if (!orgInfo.isBlank()) {
+            String[] parts = orgInfo.split(";");
+            username = removeLineSeparator(parts[1]);
+        }
+        return username;
+    }
+
+    public OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers, List<User> allUsers) {
+        if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
+            log.info("Organizer is already recorded");
+            return OrganizerResponse.PRESENT;
+        } else if (isOrganizer(userKeys.getValue(), organizers, allUsers)) {
+            WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
+            log.info("Organizer is already recorded");
+            return OrganizerResponse.ADD;
+        }
+        log.info("User is not added to the file because it is not the organizer");
+
+        return OrganizerResponse.REJECT;
+    }
+
     private boolean isUserIdInDatabase(String userId) {
         List<String> savedOrganizers = readFile();
 
@@ -31,29 +77,7 @@ public class OrganizerInformer {
         return Long.parseLong(parts[0]);
     }
 
-    long idFromListOrgInfo(List<String> infoOrganizers, String usernameTelegram) {
-
-        return infoOrganizers.stream().filter(orgInfo -> orgInfo.contains(usernameTelegram)).map(this::idFromOrgInfo).findFirst().orElse(0L);
-    }
-
-    boolean isListContainsUserName(List<String> orgInfo, String userName) {
-        return orgInfo.stream().map(this::userNameFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userName.trim()));
-    }
-
-    boolean isListContainsUserId(List<String> orgInfo, String userId) {
-        return orgInfo.stream().map(this::userIdFromOrgInfo).anyMatch(l -> l.equalsIgnoreCase(userId.trim()));
-    }
-
-    String userNameFromOrgInfo(String orgInfo) {
-        String username = "";
-        if (!orgInfo.isBlank()) {
-            String[] parts = orgInfo.split(";");
-            username = removeLineSeparator(parts[1]);
-        }
-        return username;
-    }
-
-    String userIdFromOrgInfo(String orgInfo) {
+    private String userIdFromOrgInfo(String orgInfo) {
         String userId = "";
         if (!orgInfo.isBlank()) {
             String[] parts = orgInfo.split(";");
@@ -94,34 +118,10 @@ public class OrganizerInformer {
         }
     }
 
-    public OrganizerResponse addOrganizer(Map.Entry<Long, String> userKeys, List<String> organizers, List<User> allUsers) {
-        if (isUserIdInDatabase(String.valueOf(userKeys.getKey()))) {
-            log.info("Organizer is already recorded");
-            return OrganizerResponse.PRESENT;
-        } else if (isOrganizer(userKeys.getValue(), organizers, allUsers)) {
-            WriteToFile(userKeys.getKey() + ";" + userKeys.getValue() + System.lineSeparator());
-            log.info("Organizer is already recorded");
-            return OrganizerResponse.ADD;
-        }
-        log.info("User is not added to the file because it is not the organizer");
-
-        return OrganizerResponse.REJECT;
-    }
-
     private boolean isOrganizer(String usernameTelegram, List<String> organizers, List<User> allUsers) {
         String userFullName = getFullNameByTelegram(allUsers, usernameTelegram).trim();
 
         return organizers.stream().anyMatch(name -> name.equalsIgnoreCase(userFullName.trim()));
-    }
-
-    public List<Long> getOrganizersIdsTelegram(List<Participation> organizers) {
-        List<String> savedOrganizers = readFile();
-
-        return organizers.stream()
-                .filter(participant -> !Objects.isNull(participant.getUser()))
-                .map(participant -> participant.getUser().getTelegram())
-                .map(telegram -> idFromListOrgInfo(savedOrganizers, telegram))
-                .filter(id -> !id.equals(0L)).toList();
     }
 
     private String getFullNameByTelegram(List<User> allUsers, String telegram) {

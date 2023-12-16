@@ -49,6 +49,7 @@ public interface TelegramBotStorage {
      */
     List<Participation> getParticipantsByDate(LocalDate date);
 
+    // получаем список организаторов
     List<String> getOrganizers();
 
     /**
