@@ -22,7 +22,6 @@ import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
-import telegram.bot.storage.OrganizerInformer;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -60,10 +59,6 @@ public class TelegramBot extends TelegramLongPollingBot {
      * Класс формирующий ответы
      */
     private final ReplyFactory reply = new ReplyFactory();
-    /**
-     * Класс информирующий организаторов о записи волонтеров
-     */
-    private final OrganizerInformer organizerInformer = new OrganizerInformer();
 
     ObjectMapper mapper = new ObjectMapper();
 
