@@ -68,6 +68,28 @@ public abstract class Storage implements TelegramBotStorage {
         if (Objects.isNull(events.get(date))) addNewEvent(date);
         return events.get(date).getParticipants();
     }
+    @Override
+    public List<String> getOrganizers() {
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
+
+        return getOrganizersFromGoogleSheet();
+    }
+
+   /* @Override
+    public Map<String, Participation> getAllOrganizers() {
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
+        Map<String, Participation> organizers = new HashMap<>();
+        for (Event event : events.values()) {
+            List<Participation> participations = event.getParticipants();
+            Map<String, Participation> counter = participations..
+            collect(Collectors.toMap(s -> s, s -> 1, Integer::sum));
+            if (CollectionUtils.isNotEmpty(elem)) {
+                fullImagePull.addAll(elem);
+            }
+        }
+        if (Objects.isNull(events.get(date))) addNewEvent(date);
+        return events.get(date).getParticipants();
+    }*/
 
     @Override
     public List<Participation> getAvailableParticipationByDate(LocalDate date) {
@@ -209,6 +231,13 @@ public abstract class Storage implements TelegramBotStorage {
                 .stream()
                 .map(eventDateString -> LocalDate.parse(eventDateString, BotConfiguration.DATE_FORMATTER))
                 .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    protected List<String> getOrganizersFromGoogleSheet() {
+        var rangeBegin = getCellAddress(BotConfiguration.getSheetVolunteersEventRow() + 1, BotConfiguration.getSheetVolunteersEventColumnStart());
+        var rangeEnd = getCellAddress(BotConfiguration.getSheetVolunteersEventRow() + 1, null);
+
+        return new LinkedList<>(storageUtils.readValuesRange(BotConfiguration.getSheetVolunteers(), rangeBegin, rangeEnd).get(0));
     }
 
     protected void addSaturdaysIfNeeded(List<LocalDate> eventDates) {

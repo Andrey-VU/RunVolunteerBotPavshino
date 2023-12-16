@@ -21,7 +21,9 @@ import telegram.bot.service.enums.Callbackcommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
+import telegram.bot.storage.OrganizerInformer;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -57,6 +59,10 @@ public class TelegramBot extends TelegramLongPollingBot {
      * Класс формирующий ответы
      */
     private final ReplyFactory reply = new ReplyFactory();
+    /**
+     * Класс информирующий организаторов о записи волонтеров
+     */
+    private final OrganizerInformer organizerInformer = new OrganizerInformer();
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -86,6 +92,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
                 log.info("user unknown /register command.");
                 registration(update);
+
                 return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
@@ -166,6 +173,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             case "/volunteer" -> {
                 answerToUser(reply.selectDatesReply(chatId, Callbackcommands.VOLUNTEER));
             }
+            case "/organizer" -> {
+                answerToUser(checkOrganizer(userKeys, chatId));
+            }
             default -> {
                 answerToUser(reply.commandNeededMessage(chatId));
             }
@@ -207,6 +217,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
             case ROLE -> {
+                List<Participation> organizers = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getEventRole().equals("Организатор")) // ищем организаторов на эту дату
+                        .toList();
+
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
@@ -226,6 +241,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
+
+                            informingOrganizers(organizers, payload.getDate(), eventRole); // отправляем сообщение организаторам
                         });
             }
             case CONFIRMATION -> registration(update);
@@ -309,4 +326,26 @@ public class TelegramBot extends TelegramLongPollingBot {
         return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
     }
 
+    private SendMessage checkOrganizer(Map.Entry<Long, String> userKeys, long chatId) {
+        List<User> allUsers = storage.getUsers();
+        List<String> organizers = storage.getOrganizers();
+
+        switch (organizerInformer.addOrganizer(userKeys, organizers, allUsers)) {
+            case ADD -> {
+                return reply.addOrganizerSignupReply(chatId);
+            }
+            case PRESENT -> {
+                return reply.alreadyOrganizerSignupReply(chatId);
+            }
+            case REJECT -> {
+                return reply.rejectOrganizerSignupReply(chatId);
+            }
+        }
+        return reply.errorMessage(chatId);
+    }
+
+    private void informingOrganizers(List<Participation> organizers, LocalDate date, String eventRole) {
+        List<Long> organizersIds = organizerInformer.getOrganizersIdsTelegram(organizers);
+        organizersIds.forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId, date, eventRole)));
+    }
 }
