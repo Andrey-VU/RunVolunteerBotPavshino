@@ -9,9 +9,6 @@ import telegram.bot.storage.google.GoogleSheetUtils;
 
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
-
 
 @ExtendWith(SpringExtension.class)
 @TestPropertySource("file:${RunVolunteerBotPavshinoLocalConfigDir}/sheet.properties")

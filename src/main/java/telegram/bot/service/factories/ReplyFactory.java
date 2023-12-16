@@ -30,6 +30,7 @@ public class ReplyFactory {
     private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
+
     public SendMessage startCommandReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
     }
