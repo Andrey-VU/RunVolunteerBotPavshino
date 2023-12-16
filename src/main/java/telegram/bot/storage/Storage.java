@@ -29,19 +29,7 @@ public abstract class Storage implements TelegramBotStorage {
         if (contacts.containsKey(user.getFullName()))
             return null;
 
-        var cellRangeBegin = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
-        var cellRangeEnd = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
-        if (!storageUtils.writesValues(
-                BotConfiguration.getSheetContacts(),
-                cellRangeBegin + ":" + cellRangeEnd,
-                List.of(List.of(
-                        user.getFullName(),
-                        user.getTelegram(),
-                        user.getCode(),
-                        user.getComment(),
-                        user.getUserId(),
-                        user.getIsOrganizer(),
-                        user.getIsSubscribed()))))
+        if (Objects.isNull(mergeUserToSheet(user)))
             return null;
 
         contacts.put(user.getFullName(), user);
@@ -146,20 +134,16 @@ public abstract class Storage implements TelegramBotStorage {
 
     private boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
         if (BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() == 0) return false;
-
-        log.info("checking cache..");
-
+        //log.info("checking cache..");
         var sheetLastUpdateTime = storageUtils.getSheetLastUpdateTime();
-
-        log.info("cacheLastUpdateTime {}: ", cacheLastUpdateTime);
-        log.info("sheetLastUpdateTime {}: ", sheetLastUpdateTime);
-
         if (cacheLastUpdateTime.isBefore(sheetLastUpdateTime)) {
+            log.info("cacheLastUpdateTime {}: ", cacheLastUpdateTime);
+            log.info("sheetLastUpdateTime {}: ", sheetLastUpdateTime);
             log.info("cache is obsoleted");
             loadDataFromStorage();
             return true;
         }
-        log.info("cache is actual");
+        //log.info("cache is actual");
         return false;
     }
 
@@ -251,13 +235,17 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     protected void prepareEvents(List<String> eventRoles, List<LocalDate> eventDates, List<List<String>> eventVolunteers) {
-        for (int dateIndex = 0; dateIndex < eventDates.size(); dateIndex++) {
-            var eventDate = eventDates.get(dateIndex);
-            List<Participation> participants = new LinkedList<>();
-            for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) {
-                var roleForEvent = eventRoles.get(roleIndex);
-                var userForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers);
-                userForEvent.setIsOrganizer(eventRoles.get(roleIndex).equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()));
+        for (int dateIndex = 0; dateIndex < eventDates.size(); dateIndex++) { // идем по датам событий
+            var eventDate = eventDates.get(dateIndex); // берем очередную дату
+            List<Participation> participants = new LinkedList<>(); // инициализируем список участников
+            for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) { // проходим по списку ролей
+                var roleForEvent = eventRoles.get(roleIndex); // берем очередную роль
+                var isOrganizerRole = roleForEvent.equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()); // определяем является ли это ролью Организатора
+                var userForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers); // смотрим кто юзер на эту роль
+                if (isOrganizerRole && Objects.nonNull(userForEvent) && !userForEvent.getIsOrganizer()) { // если сейчас роль Организатора, юзер на нее есть и он как Организатор еще не отмечен (получается, в файле метка у него не стояла)
+                    userForEvent.setIsOrganizer(true); // отмечаем юзера как Организатора
+                    mergeUserToSheet(userForEvent); // обновляем информацию о юзере в файле
+                }
                 participants.add(Participation.builder()
                         .eventDate(eventDate)
                         .eventRole(roleForEvent)
@@ -287,12 +275,31 @@ public abstract class Storage implements TelegramBotStorage {
         return rowAddress + columnAddress;
     }
 
+    protected User mergeUserToSheet(User user) {
+        var cellRangeBegin = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
+        var cellRangeEnd = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
+        if (storageUtils.writesValues(
+                BotConfiguration.getSheetContacts(),
+                cellRangeBegin + ":" + cellRangeEnd,
+                List.of(List.of(
+                        user.getFullName(),
+                        user.getTelegram(),
+                        Optional.ofNullable(user.getCode()).orElse(""),
+                        Optional.ofNullable(user.getComment()).orElse(""),
+                        Optional.ofNullable(user.getUserId()).orElse(0L),
+                        Optional.ofNullable(user.getIsOrganizer()).orElse(false),
+                        Optional.ofNullable(user.getIsSubscribed()).orElse(false)))))
+            return user;
+        else
+            return null;
+    }
+
     class SyncStorageRunner implements Runnable {
         @Override
         public void run() {
             while (true) {
                 try {
-                    log.info("waiting for {} sec", BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() / 1000);
+                    //log.info("waiting for {} sec", BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() / 1000);
                     Thread.sleep(BotConfiguration.getBotStorageSheetSyncIntervalMilliSec());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
