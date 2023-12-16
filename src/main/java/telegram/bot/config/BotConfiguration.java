@@ -31,6 +31,7 @@ public class BotConfiguration {
     private static long GOOGLE_API_PAUSE_LONG;
     private static String GOOGLE_SHEET_ID;
     private static String SHEET_VOLUNTEERS;
+    private static String SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME;
     private static String SHEET_CONTACTS;
     private static int SHEET_CONTACTS_ROW_START;
     private static int SHEET_CONTACTS_COLUMN_FIRST;
@@ -67,6 +68,7 @@ public class BotConfiguration {
                             @Value("${google.api.pause.ms}") String google_api_pause_ms,
                             @Value("${google.sheet.id}") String google_sheet_id,
                             @Value("${sheet.volunteers}") String sheet_volunteers,
+                            @Value("${sheet.volunteers.role.organizer.name}") String sheet_volunteers_role_organizer_name,
                             @Value("${sheet.contacts}") String sheet_contacts,
                             @Value("${sheet.contacts.row.start}") String sheet_contacts_row_start,
                             @Value("${sheet.contacts.column.first}") String sheet_contacts_column_first,
@@ -89,6 +91,7 @@ public class BotConfiguration {
         GOOGLE_API_PAUSE_LONG = Long.parseLong(google_api_pause_ms);
         GOOGLE_SHEET_ID = google_sheet_id;
         SHEET_VOLUNTEERS = sheet_volunteers;
+        SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME = sheet_volunteers_role_organizer_name;
         SHEET_CONTACTS = sheet_contacts;
         SHEET_CONTACTS_ROW_START = Integer.parseInt(sheet_contacts_row_start);
         SHEET_CONTACTS_COLUMN_FIRST = Integer.parseInt(sheet_contacts_column_first);
@@ -122,6 +125,10 @@ public class BotConfiguration {
 
     public static String getSheetVolunteers() {
         return SHEET_VOLUNTEERS;
+    }
+
+    public static String getSheetVolunteersRolesOrganizerName() {
+        return SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME;
     }
 
     public static String getSheetContacts() {

@@ -29,15 +29,19 @@ public abstract class Storage implements TelegramBotStorage {
         if (contacts.containsKey(user.getFullName()))
             return null;
 
-        var cellRangeBegin = getCellAddress(BotConfiguration.getSheetContactsRowStart() + contacts.size(), BotConfiguration.getSheetContactsColumnFirst());
-        var cellRangeEnd = getCellAddress(BotConfiguration.getSheetContactsRowStart() + contacts.size(), BotConfiguration.getSheetContactsColumnLast());
+        var cellRangeBegin = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
+        var cellRangeEnd = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
         if (!storageUtils.writesValues(
                 BotConfiguration.getSheetContacts(),
                 cellRangeBegin + ":" + cellRangeEnd,
                 List.of(List.of(
                         user.getFullName(),
                         user.getTelegram(),
-                        user.getCode()))))
+                        user.getCode(),
+                        user.getComment(),
+                        user.getUserId(),
+                        user.getIsOrganizer(),
+                        user.getIsSubscribed()))))
             return null;
 
         contacts.put(user.getFullName(), user);
