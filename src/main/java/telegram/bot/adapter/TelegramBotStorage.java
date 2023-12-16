@@ -18,6 +18,11 @@ public interface TelegramBotStorage {
      */
     User saveUser(User user);
 
+    // обновляем данные для уже зарегистрированного участника
+    default User updateUser(User user) {
+        return null;
+    }
+
     /**
      * Получаем участника по его телеграму
      *

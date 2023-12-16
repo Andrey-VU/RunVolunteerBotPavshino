@@ -25,16 +25,19 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public User saveUser(User user) {
-        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return null;
-        if (contacts.containsKey(user.getFullName()))
-            return null;
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && !contacts.containsKey(user.getFullName()) && Objects.nonNull(mergeUserToSheet(user))) {
+            contacts.put(user.getFullName(), user);
+            cacheLastUpdateTime = LocalDateTime.now();
+            return user;
+        } else return null;
+    }
 
-        if (Objects.isNull(mergeUserToSheet(user)))
-            return null;
-
-        contacts.put(user.getFullName(), user);
-        cacheLastUpdateTime = LocalDateTime.now();
-        return user;
+    @Override
+    public User updateUser(User user) {
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && Objects.nonNull(mergeUserToSheet(user))) {
+            cacheLastUpdateTime = LocalDateTime.now();
+            return user;
+        } else return null;
     }
 
     @Override

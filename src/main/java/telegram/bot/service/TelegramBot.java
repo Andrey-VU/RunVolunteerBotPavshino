@@ -15,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
+import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 import telegram.bot.service.enums.Callbackcommands;
@@ -173,8 +174,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             case "/volunteer" -> {
                 answerToUser(reply.selectDatesReply(chatId, Callbackcommands.VOLUNTEER));
             }
-            case "/organizer" -> {
-                answerToUser(checkOrganizer(userKeys, chatId));
+            case "/subscribe" -> {
+                replyToSubscriptionRequestor(userKeys, chatId);
             }
             default -> {
                 answerToUser(reply.commandNeededMessage(chatId));
@@ -217,9 +218,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
             case ROLE -> {
-                List<Participation> organizers = storage.getParticipantsByDate(payload.getDate())
+                List<User> organizers = storage.getParticipantsByDate(payload.getDate())
                         .stream()
-                        .filter(part -> part.getEventRole().equals("Организатор")) // ищем организаторов на эту дату
+                        .filter(part -> part.getEventRole().equals(BotConfiguration.getSheetVolunteersRolesOrganizerName())) // ищем организаторов на эту дату
+                        .map(Participation::getUser)
                         .toList();
 
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
@@ -326,26 +328,27 @@ public class TelegramBot extends TelegramLongPollingBot {
         return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
     }
 
-    private SendMessage checkOrganizer(Map.Entry<Long, String> userKeys, long chatId) {
-        List<User> allUsers = storage.getUsers();
-        List<String> organizers = storage.getOrganizers();
-
-        switch (organizerInformer.addOrganizer(userKeys, organizers, allUsers)) {
-            case ADD -> {
-                return reply.addOrganizerSignupReply(chatId);
-            }
-            case PRESENT -> {
-                return reply.alreadyOrganizerSignupReply(chatId);
-            }
-            case REJECT -> {
-                return reply.rejectOrganizerSignupReply(chatId);
-            }
-        }
-        return reply.errorMessage(chatId);
+    private void replyToSubscriptionRequestor(Map.Entry<Long, String> userKeys, long chatId) {
+        storage.getUsers()
+                .stream()
+                .filter(user -> user.getTelegram().equals(userKeys.getValue()))
+                .findAny()
+                .ifPresentOrElse(user -> {
+                            if (user.getIsOrganizer() && !user.getIsSubscribed()) {
+                                answerToUser(reply.addOrganizerSignupReply(chatId));
+                                user.setUserId(userKeys.getKey());
+                                user.setIsSubscribed(true);
+                                storage.updateUser(user);
+                            } else if (user.getIsOrganizer()) answerToUser(reply.alreadyOrganizerSignupReply(chatId));
+                            else answerToUser(reply.rejectOrganizerSignupReply(chatId));
+                        }, () -> answerToUser(reply.registrationRequired(chatId))
+                );
     }
 
-    private void informingOrganizers(List<Participation> organizers, LocalDate date, String eventRole) {
-        List<Long> organizersIds = organizerInformer.getOrganizersIdsTelegram(organizers);
-        organizersIds.forEach(chatId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(chatId, date, eventRole)));
+    private void informingOrganizers(List<User> organizers, LocalDate eventDate, String eventRole) {
+        organizers.stream()
+                .map(User::getUserId)
+                .filter(userId -> userId != 0)
+                .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, eventRole)));
     }
 }

@@ -27,7 +27,7 @@ public class ReplyFactory {
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
     private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = "Произошла запись в волонтеры на позицию: ";
     private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписались на рассылку уведомлений о записи волонтеров";
-    private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны рассылку уведомлений о записи волонтеров";
+    private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
     public SendMessage startCommandReply(long chatId) {
