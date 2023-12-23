@@ -1,13 +1,11 @@
 package telegram.bot.adapter;
 
-import org.springframework.stereotype.Component;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Component
 public interface TelegramBotStorage {
 
     /**

@@ -6,6 +6,7 @@ import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
+import telegram.bot.service.AESUtil;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class Storage implements TelegramBotStorage {
+    protected AESUtil aesUtil;
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
@@ -158,7 +160,7 @@ public abstract class Storage implements TelegramBotStorage {
         AtomicInteger sheetContactsRowStart = new AtomicInteger(BotConfiguration.getSheetContactsRowStart());
         storageUtils.readValuesRange(BotConfiguration.getSheetContacts(), rangeBegin, rangeEnd)
                 .forEach(userProperty -> {
-                    var user = User.createFrom(userProperty);
+                    var user = User.createFrom(userProperty, aesUtil);
                     user.setSheetRowNumber(sheetContactsRowStart.getAndIncrement());
                     contacts.put(user.getFullName(), user);
                 });
@@ -289,7 +291,7 @@ public abstract class Storage implements TelegramBotStorage {
                         user.getTelegram(),
                         Optional.ofNullable(user.getCode()).orElse(""),
                         Optional.ofNullable(user.getComment()).orElse(""),
-                        Optional.ofNullable(user.getUserId()).orElse(0L),
+                        aesUtil.encrypt(String.valueOf(Optional.ofNullable(user.getUserId()).orElse(0L))),
                         Optional.ofNullable(user.getIsOrganizer()).orElse(false),
                         Optional.ofNullable(user.getIsSubscribed()).orElse(false)))))
             return user;
