@@ -25,7 +25,7 @@ public class ReplyFactory {
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
     private static final String ERROR_MESSAGE = "Что-то пошло не так.";
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите комманду!";
-    private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = "Произошла запись в волонтеры на позицию: ";
+    private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = " записался в волонтеры на позицию ";
     private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписались на рассылку уведомлений о записи волонтеров";
     private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
@@ -134,7 +134,7 @@ public class ReplyFactory {
                 .build();
     }
 
-    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId, LocalDate date, String eventRole) {
-        return SendMessage.builder().chatId(chatId).text(INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE + "\"" + eventRole + "\" на дату " + date + "!").build();
+    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId, LocalDate date, String volunteer, String eventRole) {
+        return SendMessage.builder().chatId(chatId).text(volunteer + INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE + "\"" + eventRole + "\" на дату " + date + "!").build();
     }
 }

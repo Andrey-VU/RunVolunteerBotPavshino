@@ -239,7 +239,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
                             answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
 
-                            informingOrganizers(organizers, payload.getDate(), eventRole); // отправляем сообщение организаторам
+                            informingOrganizers(organizers, payload.getDate(), storage.getUserByTelegram(userKeys.getValue()).getFullName(), eventRole); // отправляем сообщение организаторам
                         });
             }
             case CONFIRMATION -> registration(update);
@@ -340,10 +340,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 );
     }
 
-    private void informingOrganizers(List<User> organizers, LocalDate eventDate, String eventRole) {
+    private void informingOrganizers(List<User> organizers, LocalDate eventDate, String volunteer, String eventRole) {
         organizers.stream()
                 .map(User::getUserId)
                 .filter(userId -> userId != 0)
-                .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, eventRole)));
+                .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, volunteer, eventRole)));
     }
 }
