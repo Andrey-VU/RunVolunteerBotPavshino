@@ -319,7 +319,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private boolean isNameAndSurnameAreCorrect(String name, String surname) {
-        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-Я]+$", Pattern.UNICODE_CASE);
+        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-ЯёЁ]+$", Pattern.UNICODE_CASE);
         return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
     }
 
