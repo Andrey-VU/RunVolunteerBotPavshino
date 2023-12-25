@@ -8,6 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.adapter.google.TelegramBotStorageGoogleTableImpl;
 import telegram.bot.adapter.local.TelegramBotStorageLocalDBImpl;
+import telegram.bot.service.AESUtil;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 import telegram.bot.storage.google.GoogleConnection;
@@ -31,6 +32,7 @@ public class BotConfiguration {
     private static long GOOGLE_API_PAUSE_LONG;
     private static String GOOGLE_SHEET_ID;
     private static String SHEET_VOLUNTEERS;
+    private static String SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME;
     private static String SHEET_CONTACTS;
     private static int SHEET_CONTACTS_ROW_START;
     private static int SHEET_CONTACTS_COLUMN_FIRST;
@@ -40,6 +42,8 @@ public class BotConfiguration {
     private static int SHEET_VOLUNTEERS_EVENT_COLUMN_START;
     private static int SHEET_VOLUNTEERS_EVENT_ROW;
     private static int SHEET_SATURDAYS_AHEAD;
+    private static String SHEET_USERID_CRYPT_PASS;
+    private static String SHEET_USERID_CRYPT_SALT;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     @Value("${local.excel.file.path}")
@@ -50,9 +54,9 @@ public class BotConfiguration {
         Storage telegramBotStorage;
 
         if (botStorageMode == BotStorageMode.GOOGLE)
-            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(new GoogleConnection()), new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH));
+            telegramBotStorage = new TelegramBotStorageGoogleTableImpl(new GoogleSheetUtils(new GoogleConnection()), new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH), new AESUtil());
         else if (botStorageMode == BotStorageMode.LOCAL)
-            telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH));
+            telegramBotStorage = new TelegramBotStorageLocalDBImpl(new LocalExcelUtils(LOCAL_EXCEL_FILE_PATH), new AESUtil());
         else throw new RuntimeException("error choosing Storage");
 
         telegramBotStorage.loadDataFromStorage();
@@ -67,6 +71,7 @@ public class BotConfiguration {
                             @Value("${google.api.pause.ms}") String google_api_pause_ms,
                             @Value("${google.sheet.id}") String google_sheet_id,
                             @Value("${sheet.volunteers}") String sheet_volunteers,
+                            @Value("${sheet.volunteers.role.organizer.name}") String sheet_volunteers_role_organizer_name,
                             @Value("${sheet.contacts}") String sheet_contacts,
                             @Value("${sheet.contacts.row.start}") String sheet_contacts_row_start,
                             @Value("${sheet.contacts.column.first}") String sheet_contacts_column_first,
@@ -75,8 +80,9 @@ public class BotConfiguration {
                             @Value("${sheet.volunteers.role.column}") String sheet_volunteers_role_column,
                             @Value("${sheet.volunteers.event.column.start}") String sheet_volunteers_event_column_start,
                             @Value("${sheet.volunteers.event.row}") String sheet_volunteers_event_row,
-                            @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead) {
-
+                            @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead,
+                            @Value("${sheet.userid.crypt.pass}") String sheet_userid_crypt_pass,
+                            @Value("${sheet.userid.crypt.salt}") String sheet_userid_crypt_salt) {
         if (bot_storage_mode.equals(BotStorageMode.GOOGLE.toString()))
             BotConfiguration.botStorageMode = BotStorageMode.GOOGLE;
         else if (bot_storage_mode.equals(BotStorageMode.LOCAL.toString()))
@@ -89,6 +95,7 @@ public class BotConfiguration {
         GOOGLE_API_PAUSE_LONG = Long.parseLong(google_api_pause_ms);
         GOOGLE_SHEET_ID = google_sheet_id;
         SHEET_VOLUNTEERS = sheet_volunteers;
+        SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME = sheet_volunteers_role_organizer_name;
         SHEET_CONTACTS = sheet_contacts;
         SHEET_CONTACTS_ROW_START = Integer.parseInt(sheet_contacts_row_start);
         SHEET_CONTACTS_COLUMN_FIRST = Integer.parseInt(sheet_contacts_column_first);
@@ -98,6 +105,8 @@ public class BotConfiguration {
         SHEET_VOLUNTEERS_EVENT_COLUMN_START = Integer.parseInt(sheet_volunteers_event_column_start);
         SHEET_VOLUNTEERS_EVENT_ROW = Integer.parseInt(sheet_volunteers_event_row);
         SHEET_SATURDAYS_AHEAD = Integer.parseInt(sheet_saturdays_ahead);
+        SHEET_USERID_CRYPT_PASS = sheet_userid_crypt_pass;
+        SHEET_USERID_CRYPT_SALT = sheet_userid_crypt_salt;
     }
 
     public static long getBotStorageSheetSyncIntervalMilliSec() {
@@ -122,6 +131,10 @@ public class BotConfiguration {
 
     public static String getSheetVolunteers() {
         return SHEET_VOLUNTEERS;
+    }
+
+    public static String getSheetVolunteersRolesOrganizerName() {
+        return SHEET_VOLUNTEERS_ROLES_ORGANIZER_NAME;
     }
 
     public static String getSheetContacts() {
@@ -158,5 +171,13 @@ public class BotConfiguration {
 
     public static int getSheetSaturdaysAhead() {
         return SHEET_SATURDAYS_AHEAD;
+    }
+
+    public static String getSheetUseridCryptPass() {
+        return SHEET_USERID_CRYPT_PASS;
+    }
+
+    public static String getSheetUseridCryptSalt() {
+        return SHEET_USERID_CRYPT_SALT;
     }
 }
