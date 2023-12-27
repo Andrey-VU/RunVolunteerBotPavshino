@@ -6,16 +6,19 @@ import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
+import telegram.bot.service.AESUtil;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class Storage implements TelegramBotStorage {
+    protected AESUtil aesUtil;
     protected StorageUtils storageUtils;
     protected Map<String, User> contacts;
     protected Map<LocalDate, Event> events;
@@ -24,24 +27,19 @@ public abstract class Storage implements TelegramBotStorage {
 
     @Override
     public User saveUser(User user) {
-        if (checkIfCacheIsObsoletedAndUpdateIfNeeded()) return null;
-        if (contacts.containsKey(user.getFullName()))
-            return null;
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && !contacts.containsKey(user.getFullName()) && Objects.nonNull(mergeUserToSheet(user))) {
+            contacts.put(user.getFullName(), user);
+            cacheLastUpdateTime = LocalDateTime.now();
+            return user;
+        } else return null;
+    }
 
-        var cellRangeBegin = getCellAddress(BotConfiguration.getSheetContactsRowStart() + contacts.size(), BotConfiguration.getSheetContactsColumnFirst());
-        var cellRangeEnd = getCellAddress(BotConfiguration.getSheetContactsRowStart() + contacts.size(), BotConfiguration.getSheetContactsColumnLast());
-        if (!storageUtils.writesValues(
-                BotConfiguration.getSheetContacts(),
-                cellRangeBegin + ":" + cellRangeEnd,
-                List.of(List.of(
-                        user.getFullName(),
-                        user.getTelegram(),
-                        user.getCode()))))
-            return null;
-
-        contacts.put(user.getFullName(), user);
-        cacheLastUpdateTime = LocalDateTime.now();
-        return user;
+    @Override
+    public User updateUser(User user) {
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && Objects.nonNull(mergeUserToSheet(user))) {
+            cacheLastUpdateTime = LocalDateTime.now();
+            return user;
+        } else return null;
     }
 
     @Override
@@ -67,6 +65,12 @@ public abstract class Storage implements TelegramBotStorage {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
         if (Objects.isNull(events.get(date))) addNewEvent(date);
         return events.get(date).getParticipants();
+    }
+
+    @Override
+    public List<String> getOrganizers() {
+        checkIfCacheIsObsoletedAndUpdateIfNeeded();
+        return null;
     }
 
     @Override
@@ -135,20 +139,16 @@ public abstract class Storage implements TelegramBotStorage {
 
     private boolean checkIfCacheIsObsoletedAndUpdateIfNeeded() {
         if (BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() == 0) return false;
-
-        log.info("checking cache..");
-
+        //log.info("checking cache..");
         var sheetLastUpdateTime = storageUtils.getSheetLastUpdateTime();
-
-        log.info("cacheLastUpdateTime {}: ", cacheLastUpdateTime);
-        log.info("sheetLastUpdateTime {}: ", sheetLastUpdateTime);
-
         if (cacheLastUpdateTime.isBefore(sheetLastUpdateTime)) {
+            log.info("cacheLastUpdateTime {}: ", cacheLastUpdateTime);
+            log.info("sheetLastUpdateTime {}: ", sheetLastUpdateTime);
             log.info("cache is obsoleted");
             loadDataFromStorage();
             return true;
         }
-        log.info("cache is actual");
+        //log.info("cache is actual");
         return false;
     }
 
@@ -157,9 +157,11 @@ public abstract class Storage implements TelegramBotStorage {
         contacts = new HashMap<>();
         var rangeBegin = getCellAddress(BotConfiguration.getSheetContactsRowStart(), BotConfiguration.getSheetContactsColumnFirst());
         var rangeEnd = getCellAddress(null, BotConfiguration.getSheetContactsColumnLast());
+        AtomicInteger sheetContactsRowStart = new AtomicInteger(BotConfiguration.getSheetContactsRowStart());
         storageUtils.readValuesRange(BotConfiguration.getSheetContacts(), rangeBegin, rangeEnd)
                 .forEach(userProperty -> {
-                    var user = User.createFrom(userProperty);
+                    var user = User.createFrom(userProperty, aesUtil);
+                    user.setSheetRowNumber(sheetContactsRowStart.getAndIncrement());
                     contacts.put(user.getFullName(), user);
                 });
         log.info("loadContacts is finished");
@@ -238,15 +240,21 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     protected void prepareEvents(List<String> eventRoles, List<LocalDate> eventDates, List<List<String>> eventVolunteers) {
-        for (int dateIndex = 0; dateIndex < eventDates.size(); dateIndex++) {
-            var eventDate = eventDates.get(dateIndex);
-            List<Participation> participants = new LinkedList<>();
-            for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) {
-                var eventRole = eventRoles.get(roleIndex);
+        for (int dateIndex = 0; dateIndex < eventDates.size(); dateIndex++) { // идем по датам событий
+            var eventDate = eventDates.get(dateIndex); // берем очередную дату
+            List<Participation> participants = new LinkedList<>(); // инициализируем список участников
+            for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) { // проходим по списку ролей
+                var roleForEvent = eventRoles.get(roleIndex); // берем очередную роль
+                var isOrganizerRole = roleForEvent.equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()); // определяем является ли это ролью Организатора
+                var userForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers); // смотрим кто юзер на эту роль
+                if (isOrganizerRole && Objects.nonNull(userForEvent) && !userForEvent.getIsOrganizer()) { // если сейчас роль Организатора, юзер на нее есть и он как Организатор еще не отмечен (получается, в файле метка у него не стояла)
+                    userForEvent.setIsOrganizer(true); // отмечаем юзера как Организатора
+                    mergeUserToSheet(userForEvent); // обновляем информацию о юзере в файле
+                }
                 participants.add(Participation.builder()
                         .eventDate(eventDate)
-                        .eventRole(eventRole)
-                        .user(getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers))
+                        .eventRole(roleForEvent)
+                        .user(userForEvent)
                         .sheetRowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
             }
             events.put(eventDate, Event.builder()
@@ -272,12 +280,31 @@ public abstract class Storage implements TelegramBotStorage {
         return rowAddress + columnAddress;
     }
 
+    protected User mergeUserToSheet(User user) {
+        var cellRangeBegin = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
+        var cellRangeEnd = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
+        if (storageUtils.writesValues(
+                BotConfiguration.getSheetContacts(),
+                cellRangeBegin + ":" + cellRangeEnd,
+                List.of(List.of(
+                        user.getFullName(),
+                        user.getTelegram(),
+                        Optional.ofNullable(user.getCode()).orElse(""),
+                        Optional.ofNullable(user.getComment()).orElse(""),
+                        aesUtil.encrypt(String.valueOf(Optional.ofNullable(user.getUserId()).orElse(0L))),
+                        Optional.ofNullable(user.getIsOrganizer()).orElse(false),
+                        Optional.ofNullable(user.getIsSubscribed()).orElse(false)))))
+            return user;
+        else
+            return null;
+    }
+
     class SyncStorageRunner implements Runnable {
         @Override
         public void run() {
             while (true) {
                 try {
-                    log.info("waiting for {} sec", BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() / 1000);
+                    //log.info("waiting for {} sec", BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() / 1000);
                     Thread.sleep(BotConfiguration.getBotStorageSheetSyncIntervalMilliSec());
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);

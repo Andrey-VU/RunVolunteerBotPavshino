@@ -28,6 +28,10 @@ public class ReplyFactory {
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
     private static final String ERROR_MESSAGE = "Что-то пошло не так";
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите команду!";
+    private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = " регистрируется в волонтеры на позицию ";
+    private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписаны на рассылку уведомлений о записи волонтеров";
+    private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
+    private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
     public SendMessage startCommandReply(long chatId) {
@@ -40,6 +44,18 @@ public class ReplyFactory {
 
     public SendMessage alreadyRegisteredReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(ALREADY_REGISTERED_MESSAGE).build();
+    }
+
+    public SendMessage addOrganizerSignupReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ORG_ADD_SIGNUP_MESSAGE).build();
+    }
+
+    public SendMessage alreadyOrganizerSignupReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ORG_ALREADY_SIGNUP_MESSAGE).build();
+    }
+
+    public SendMessage rejectOrganizerSignupReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(ORG_REJECT_SIGNUP_MESSAGE).build();
     }
 
     public SendMessage selectDatesReply(long chatId, Callbackcommands command) {
@@ -129,5 +145,9 @@ public class ReplyFactory {
                 .text(message)
                 .replyMarkup(keyboardFactory.getConfirmationButtons())
                 .build();
+    }
+
+    public SendMessage informOrgAboutJoinVolunteersMessage(long chatId, LocalDate date, String volunteer, String eventRole) {
+        return SendMessage.builder().chatId(chatId).text(volunteer + INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE + "\"" + eventRole + "\" на дату " + date + "!").build();
     }
 }

@@ -1,13 +1,11 @@
 package telegram.bot.adapter;
 
-import org.springframework.stereotype.Component;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Component
 public interface TelegramBotStorage {
 
     /**
@@ -17,6 +15,11 @@ public interface TelegramBotStorage {
      * @return Возвращает участника
      */
     User saveUser(User user);
+
+    // обновляем данные для уже зарегистрированного участника
+    default User updateUser(User user) {
+        return null;
+    }
 
     /**
      * Получаем участника по его телеграму
@@ -48,6 +51,9 @@ public interface TelegramBotStorage {
      * @return Список участников
      */
     List<Participation> getParticipantsByDate(LocalDate date);
+
+    // получаем список организаторов
+    List<String> getOrganizers();
 
     /**
      * Получаем список свободных позиций на дату

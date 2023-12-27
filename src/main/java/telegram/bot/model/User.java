@@ -3,6 +3,7 @@ package telegram.bot.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import telegram.bot.service.AESUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,14 +29,30 @@ public class User {
     // Примечание
     private String comment;
 
-    public static User createFrom(List<String> userProperties) {
+    // id пользователя в телеграме
+    private Long userId;
+
+    // является ли пользователь организатором в какую-либо из суббот
+    private Boolean isOrganizer;
+
+    // подписан ли пользователь на оповещения о записях на роли
+    private Boolean isSubscribed;
+
+    // номер строки в таблице на закладке "Контакты"
+    private Integer sheetRowNumber;
+
+    public static User createFrom(List<String> userProperties, AESUtil aesUtil) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
         return new User(
                 getValueFromList(fullNameList, 0),
                 getValueFromList(fullNameList, 1),
                 getValueFromList(userProperties, 1),
                 getValueFromList(userProperties, 2),
-                getValueFromList(userProperties, 3));
+                getValueFromList(userProperties, 3),
+                Long.parseLong(aesUtil.decrypt(Optional.ofNullable(getValueFromList(userProperties, 4)).orElse(aesUtil.encrypt("0")))),
+                Boolean.parseBoolean(getValueFromList(userProperties, 5)),
+                Boolean.parseBoolean(getValueFromList(userProperties, 6)),
+                null);
     }
 
     private static String getValueFromList(List<String> list, int elementIndex) {
