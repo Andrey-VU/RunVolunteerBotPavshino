@@ -221,6 +221,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         .stream()
                         .filter(part -> part.getEventRole().equals(BotConfiguration.getSheetVolunteersRolesOrganizerName())) // ищем организаторов на эту дату
                         .map(Participation::getUser)
+                        .filter(Objects::nonNull)
                         .toList();
 
                 String eventRole = storage.getParticipantsByDate(payload.getDate())
