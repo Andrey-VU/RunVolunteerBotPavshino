@@ -21,7 +21,8 @@ public class ReplyFactory {
     private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы регистрируетесь на дату: ";
 
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
-    private static final String REGISTRATION_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
+    private static final String REGISTRATION_FAMILY_NAME_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
+    private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5Вёрст";
     private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую.";
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
@@ -96,8 +97,12 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_DONE_MESSAGE).build();
     }
 
-    public SendMessage registrationErrorReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(REGISTRATION_ERROR_MESSAGE).build();
+    public SendMessage registrationFamilyNameErrorReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_FAMILY_NAME_ERROR_MESSAGE).build();
+    }
+
+    public SendMessage registrationCode5VerstErrorReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_CODE_5VERST_ERROR_MESSAGE).build();
     }
 
     public SendMessage registrationCancelReply(long chatId) {

@@ -307,7 +307,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
                 switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
                     case YES -> {
-                        if (isNameAndSurnameAreCorrect(form.getName(), form.getSurname())) {
+                        if (isNameAndSurnameAreCorrect(form.getName(), form.getSurname()) && isCode5VerstCorrect(form.getCode())) {
                             User user = storage.saveUser(
                                     User.builder()
                                             .name(form.getName())
@@ -321,7 +321,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                             answerToUser(reply.registrationDoneReply(chatId));
                         } else {
                             forms.remove(userKeys.getValue());
-                            answerToUser(reply.registrationErrorReply(chatId));
+                            if (!isNameAndSurnameAreCorrect(form.getName(), form.getSurname())) {
+                                answerToUser(reply.registrationFamilyNameErrorReply(chatId));
+                            }
+                            if (!isCode5VerstCorrect(form.getCode())) {
+                                answerToUser(reply.registrationCode5VerstErrorReply(chatId));
+                            }
                         }
                     }
                     case NO -> {
@@ -336,6 +341,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     private boolean isNameAndSurnameAreCorrect(String name, String surname) {
         Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-ЯёЁ]+$", Pattern.UNICODE_CASE);
         return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
+    }
+
+    private boolean isCode5VerstCorrect(String code) {
+        Pattern codePattern = Pattern.compile("[0-9]{9}$", Pattern.UNICODE_CASE);
+        return  codePattern.matcher(code).matches();
     }
 
     private void replyToSubscriptionRequestor(Map.Entry<Long, String> userKeys, long chatId) {
