@@ -167,15 +167,19 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.selectDatesReply(chatId, CallbackCommands.SHOW));
             }
             case "/volunteer" -> {
-                answerToUser(reply.selectDatesReply(chatId, CallbackCommands.VOLUNTEER));
+                dateRoleRegistration(chatId);
             }
             case "/subscribe" -> {
-                replyToSubscriptionRequestor(userKeys, chatId);
+                replyToSubscriptionRequester(userKeys, chatId);
             }
             default -> {
                 answerToUser(reply.commandNeededMessage(chatId));
             }
         }
+    }
+
+    private void dateRoleRegistration(long chatId) {
+        answerToUser(reply.selectDatesReply(chatId, CallbackCommands.VOLUNTEER));
     }
 
     private void handleCallback(Update update) {
@@ -245,11 +249,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                         });
             }
             case CONFIRMATION -> registration(update);
-//            case CONFIRMATION_DATE_ROLE -> ;
         }
     }
 
-    /**
+     /**
      * Подтверждение введённых пользователем данных
      * @param date
      * @param eventRole
@@ -257,7 +260,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
         log.info("Confirmation date & role");
         SendMessage message = reply.makeConfirmationDateRole(chatId, date, eventRole);
-
         answerToUser(message);
     }
 
@@ -348,7 +350,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         return  codePattern.matcher(code).matches();
     }
 
-    private void replyToSubscriptionRequestor(Map.Entry<Long, String> userKeys, long chatId) {
+    private void replyToSubscriptionRequester(Map.Entry<Long, String> userKeys, long chatId) {
         storage.getUsers()
                 .stream()
                 .filter(user -> user.getTelegram().equals(userKeys.getValue()))

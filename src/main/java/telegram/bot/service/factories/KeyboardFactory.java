@@ -79,9 +79,9 @@ public class KeyboardFactory {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         try {
-            InlineKeyboardButton approveButton = new InlineKeyboardButton("Подтверждаю!");
+            InlineKeyboardButton approveButton = new InlineKeyboardButton("YES!");
             approveButton.setCallbackData("YES");
-            InlineKeyboardButton declineButton = new InlineKeyboardButton("Нужно исправить!");
+            InlineKeyboardButton declineButton = new InlineKeyboardButton("NO!");
             declineButton.setCallbackData("NO");
 
             buttons.add(approveButton);
