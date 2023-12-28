@@ -18,7 +18,7 @@ import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
-import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.CallbackCommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
 import telegram.bot.service.enums.RegistrationStages;
 import telegram.bot.service.factories.ReplyFactory;
@@ -164,10 +164,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
             }
             case "/show_volunteers" -> {
-                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.SHOW));
+                answerToUser(reply.selectDatesReply(chatId, CallbackCommands.SHOW));
             }
             case "/volunteer" -> {
-                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.VOLUNTEER));
+                answerToUser(reply.selectDatesReply(chatId, CallbackCommands.VOLUNTEER));
             }
             case "/subscribe" -> {
                 replyToSubscriptionRequestor(userKeys, chatId);
@@ -234,7 +234,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если данный волонтер уже записан на какую-то роль
                                 answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole())) // тогда отравляем в бот сообщение об этом
                         , () -> { // иначе записываем его на запрошенную роль
-                            makeConfirmation(chatId, payload.getDate(), eventRole);
+                            makeConfirmationDateRole(chatId, payload.getDate(), eventRole);
 
                             storage.saveParticipation(Participation.builder() // записываем в файл
                                     .user(storage.getUserByTelegram(userKeys.getValue()))
@@ -245,6 +245,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         });
             }
             case CONFIRMATION -> registration(update);
+//            case CONFIRMATION_DATE_ROLE -> ;
         }
     }
 
@@ -253,13 +254,12 @@ public class TelegramBot extends TelegramLongPollingBot {
      * @param date
      * @param eventRole
      */
-    private void makeConfirmation(long chatId, LocalDate date, String eventRole) {
-        log.info("Confirmation income data");
-        SendMessage message = reply.makeConfirmation(chatId, date, eventRole);
+    private void makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
+        log.info("Confirmation date & role");
+        SendMessage message = reply.makeConfirmationDateRole(chatId, date, eventRole);
 
         answerToUser(message);
     }
-    //.setReplyMarkup()
 
     private void registration(Update update) {
         log.info("Registration progress.");

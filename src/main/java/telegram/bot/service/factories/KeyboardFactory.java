@@ -3,14 +3,13 @@ package telegram.bot.service.factories;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.service.CallbackPayload;
 import telegram.bot.service.DatesCalculator;
-import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.CallbackCommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
 
 import java.nio.charset.StandardCharsets;
@@ -26,7 +25,7 @@ public class KeyboardFactory {
         mapper.registerModule(new JavaTimeModule());
     }
 
-    public InlineKeyboardMarkup getFourDatesMarkup(Callbackcommands command) {
+    public InlineKeyboardMarkup getFourDatesMarkup(CallbackCommands command) {
         List<LocalDate> dates = DatesCalculator.getNextEventDates();
         return InlineKeyboardMarkup.builder().keyboard(List.of(
                 List.of(getDateButton(dates.get(0), command), getDateButton(dates.get(1), command)),
@@ -51,14 +50,14 @@ public class KeyboardFactory {
                                     .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
                                     .callbackData(mapper.writeValueAsString(
                                             CallbackPayload.builder()
-                                                    .command(Callbackcommands.CONFIRMATION)
+                                                    .command(CallbackCommands.CONFIRMATION)
                                                     .confirmationAnswer(ConfirmationFeedback.YES.name()).build())
                                     ).build(),
                             InlineKeyboardButton.builder()
                                     .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
                                     .callbackData(mapper.writeValueAsString(
                                             CallbackPayload.builder()
-                                                    .command(Callbackcommands.CONFIRMATION)
+                                                    .command(CallbackCommands.CONFIRMATION)
                                                     .confirmationAnswer(ConfirmationFeedback.NO.name()).build())
                                     ).build()))
             ).build();
@@ -98,7 +97,7 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(Callbackcommands.ROLE).build();
+                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(CallbackCommands.ROLE).build();
         try {
             return InlineKeyboardButton.builder()
                     .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
@@ -108,7 +107,7 @@ public class KeyboardFactory {
         }
     }
 
-    private InlineKeyboardButton getDateButton(LocalDate date, Callbackcommands command) {
+    private InlineKeyboardButton getDateButton(LocalDate date, CallbackCommands command) {
         CallbackPayload payload = CallbackPayload.builder().date(date).command(command).build();
         try {
             var caption = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);

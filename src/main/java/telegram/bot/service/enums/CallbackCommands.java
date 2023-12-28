@@ -1,6 +1,6 @@
 package telegram.bot.service.enums;
 
-public enum Callbackcommands {
+public enum CallbackCommands {
 
     SHOW,
 
@@ -10,5 +10,7 @@ public enum Callbackcommands {
 
     ORGANIZER,
 
-    CONFIRMATION;
+    CONFIRMATION,
+
+    CONFIRMATION_DATE_ROLE;
 }

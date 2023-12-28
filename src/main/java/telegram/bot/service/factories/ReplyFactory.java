@@ -3,7 +3,7 @@ package telegram.bot.service.factories;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.CallbackCommands;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -18,7 +18,7 @@ public class ReplyFactory {
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
 
-    private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы записываетесь на дату: ";
+    private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы регистрируетесь на дату: ";
 
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
     private static final String REGISTRATION_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
@@ -58,7 +58,7 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(ORG_REJECT_SIGNUP_MESSAGE).build();
     }
 
-    public SendMessage selectDatesReply(long chatId, Callbackcommands command) {
+    public SendMessage selectDatesReply(long chatId, CallbackCommands command) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(SELECT_DATES_MESSAGE)
@@ -74,11 +74,11 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(ENTER_NAME_MESSAGE).build();
     }
 
-    public SendMessage makeConfirmation(long chatId, LocalDate date, String eventRole) {
+    public SendMessage makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
         SendMessage message = SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
                 + "\nНа роль: \"" + eventRole + "\""
-                + "\nЕсли всё верно, отправьте мне в сообщении: \"Подтверждаю\"!" +
-                "\nЕсли что-то пошло не так, сообщите мне об этом: \"Нужно исправить\"!")
+                + "\nЕсли всё верно, выбирайте: \"YES\"!" +
+                "\nЕсли что-то пошло не так, откажитесь от сохранения: \"NO\"!")
             .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
             .build();
         return message;
