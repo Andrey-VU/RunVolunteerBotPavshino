@@ -19,6 +19,6 @@ public class TelegramBotStorageGoogleTableImpl extends Storage {
     @Override
     public void loadDataFromStorage() {
         super.loadDataFromStorage();
-        localExcelUtils.initExcelFile(contacts, events);
+        //localExcelUtils.initExcelFile(contacts, events);
     }
 }
