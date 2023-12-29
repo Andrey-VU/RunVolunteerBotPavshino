@@ -1,9 +1,10 @@
 package telegram.bot.service.factories;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.service.enums.CallbackCommands;
+import telegram.bot.service.enums.CallbackCommand;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -17,9 +18,7 @@ public class ReplyFactory {
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
-
     private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы регистрируетесь на дату: ";
-
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
     private static final String REGISTRATION_FAMILY_NAME_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
     private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5Вёрст";
@@ -59,7 +58,7 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(ORG_REJECT_SIGNUP_MESSAGE).build();
     }
 
-    public SendMessage selectDatesReply(long chatId, CallbackCommands command) {
+    public SendMessage selectDatesReply(long chatId, CallbackCommand command) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(SELECT_DATES_MESSAGE)
@@ -77,11 +76,11 @@ public class ReplyFactory {
 
     public SendMessage makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
         SendMessage message = SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
-                + "\nНа роль: \"" + eventRole + "\""
-                + "\nЕсли всё верно, выбирайте: \"YES\"!" +
-                "\nЕсли что-то пошло не так, откажитесь от сохранения: \"NO\"!")
-            .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
-            .build();
+                        + "\nНа роль: \"" + eventRole + "\""
+                        + "\nЕсли всё верно, выбирайте: \"YES\"!" +
+                        "\nЕсли что-то пошло не так, откажитесь от сохранения: \"NO\"!")
+                .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
+                .build();
         return message;
     }
 
@@ -144,15 +143,19 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(COMMAND_REQUIRED_MESSAGE).build();
     }
 
-    public SendMessage selectConfirmationChoice(long chatId, String message) {
+    public SendMessage selectConfirmationChoice(long chatId, String message, CallbackPayload callbackPayload) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(message)
-                .replyMarkup(keyboardFactory.getConfirmationButtons())
+                .replyMarkup(keyboardFactory.getConfirmationButtons(callbackPayload))
                 .build();
     }
 
     public SendMessage informOrgAboutJoinVolunteersMessage(long chatId, LocalDate date, String volunteer, String eventRole) {
         return SendMessage.builder().chatId(chatId).text(volunteer + INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE + "\"" + eventRole + "\" на дату " + date + "!").build();
+    }
+
+    public SendMessage genericMessage(long chatId, String message) {
+        return SendMessage.builder().chatId(chatId).text(message).build();
     }
 }

@@ -1,16 +1,12 @@
 package telegram.bot.model;
 
 import lombok.Data;
-import telegram.bot.service.enums.RegistrationStages;
+import telegram.bot.service.enums.CustomerJourneyStage;
 
 @Data
 public class RegistrationForm {
-
-    private RegistrationStages stage = RegistrationStages.NEW;
-
+    private CustomerJourneyStage stage = CustomerJourneyStage.BEGIN;
     private String name;
-
     private String surname;
-
     private String code;
 }

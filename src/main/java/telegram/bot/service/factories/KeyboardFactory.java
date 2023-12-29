@@ -5,12 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.model.CallbackPayload;
-import telegram.bot.service.utils.DatesCalculator;
-import telegram.bot.service.enums.CallbackCommands;
+import telegram.bot.service.enums.CallbackCommand;
 import telegram.bot.service.enums.ConfirmationFeedback;
+import telegram.bot.service.utils.DatesCalculator;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -25,7 +25,7 @@ public class KeyboardFactory {
         mapper.registerModule(new JavaTimeModule());
     }
 
-    public InlineKeyboardMarkup getFourDatesMarkup(CallbackCommands command) {
+    public InlineKeyboardMarkup getFourDatesMarkup(CallbackCommand command) {
         List<LocalDate> dates = DatesCalculator.getNextEventDates();
         return InlineKeyboardMarkup.builder().keyboard(List.of(
                 List.of(getDateButton(dates.get(0), command), getDateButton(dates.get(1), command)),
@@ -42,24 +42,26 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
-    public InlineKeyboardMarkup getConfirmationButtons() {
+    public InlineKeyboardMarkup getConfirmationButtons(CallbackPayload callbackPayload) {
+        var callbackPayloadConfirmationYes = CallbackPayload.builder()
+                .command(callbackPayload.getCommand())
+                .date(callbackPayload.getDate())
+                .sheetRowNumber(callbackPayload.getSheetRowNumber())
+                .confirmationAnswer(ConfirmationFeedback.YES.name()).build();
+        var callbackPayloadConfirmationNo = CallbackPayload.builder()
+                .command(callbackPayload.getCommand())
+                .date(callbackPayload.getDate())
+                .sheetRowNumber(callbackPayload.getSheetRowNumber())
+                .confirmationAnswer(ConfirmationFeedback.NO.name()).build();
         try {
             return InlineKeyboardMarkup.builder().keyboard(List.of(
                     List.of(
                             InlineKeyboardButton.builder()
                                     .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
-                                    .callbackData(mapper.writeValueAsString(
-                                            CallbackPayload.builder()
-                                                    .command(CallbackCommands.CONFIRMATION)
-                                                    .confirmationAnswer(ConfirmationFeedback.YES.name()).build())
-                                    ).build(),
+                                    .callbackData(mapper.writeValueAsString(callbackPayloadConfirmationYes)).build(),
                             InlineKeyboardButton.builder()
                                     .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
-                                    .callbackData(mapper.writeValueAsString(
-                                            CallbackPayload.builder()
-                                                    .command(CallbackCommands.CONFIRMATION)
-                                                    .confirmationAnswer(ConfirmationFeedback.NO.name()).build())
-                                    ).build()))
+                                    .callbackData(mapper.writeValueAsString(callbackPayloadConfirmationNo)).build()))
             ).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -97,17 +99,17 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(CallbackCommands.ROLE).build();
+                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(CallbackCommand.TAKE_ROLE).build();
         try {
             return InlineKeyboardButton.builder()
                     .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
-                        + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
+                            + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private InlineKeyboardButton getDateButton(LocalDate date, CallbackCommands command) {
+    private InlineKeyboardButton getDateButton(LocalDate date, CallbackCommand command) {
         CallbackPayload payload = CallbackPayload.builder().date(date).command(command).build();
         try {
             var caption = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);
