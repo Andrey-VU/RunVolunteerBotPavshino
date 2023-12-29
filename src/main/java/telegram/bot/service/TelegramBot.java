@@ -226,7 +226,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void processCustomerJourneyStage(Update update) {
-        log.info("Registration progress.");
+        log.info("processCustomerJourneyStage");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         VolunteerBotRecord volunteerBotRecord;
