@@ -190,6 +190,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()))
                         , () -> {// если он в эту дату еще не записан на какую-либо роль
 
+                            if (!forms.containsKey(userKeys.getKey()))
+                                forms.put(userKeys.getKey(), new RegistrationForm());
+
                             // фиксируем, что дальше нужно будет запросить у него подтверждение записи на роль
                             forms.get(userKeys.getKey()).setStage(CustomerJourneyStage.CONFIRM_ACTION);
 
@@ -200,7 +203,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                     .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
 
                             // готовим сообщение
-                            String confirmationMessage = "Записать вас на: " +
+                            String confirmationMessage = "Записать вас на " +
                                     Event.getDateLocalized(payload.getDate()) + " на роль \"" +
                                     eventRole + "\"?";
 
@@ -313,7 +316,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                         .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
 
                                 // информируем волонтера
-                                answerToUser(reply.genericMessage(chatId,"Запись подтверждена"));
+                                answerToUser(reply.genericMessage(chatId, "Запись подтверждена"));
 
                                 // ищем организаторов на эту дату
                                 List<User> organizers = storage.getParticipantsByDate(payload.getDate())
@@ -327,7 +330,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 informingOrganizers(organizers, payload.getDate(), storage.getUserByTelegram(userKeys.getValue()).getFullName(), eventRole);
                             }
                             case NO -> {
-                                answerToUser(reply.genericMessage(chatId,"Запись отменена"));
+                                answerToUser(reply.genericMessage(chatId, "Запись отменена"));
                             }
                         }
                     }
