@@ -1,4 +1,4 @@
-package telegram.bot.service;
+package telegram.bot.service.utils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

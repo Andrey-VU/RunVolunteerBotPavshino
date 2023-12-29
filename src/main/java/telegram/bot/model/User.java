@@ -3,7 +3,7 @@ package telegram.bot.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import telegram.bot.service.AESUtil;
+import telegram.bot.service.utils.AESUtil;
 
 import java.util.Arrays;
 import java.util.List;

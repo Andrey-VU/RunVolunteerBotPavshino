@@ -1,4 +1,4 @@
-package telegram.bot.service;
+package telegram.bot.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;

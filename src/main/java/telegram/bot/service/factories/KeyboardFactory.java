@@ -7,8 +7,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.service.CallbackPayload;
-import telegram.bot.service.DatesCalculator;
+import telegram.bot.model.CallbackPayload;
+import telegram.bot.service.utils.DatesCalculator;
 import telegram.bot.service.enums.CallbackCommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
 

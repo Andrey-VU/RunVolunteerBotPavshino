@@ -6,7 +6,7 @@ import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
 import telegram.bot.model.User;
-import telegram.bot.service.AESUtil;
+import telegram.bot.service.utils.AESUtil;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

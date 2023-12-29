@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.adapter.google.TelegramBotStorageGoogleTableImpl;
 import telegram.bot.adapter.local.TelegramBotStorageLocalDBImpl;
-import telegram.bot.service.AESUtil;
+import telegram.bot.service.utils.AESUtil;
 import telegram.bot.storage.LocalExcelUtils;
 import telegram.bot.storage.Storage;
 import telegram.bot.storage.google.GoogleConnection;

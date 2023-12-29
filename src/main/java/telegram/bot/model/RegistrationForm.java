@@ -1,4 +1,4 @@
-package telegram.bot.service;
+package telegram.bot.model;
 
 import lombok.Data;
 import telegram.bot.service.enums.RegistrationStages;

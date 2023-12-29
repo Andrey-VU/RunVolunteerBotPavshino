@@ -16,7 +16,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
+import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Participation;
+import telegram.bot.model.RegistrationForm;
 import telegram.bot.model.User;
 import telegram.bot.service.enums.CallbackCommands;
 import telegram.bot.service.enums.ConfirmationFeedback;
@@ -77,6 +79,16 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     @Override
+    public String getBotUsername() {
+        return botName;
+    }
+
+    @Override
+    public String getBotToken() {
+        return botToken;
+    }
+
+    @Override
     public void onUpdateReceived(Update update) {
         log.info("received update!");
         Map.Entry<Long, String> userKeys = getUserKeys(update);
@@ -87,8 +99,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.startCommandReply(getChatId(update)));
             } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
                 log.info("user unknown /register command.");
-                registration(update);
-
+                processCustomerJourneyStage(update);
                 return;
             }
             answerToUser(reply.registrationRequired(getChatId(update)));
@@ -96,56 +107,13 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (update.getMessage().getText().startsWith("/")) {
                 handleCommand(update);
             } else if (forms.containsKey(userKeys.getKey())) {
-                registration(update);
+                processCustomerJourneyStage(update);
             } else {
                 answerToUser(reply.commandNeededMessage(getChatId(update)));
             }
         } else if (update.hasCallbackQuery()) {
             handleCallback(update);
         }
-    }
-
-    @Override
-    public String getBotUsername() {
-        return botName;
-    }
-
-    @Override
-    public String getBotToken() {
-        return botToken;
-    }
-
-    private void answerToUser(SendMessage message) {
-        try {
-            this.execute(message);
-        } catch (TelegramApiException e) {
-            log.error("Can't send answer! - " + message.toString());
-            throw new RuntimeException();
-        }
-    }
-
-    private Map.Entry<Long, String> getUserKeys(Update update) {
-        if (update.hasMessage()) {
-            return new AbstractMap.SimpleEntry<Long, String>(
-                    update.getMessage().getFrom().getId(), update.getMessage().getFrom().getUserName());
-        } else if (update.hasCallbackQuery()) {
-            return new AbstractMap.SimpleEntry<Long, String>(
-                    update.getCallbackQuery().getFrom().getId(), update.getCallbackQuery().getFrom().getUserName());
-        }
-        throw new RuntimeException("Can't define user");
-    }
-
-    private Long getChatId(Update update) {
-        if (update.hasMessage()) {
-            return update.getMessage().getChatId();
-        } else if (update.hasCallbackQuery()) {
-            return update.getCallbackQuery().getMessage().getChatId();
-        }
-        throw new RuntimeException("Can't define chat");
-    }
-
-    private boolean isKnownUser(Map.Entry<Long, String> userKeys) {
-        return forms.containsKey(userKeys.getKey()) || storage.getUserByTelegram(userKeys.getValue()) != null;
     }
 
     private void handleCommand(Update update) {
@@ -160,14 +128,14 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (storage.getUserByTelegram(userKeys.getValue()) != null) {
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 } else {
-                    registration(update);
+                    processCustomerJourneyStage(update);
                 }
             }
             case "/show_volunteers" -> {
                 answerToUser(reply.selectDatesReply(chatId, CallbackCommands.SHOW));
             }
             case "/volunteer" -> {
-                dateRoleRegistration(chatId);
+                answerToUser(reply.selectDatesReply(chatId, CallbackCommands.VOLUNTEER));
             }
             case "/subscribe" -> {
                 replyToSubscriptionRequester(userKeys, chatId);
@@ -176,10 +144,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.commandNeededMessage(chatId));
             }
         }
-    }
-
-    private void dateRoleRegistration(long chatId) {
-        answerToUser(reply.selectDatesReply(chatId, CallbackCommands.VOLUNTEER));
     }
 
     private void handleCallback(Update update) {
@@ -249,22 +213,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                             informingOrganizers(organizers, payload.getDate(), storage.getUserByTelegram(userKeys.getValue()).getFullName(), eventRole); // отправляем сообщение организаторам
                         });
             }
-            case CONFIRMATION -> registration(update);
+            case CONFIRMATION -> processCustomerJourneyStage(update);
         }
     }
 
-     /**
-     * Подтверждение введённых пользователем данных
-     * @param date
-     * @param eventRole
-     */
-    private void makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
-        log.info("Confirmation date & role");
-        SendMessage message = reply.makeConfirmationDateRole(chatId, date, eventRole);
-        answerToUser(message);
-    }
-
-    private void registration(Update update) {
+    private void processCustomerJourneyStage(Update update) {
         log.info("Registration progress.");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
@@ -341,6 +294,17 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    /**
+     * Подтверждение введённых пользователем данных
+     * @param date
+     * @param eventRole
+     */
+    private void makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
+        log.info("Confirmation date & role");
+        SendMessage message = reply.makeConfirmationDateRole(chatId, date, eventRole);
+        answerToUser(message);
+    }
+
     private boolean isNameAndSurnameAreCorrect(String name, String surname) {
         Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-ЯёЁ]+$", Pattern.UNICODE_CASE);
         return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
@@ -373,5 +337,38 @@ public class TelegramBot extends TelegramLongPollingBot {
                 .map(User::getUserId)
                 .filter(userId -> userId != 0)
                 .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, volunteer, eventRole)));
+    }
+
+    private void answerToUser(SendMessage message) {
+        try {
+            this.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Can't send answer! - " + message.toString());
+            throw new RuntimeException();
+        }
+    }
+
+    private Map.Entry<Long, String> getUserKeys(Update update) {
+        if (update.hasMessage()) {
+            return new AbstractMap.SimpleEntry<Long, String>(
+                    update.getMessage().getFrom().getId(), update.getMessage().getFrom().getUserName());
+        } else if (update.hasCallbackQuery()) {
+            return new AbstractMap.SimpleEntry<Long, String>(
+                    update.getCallbackQuery().getFrom().getId(), update.getCallbackQuery().getFrom().getUserName());
+        }
+        throw new RuntimeException("Can't define user");
+    }
+
+    private Long getChatId(Update update) {
+        if (update.hasMessage()) {
+            return update.getMessage().getChatId();
+        } else if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage().getChatId();
+        }
+        throw new RuntimeException("Can't define chat");
+    }
+
+    private boolean isKnownUser(Map.Entry<Long, String> userKeys) {
+        return forms.containsKey(userKeys.getKey()) || storage.getUserByTelegram(userKeys.getValue()) != null;
     }
 }
