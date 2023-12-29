@@ -147,6 +147,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Handling command!");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
+
+        if (volunteerBotRecords.containsKey(userKeys.getKey()) && volunteerBotRecords.get(userKeys.getKey()).getStage() == TgUserJourneyStage.REQUIRES_COMMAND) {
+            answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+            return;
+        }
+
         CallbackPayload payload;
         try {
             var pr = update.getCallbackQuery().getData();
@@ -230,15 +236,15 @@ public class TelegramBot extends TelegramLongPollingBot {
         long chatId = getChatId(update);
         Map.Entry<Long, String> userKeys = getUserKeys(update);
         VolunteerBotRecord volunteerBotRecord;
-        if (this.volunteerBotRecords.containsKey(userKeys.getKey())) {
-            volunteerBotRecord = this.volunteerBotRecords.get(userKeys.getKey());
+        if (volunteerBotRecords.containsKey(userKeys.getKey())) {
+            volunteerBotRecord = volunteerBotRecords.get(userKeys.getKey());
         } else {
             volunteerBotRecord = new VolunteerBotRecord();
             answerToUser(reply.registerCommandReply(chatId));
-            this.volunteerBotRecords.put(userKeys.getKey(), volunteerBotRecord);
+            volunteerBotRecords.put(userKeys.getKey(), volunteerBotRecord);
         }
         switch (volunteerBotRecord.getStage()) {
-            case BEGIN -> {
+            case REQUIRES_COMMAND -> {
                 answerToUser(reply.enterNameReply(chatId));
                 volunteerBotRecord.setStage(TgUserJourneyStage.ENTER_NAME);
             }
@@ -255,14 +261,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             case ENTER_CODE -> {
                 volunteerBotRecord.setCode(update.getMessage().getText());
                 String confirmationMessage = "Сохранить данные: " +
-                        this.volunteerBotRecords.get(userKeys.getKey()).getName() + " " +
-                        this.volunteerBotRecords.get(userKeys.getKey()).getSurname() + ", " +
-                        this.volunteerBotRecords.get(userKeys.getKey()).getCode() + "?";
+                        volunteerBotRecords.get(userKeys.getKey()).getName() + " " +
+                        volunteerBotRecords.get(userKeys.getKey()).getSurname() + ", " +
+                        volunteerBotRecords.get(userKeys.getKey()).getCode() + "?";
                 answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().command(CallbackCommand.CONFIRM_REG).build()));
                 volunteerBotRecord.setStage(TgUserJourneyStage.CONFIRM_ACTION);
             }
             case CONFIRM_ACTION -> {
-                volunteerBotRecord.setStage(TgUserJourneyStage.BEGIN);
+                volunteerBotRecord.setStage(TgUserJourneyStage.REQUIRES_COMMAND);
                 CallbackPayload payload;
                 try {
                     payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
@@ -283,10 +289,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                                                     .comment("useless comment")
                                                     .build()
                                     );
-                                    this.volunteerBotRecords.remove(userKeys.getValue());
+                                    volunteerBotRecords.remove(userKeys.getValue());
                                     answerToUser(reply.registrationDoneReply(chatId));
                                 } else {
-                                    this.volunteerBotRecords.remove(userKeys.getValue());
+                                    volunteerBotRecords.remove(userKeys.getValue());
                                     if (!isNameAndSurnameAreCorrect(volunteerBotRecord.getName(), volunteerBotRecord.getSurname())) {
                                         answerToUser(reply.registrationFamilyNameErrorReply(chatId));
                                     }
@@ -296,7 +302,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 }
                             }
                             case NO -> {
-                                this.volunteerBotRecords.remove(userKeys.getValue());
+                                volunteerBotRecords.remove(userKeys.getValue());
                                 answerToUser(reply.registrationCancelReply(chatId));
                             }
                         }
@@ -375,7 +381,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void answerToUser(SendMessage message) {
         try {
-            this.execute(message);
+            execute(message);
         } catch (TelegramApiException e) {
             log.error("Can't send answer! - " + message.toString());
             throw new RuntimeException();
@@ -384,7 +390,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void answerToUser(long chatId, String message) {
         try {
-            this.execute(reply.genericMessage(chatId, message));
+            execute(reply.genericMessage(chatId, message));
         } catch (TelegramApiException e) {
             log.error("Can't send answer! - " + message);
             throw new RuntimeException();
