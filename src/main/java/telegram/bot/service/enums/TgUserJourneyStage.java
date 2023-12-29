@@ -1,6 +1,6 @@
 package telegram.bot.service.enums;
 
-public enum CustomerJourneyStage {
+public enum TgUserJourneyStage {
     BEGIN,
     ENTER_NAME,
     ENTER_SURNAME,

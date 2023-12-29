@@ -112,7 +112,7 @@ public class ReplyFactory {
         StringBuilder builder = new StringBuilder();
         builder.append("На ").append(Event.getDateLocalized(date)).append(" записаны:\n\n");
         for (Participation participation : participationList) {
-            builder.append(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8)).append(" ").append(participation.getEventRole()).append(" - ").append(participation.getUser().getFullName()).append("\n\n");
+            builder.append(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8)).append(" ").append(participation.getEventRole()).append(" - ").append(participation.getVolunteer().getFullName()).append("\n\n");
         }
         return SendMessage.builder().chatId(chatId)
                 .text(builder.toString()).build();

@@ -5,7 +5,7 @@ import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.model.User;
+import telegram.bot.model.Volunteer;
 import telegram.bot.service.utils.AESUtil;
 
 import java.time.DayOfWeek;
@@ -20,42 +20,42 @@ import java.util.stream.Collectors;
 public abstract class Storage implements TelegramBotStorage {
     protected AESUtil aesUtil;
     protected StorageUtils storageUtils;
-    protected Map<String, User> contacts;
+    protected Map<String, Volunteer> contacts;
     protected Map<LocalDate, Event> events;
     protected volatile LocalDateTime cacheLastUpdateTime;
     private volatile boolean isStorageSyncStarted = false;
 
     @Override
-    public User saveUser(User user) {
-        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && !contacts.containsKey(user.getFullName()) && Objects.nonNull(mergeUserToSheet(user))) {
-            contacts.put(user.getFullName(), user);
+    public Volunteer saveVolunteer(Volunteer volunteer) {
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && !contacts.containsKey(volunteer.getFullName()) && Objects.nonNull(mergeVolunteerToSheet(volunteer))) {
+            contacts.put(volunteer.getFullName(), volunteer);
             cacheLastUpdateTime = LocalDateTime.now();
-            return user;
+            return volunteer;
         } else return null;
     }
 
     @Override
-    public User updateUser(User user) {
-        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && Objects.nonNull(mergeUserToSheet(user))) {
+    public Volunteer updateVolunteer(Volunteer volunteer) {
+        if (!checkIfCacheIsObsoletedAndUpdateIfNeeded() && Objects.nonNull(mergeVolunteerToSheet(volunteer))) {
             cacheLastUpdateTime = LocalDateTime.now();
-            return user;
+            return volunteer;
         } else return null;
     }
 
     @Override
-    public User getUserByTelegram(String telegram) {
+    public Volunteer getVolunteerByTelegram(String telegram) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
-        return contacts.values().stream().filter(user -> Objects.equals(user.getTelegram(), telegram)).findFirst().orElse(null);
+        return contacts.values().stream().filter(volunteer -> Objects.equals(volunteer.getTgUserName(), telegram)).findFirst().orElse(null);
     }
 
     @Override
-    public User getUserByCode(String code) {
+    public Volunteer getVolunteerByCode(String code) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
-        return contacts.values().stream().filter(user -> Objects.equals(user.getCode(), code)).findFirst().orElse(null);
+        return contacts.values().stream().filter(volunteer -> Objects.equals(volunteer.getCode(), code)).findFirst().orElse(null);
     }
 
     @Override
-    public List<User> getUsers() {
+    public List<Volunteer> getVolunteers() {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return new LinkedList<>(contacts.values());
     }
@@ -79,7 +79,7 @@ public abstract class Storage implements TelegramBotStorage {
         if (Objects.isNull(events.get(date))) addNewEvent(date);
         return events.get(date).getParticipants()
                 .stream()
-                .filter(participation -> Objects.isNull(participation.getUser()))
+                .filter(participation -> Objects.isNull(participation.getVolunteer()))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
@@ -94,8 +94,8 @@ public abstract class Storage implements TelegramBotStorage {
         if (!storageUtils.writeCellValue(
                 BotConfiguration.getSheetVolunteers(),
                 cellAddress,
-                Optional.ofNullable(participation.getUser())
-                        .orElse(User.builder().build())
+                Optional.ofNullable(participation.getVolunteer())
+                        .orElse(Volunteer.builder().build())
                         .getFullName())) return null;
 
         var participant = event.getParticipants()
@@ -104,7 +104,7 @@ public abstract class Storage implements TelegramBotStorage {
                 .findFirst();
 
         if (participant.isEmpty()) return null;
-        else participant.get().setUser(participation.getUser());
+        else participant.get().setVolunteer(participation.getVolunteer());
         cacheLastUpdateTime = LocalDateTime.now();
 
         return participation;
@@ -114,14 +114,14 @@ public abstract class Storage implements TelegramBotStorage {
     public void deleteParticipation(Participation participation) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
         var cellAddress = getCellAddress(participation.getSheetRowNumber(), events.get(participation.getEventDate()).getColumnNumber());
-        if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getUser().getTelegram())) {
+        if (storageUtils.writeCellValue(BotConfiguration.getSheetContacts(), cellAddress, participation.getVolunteer().getTgUserName())) {
             var participant = events.get(participation.getEventDate()).getParticipants()
                     .stream()
                     .filter(obj -> obj.getSheetRowNumber() == participation.getSheetRowNumber())
                     .findFirst()
                     .orElse(null);
             assert participant != null;
-            participant.setUser(null);
+            participant.setVolunteer(null);
             cacheLastUpdateTime = LocalDateTime.now();
         }
     }
@@ -159,10 +159,10 @@ public abstract class Storage implements TelegramBotStorage {
         var rangeEnd = getCellAddress(null, BotConfiguration.getSheetContactsColumnLast());
         AtomicInteger sheetContactsRowStart = new AtomicInteger(BotConfiguration.getSheetContactsRowStart());
         storageUtils.readValuesRange(BotConfiguration.getSheetContacts(), rangeBegin, rangeEnd)
-                .forEach(userProperty -> {
-                    var user = User.createFrom(userProperty, aesUtil);
-                    user.setSheetRowNumber(sheetContactsRowStart.getAndIncrement());
-                    contacts.put(user.getFullName(), user);
+                .forEach(volunteerProperty -> {
+                    var volunteer = Volunteer.createFrom(volunteerProperty, aesUtil);
+                    volunteer.setSheetRowNumber(sheetContactsRowStart.getAndIncrement());
+                    contacts.put(volunteer.getFullName(), volunteer);
                 });
         log.info("loadContacts is finished");
     }
@@ -183,7 +183,7 @@ public abstract class Storage implements TelegramBotStorage {
         var newEventColumnNumber = lastEvent.getColumnNumber() + 1;
         var newEventParticipants = lastEvent.getParticipants().stream()
                 .map(lastParticipation -> Participation.builder()
-                        .user(null)
+                        .volunteer(null)
                         .eventDate(newEventDate)
                         .eventRole(lastParticipation.getEventRole())
                         .sheetRowNumber(lastParticipation.getSheetRowNumber()).build())
@@ -246,15 +246,15 @@ public abstract class Storage implements TelegramBotStorage {
             for (int roleIndex = 0; roleIndex < eventRoles.size(); roleIndex++) { // проходим по списку ролей
                 var roleForEvent = eventRoles.get(roleIndex); // берем очередную роль
                 var isOrganizerRole = roleForEvent.equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()); // определяем является ли это ролью Организатора
-                var userForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers); // смотрим кто юзер на эту роль
-                if (isOrganizerRole && Objects.nonNull(userForEvent) && !userForEvent.getIsOrganizer()) { // если сейчас роль Организатора, юзер на нее есть и он как Организатор еще не отмечен (получается, в файле метка у него не стояла)
-                    userForEvent.setIsOrganizer(true); // отмечаем юзера как Организатора
-                    mergeUserToSheet(userForEvent); // обновляем информацию о юзере в файле
+                var volunteerForEvent = getVolunteerForEvent(roleIndex, dateIndex, eventVolunteers); // смотрим кто юзер на эту роль
+                if (isOrganizerRole && Objects.nonNull(volunteerForEvent) && !volunteerForEvent.getIsOrganizer()) { // если сейчас роль Организатора, юзер на нее есть и он как Организатор еще не отмечен (получается, в файле метка у него не стояла)
+                    volunteerForEvent.setIsOrganizer(true); // отмечаем юзера как Организатора
+                    mergeVolunteerToSheet(volunteerForEvent); // обновляем информацию о юзере в файле
                 }
                 participants.add(Participation.builder()
                         .eventDate(eventDate)
                         .eventRole(roleForEvent)
-                        .user(userForEvent)
+                        .volunteer(volunteerForEvent)
                         .sheetRowNumber(BotConfiguration.getSheetVolunteersRoleRowStart() + roleIndex).build());
             }
             events.put(eventDate, Event.builder()
@@ -264,7 +264,7 @@ public abstract class Storage implements TelegramBotStorage {
         }
     }
 
-    protected User getVolunteerForEvent(int roleIndex, int dateIndex, List<List<String>> roleVolunteers) {
+    protected Volunteer getVolunteerForEvent(int roleIndex, int dateIndex, List<List<String>> roleVolunteers) {
         return !Objects.isNull(roleVolunteers) &&
                 roleVolunteers.size() >= roleIndex + 1 &&
                 roleVolunteers.get(roleIndex).size() >= dateIndex + 1
@@ -280,21 +280,21 @@ public abstract class Storage implements TelegramBotStorage {
         return rowAddress + columnAddress;
     }
 
-    protected User mergeUserToSheet(User user) {
-        var cellRangeBegin = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
-        var cellRangeEnd = getCellAddress(Optional.ofNullable(user.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
+    protected Volunteer mergeVolunteerToSheet(Volunteer volunteer) {
+        var cellRangeBegin = getCellAddress(Optional.ofNullable(volunteer.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnFirst());
+        var cellRangeEnd = getCellAddress(Optional.ofNullable(volunteer.getSheetRowNumber()).orElse(BotConfiguration.getSheetContactsRowStart() + contacts.size()), BotConfiguration.getSheetContactsColumnLast());
         if (storageUtils.writesValues(
                 BotConfiguration.getSheetContacts(),
                 cellRangeBegin + ":" + cellRangeEnd,
                 List.of(List.of(
-                        user.getFullName(),
-                        user.getTelegram(),
-                        Optional.ofNullable(user.getCode()).orElse(""),
-                        Optional.ofNullable(user.getComment()).orElse(""),
-                        aesUtil.encrypt(String.valueOf(Optional.ofNullable(user.getUserId()).orElse(0L))),
-                        Optional.ofNullable(user.getIsOrganizer()).orElse(false),
-                        Optional.ofNullable(user.getIsSubscribed()).orElse(false)))))
-            return user;
+                        volunteer.getFullName(),
+                        volunteer.getTgUserName(),
+                        Optional.ofNullable(volunteer.getCode()).orElse(""),
+                        Optional.ofNullable(volunteer.getComment()).orElse(""),
+                        aesUtil.encrypt(String.valueOf(Optional.ofNullable(volunteer.getTgUserId()).orElse(0L))),
+                        Optional.ofNullable(volunteer.getIsOrganizer()).orElse(false),
+                        Optional.ofNullable(volunteer.getIsSubscribed()).orElse(false)))))
+            return volunteer;
         else
             return null;
     }

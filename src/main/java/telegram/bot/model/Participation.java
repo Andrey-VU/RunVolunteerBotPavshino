@@ -9,8 +9,8 @@ import java.time.LocalDate;
 @Builder
 public class Participation {
 
-    // Пользователь
-    private User user;
+    // Волонтер
+    private Volunteer volunteer;
 
     // Дата участия
     private LocalDate eventDate;

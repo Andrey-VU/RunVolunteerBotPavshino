@@ -13,7 +13,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.model.User;
+import telegram.bot.model.Volunteer;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -29,7 +29,7 @@ public class LocalExcelUtils implements StorageUtils {
     private final String pathToExcelFile;
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public void initExcelFile(Map<String, User> contacts, Map<LocalDate, Event> events) {
+    public void initExcelFile(Map<String, Volunteer> contacts, Map<LocalDate, Event> events) {
         /*File f = new File(pathToExcelFile);
         if (!f.exists()) {
             writeContactsToExcel(contacts);
@@ -154,7 +154,7 @@ public class LocalExcelUtils implements StorageUtils {
         return values;
     }
 
-    private void writeContactsToExcel(Map<String, User> contacts) {
+    private void writeContactsToExcel(Map<String, Volunteer> contacts) {
         XSSFWorkbook workbook = new XSSFWorkbook();
 
         Sheet sheet = workbook.createSheet(BotConfiguration.getSheetContacts());
@@ -176,7 +176,7 @@ public class LocalExcelUtils implements StorageUtils {
             Cell cell = row.createCell(0);
             cell.setCellValue(key);
             cell = row.createCell(1);
-            cell.setCellValue(value.getTelegram());
+            cell.setCellValue(value.getTgUserName());
             cell = row.createCell(2);
             cell.setCellValue(value.getCode());
             cell = row.createCell(3);
@@ -224,7 +224,7 @@ public class LocalExcelUtils implements StorageUtils {
                 Row row = sheet.getRow(member.getSheetRowNumber() - rowNumberCorrection);
                 Cell roleCell = (row.getCell(0) == null) ? row.createCell(0) : row.getCell(0);
                 Cell cell = row.createCell(value.getColumnNumber() - colNumberCorrection);
-                String cellValue = member.getUser() != null ? member.getUser().getFullName() : "";
+                String cellValue = member.getVolunteer() != null ? member.getVolunteer().getFullName() : "";
                 if (!member.getEventRole().isBlank()) {
                     roleCell.setCellValue(member.getEventRole());
                 }
