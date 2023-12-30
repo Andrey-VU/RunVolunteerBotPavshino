@@ -43,29 +43,29 @@ public class KeyboardFactory {
     }
 
     public InlineKeyboardMarkup getConfirmationButtons(CallbackPayload callbackPayload) {
-        var callbackPayloadConfirmationYes = CallbackPayload.builder()
-                .command(callbackPayload.getCommand())
-                .date(callbackPayload.getDate())
-                .sheetRowNumber(callbackPayload.getSheetRowNumber())
-                .confirmationAnswer(ConfirmationFeedback.YES.name()).build();
-        var callbackPayloadConfirmationNo = CallbackPayload.builder()
-                .command(callbackPayload.getCommand())
-                .date(callbackPayload.getDate())
-                .sheetRowNumber(callbackPayload.getSheetRowNumber())
-                .confirmationAnswer(ConfirmationFeedback.NO.name()).build();
         try {
-            return InlineKeyboardMarkup.builder().keyboard(List.of(
-                    List.of(
-                            InlineKeyboardButton.builder()
-                                    .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
-                                    .callbackData(mapper.writeValueAsString(callbackPayloadConfirmationYes)).build(),
-                            InlineKeyboardButton.builder()
-                                    .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
-                                    .callbackData(mapper.writeValueAsString(callbackPayloadConfirmationNo)).build()))
-            ).build();
+            return InlineKeyboardMarkup.builder()
+                    .keyboard(List.of(
+                            List.of(InlineKeyboardButton.builder()
+                                            .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x85}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.YES.name())
+                                            .callbackData(mapper.writeValueAsString(getCallbackPayload(callbackPayload, ConfirmationFeedback.YES)))
+                                            .build(),
+                                    InlineKeyboardButton.builder()
+                                            .text(new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x8C}, StandardCharsets.UTF_8) + " " + ConfirmationFeedback.NO.name())
+                                            .callbackData(mapper.writeValueAsString(getCallbackPayload(callbackPayload, ConfirmationFeedback.NO)))
+                                            .build()))
+                    ).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private CallbackPayload getCallbackPayload(CallbackPayload callbackPayload, ConfirmationFeedback confirmationFeedback) {
+        return CallbackPayload.builder()
+                .callbackCommand(callbackPayload.getCallbackCommand())
+                .date(callbackPayload.getDate())
+                .sheetRowNumber(callbackPayload.getSheetRowNumber())
+                .confirmationAnswer(confirmationFeedback.name()).build();
     }
 
     public InlineKeyboardMarkup getApproveDeclineButtonsMarkup() {
@@ -99,7 +99,7 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).command(CallbackCommand.TAKE_ROLE).build();
+                .date(date).sheetRowNumber(participation.getSheetRowNumber()).callbackCommand(CallbackCommand.TAKE_ROLE).build();
         try {
             return InlineKeyboardButton.builder()
                     .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
@@ -110,7 +110,7 @@ public class KeyboardFactory {
     }
 
     private InlineKeyboardButton getDateButton(LocalDate date, CallbackCommand command) {
-        CallbackPayload payload = CallbackPayload.builder().date(date).command(command).build();
+        CallbackPayload payload = CallbackPayload.builder().date(date).callbackCommand(command).build();
         try {
             var caption = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);
             return InlineKeyboardButton.builder()

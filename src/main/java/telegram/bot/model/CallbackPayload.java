@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor(force = true)
 public class CallbackPayload {
     @JsonProperty("c")
-    private final CallbackCommand command;
+    private final CallbackCommand callbackCommand;
 
     @JsonProperty("d")
     @JsonFormat(pattern = "dd.MM.yyyy")

@@ -13,7 +13,7 @@ import java.util.List;
 public class ReplyFactory {
     private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон 5 верст в парке Павшино.";
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
-    private static final String REGISTRATION_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
+    private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
@@ -34,12 +34,12 @@ public class ReplyFactory {
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
-    public SendMessage startCommandReply(long chatId) {
+    public SendMessage botGreetingReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
     }
 
-    public SendMessage registerCommandReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(REGISTRATION_MESSAGE).build();
+    public SendMessage registerInitialReply(long chatId) {
+        return SendMessage.builder().chatId(chatId).text(REGISTRATION_INITIAL_MESSAGE).build();
     }
 
     public SendMessage alreadyRegisteredReply(long chatId) {
