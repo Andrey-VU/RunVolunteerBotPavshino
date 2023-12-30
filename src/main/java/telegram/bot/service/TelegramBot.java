@@ -226,7 +226,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                 });
             }
             case REG_CHOICE, PART_CHOICE -> {
-                userRecord.setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
                 handleStage(update, userIdentity, userRecord);
             }
         }
@@ -261,6 +260,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().buttonType(ButtonType.REG_CHOICE).build()));
             }
             case CONFIRM_CHOICE -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 CallbackPayload payload;
                 try {
                     payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
