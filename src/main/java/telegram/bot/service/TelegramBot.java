@@ -17,7 +17,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.*;
-import telegram.bot.service.enums.CallbackCommandType;
+import telegram.bot.service.enums.ButtonType;
 import telegram.bot.service.enums.UserActionType;
 import telegram.bot.service.enums.UserChoiceType;
 import telegram.bot.service.factories.ReplyFactory;
@@ -118,14 +118,19 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.botGreetingReply(getChatId(update)));
             }
             case "/register" -> {
-                if (Objects.nonNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
+                if (Objects.isNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
+                    answerToUser(reply.registerInitialReply(chatId));
+                    answerToUser(reply.enterNameReply(chatId));
+                } else {
+                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.alreadyRegisteredReply(chatId));
-                } else handleStage(update);
+                }
+
             }
             case "/show_volunteers" -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                answerToUser(reply.selectDatesReply(chatId, CallbackCommandType.SHOW_PART));
+                answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
             }
             case "/volunteer" -> {
                 if (Objects.isNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
@@ -133,7 +138,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 } else {
                     userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                    answerToUser(reply.selectDatesReply(chatId, CallbackCommandType.SHOW_ROLES));
+                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART));
                 }
             }
             case "/subscribe" -> {
@@ -168,8 +173,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Error reading payload");
             return;
         }
-        switch (payload.getCallbackCommandType()) {
+        switch (payload.getButtonType()) {
             case SHOW_PART -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 answerToUser(
                         reply.showVolunteersReply(
                                 chatId,
@@ -179,18 +185,17 @@ public class TelegramBot extends TelegramLongPollingBot {
                                         .filter(part -> part.getVolunteer() != null)
                                         .collect(Collectors.toList())));
             }
-            case SHOW_ROLES -> {
+            case TAKE_PART -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 List<Participation> vacantRolesList = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(part -> part.getVolunteer() == null)
                         .toList();
-                if (vacantRolesList.isEmpty()) {
+                if (vacantRolesList.isEmpty())
                     answerToUser(reply.allSlotsTakenReply(chatId));
-                } else {
-                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
-                }
+                else answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
             }
-            case TAKE_ROLE -> {
+            case CHOSEN_ROLE -> {
                 // берем список участников на указанную субботу и ищем среди них нашего волонтера
                 var existingUSer = storage.getParticipantsByDate(payload.getDate())
                         .stream()
@@ -199,37 +204,42 @@ public class TelegramBot extends TelegramLongPollingBot {
                         .findFirst().orElse(null);
 
                 Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если волонтер уже записан на какую-то роль
-                                // тогда отравляем в бот сообщение об этом
-                                answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()))
-                        , () -> {
-                            // если волонтер в эту дату еще не записан на какую-либо роль
+                {
+                    // ожидаем, что дальше пользователь выберет другую дату
+                    userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                    // отравляем в бот сообщение об этом
+                    answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()));
+                }, () -> // если волонтер в эту дату еще не записан на какую-либо роль
+                {
+                    // из данных полученного коллбэка определяем имя роли, которую выбрад волонтер
+                    var eventRole = storage.getParticipantsByDate(payload.getDate())
+                            .stream()
+                            .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
+                            .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
 
-                            // из данных полученного коллбэка определяем имя роли, которую выбрад волонтер
-                            var eventRole = storage.getParticipantsByDate(payload.getDate())
-                                    .stream()
-                                    .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
-                                    .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
+                    // готовим сообщение для диалога подтверждения
+                    String confirmationMessage = "Записать вас на " +
+                            Event.getDateLocalized(payload.getDate()) + " на роль \"" +
+                            eventRole + "\"?";
 
-                            // готовим сообщение для диалога подтверждения
-                            String confirmationMessage = "Записать вас на " +
-                                    Event.getDateLocalized(payload.getDate()) + " на роль \"" +
-                                    eventRole + "\"?";
+                    // готовим коллбэк для диалога подтверждения
+                    var callBack = CallbackPayload.builder()
+                            .buttonType(ButtonType.PART_CHOICE)
+                            .date(payload.getDate())
+                            .sheetRowNumber(payload.getSheetRowNumber())
+                            .build();
 
-                            // готовим коллбэк для диалога подтверждения
-                            var callBack = CallbackPayload.builder()
-                                    .callbackCommandType(CallbackCommandType.CONFIRM_PART)
-                                    .date(payload.getDate())
-                                    .sheetRowNumber(payload.getSheetRowNumber())
-                                    .build();
+                    // запоминаем, что дальше нужно будет запросить у него подтверждение записи на роль
+                    userRecords.get(userIdentity.getKey()).setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
 
-                            // запоминаем, что дальше нужно будет запросить у него подтверждение записи на роль
-                            userRecords.get(userIdentity.getKey()).setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
-
-                            // отправляем диалог да/нет
-                            answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, callBack));
-                        });
+                    // отправляем диалог да/нет
+                    answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, callBack));
+                });
             }
-            case CONFIRM_REG, CONFIRM_PART -> handleStage(update);
+            case REG_CHOICE, PART_CHOICE -> {
+                userRecord.setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
+                handleStage(update);
+            }
         }
     }
 
@@ -241,11 +251,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         switch (userRecord.getExpectedUserActionType()) {
             case CHOOSE_COMMAND -> answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
-            case REGISTRATION_REQUIRED -> {
-                userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
-                answerToUser(reply.registerInitialReply(chatId));
-                answerToUser(reply.enterNameReply(chatId));
-            }
             case ENTER_NAME -> {
                 userRecord.setName(update.getMessage().getText());
 
@@ -266,7 +271,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         userRecords.get(userIdentity.getKey()).getSurname() + ", " +
                         userRecords.get(userIdentity.getKey()).getCode() + "?";
                 userRecord.setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
-                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().callbackCommandType(CallbackCommandType.CONFIRM_REG).build()));
+                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().buttonType(ButtonType.REG_CHOICE).build()));
             }
             case CONFIRM_CHOICE -> {
                 CallbackPayload payload;
@@ -275,9 +280,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                switch (CallbackCommandType.valueOf(payload.getCallbackCommandType().name())) {
-                    case CONFIRM_REG -> {
-                        switch (UserChoiceType.valueOf(payload.getConfirmationAnswer())) {
+                switch (ButtonType.valueOf(payload.getButtonType().name())) {
+                    case REG_CHOICE -> {
+                        switch (UserChoiceType.valueOf(payload.getUserChoice())) {
                             case YES -> {
                                 if (storage.getVolunteerByTelegram(userIdentity.getValue()) != null)
                                     answerToUser(reply.alreadyRegisteredReply(chatId));
@@ -311,9 +316,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                             }
                         }
                     }
-                    case CONFIRM_PART -> {
-                        switch (UserChoiceType.valueOf(payload.getConfirmationAnswer())) {
+                    case PART_CHOICE -> {
+                        switch (UserChoiceType.valueOf(payload.getUserChoice())) {
                             case YES -> {
+
+                                //storage.getParticipantsByDate(payload.getDate()).stream().filter();
+
+
                                 // из данных коллбэка определяем имя роли
                                 String eventRole = storage.getParticipantsByDate(payload.getDate())
                                         .stream()
@@ -324,6 +333,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 storage.saveParticipation(Participation.builder()
                                         .volunteer(storage.getVolunteerByTelegram(userIdentity.getValue()))
                                         .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
+
+                                // запоминаем, что после записи на роль нужно снова выбирать команду
+                                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
 
                                 // информируем волонтера
                                 answerToUser(reply.genericMessage(chatId, "Запись подтверждена"));

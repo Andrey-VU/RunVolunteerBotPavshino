@@ -8,7 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.service.enums.CallbackCommandType;
+import telegram.bot.service.enums.ButtonType;
 import telegram.bot.service.enums.UserChoiceType;
 import telegram.bot.service.utils.DatesCalculator;
 
@@ -25,11 +25,11 @@ public class KeyboardFactory {
         mapper.registerModule(new JavaTimeModule());
     }
 
-    public InlineKeyboardMarkup getFourDatesMarkup(CallbackCommandType command) {
+    public InlineKeyboardMarkup getFourDatesMarkup(ButtonType buttonType) {
         List<LocalDate> dates = DatesCalculator.getNextEventDates();
         return InlineKeyboardMarkup.builder().keyboard(List.of(
-                List.of(getDateButton(dates.get(0), command), getDateButton(dates.get(1), command)),
-                List.of(getDateButton(dates.get(2), command), getDateButton(dates.get(3), command))
+                List.of(getDateButton(dates.get(0), buttonType), getDateButton(dates.get(1), buttonType)),
+                List.of(getDateButton(dates.get(2), buttonType), getDateButton(dates.get(3), buttonType))
         )).build();
     }
 
@@ -62,10 +62,10 @@ public class KeyboardFactory {
 
     private CallbackPayload getCallbackPayload(CallbackPayload callbackPayload, UserChoiceType userChoiceType) {
         return CallbackPayload.builder()
-                .callbackCommandType(callbackPayload.getCallbackCommandType())
+                .buttonType(callbackPayload.getButtonType())
                 .date(callbackPayload.getDate())
                 .sheetRowNumber(callbackPayload.getSheetRowNumber())
-                .confirmationAnswer(userChoiceType.name()).build();
+                .userChoice(userChoiceType.name()).build();
     }
 
     public InlineKeyboardMarkup getApproveDeclineButtonsMarkup() {
@@ -99,7 +99,7 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).callbackCommandType(CallbackCommandType.TAKE_ROLE).build();
+                .date(date).sheetRowNumber(participation.getSheetRowNumber()).buttonType(ButtonType.CHOSEN_ROLE).build();
         try {
             return InlineKeyboardButton.builder()
                     .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
@@ -109,8 +109,8 @@ public class KeyboardFactory {
         }
     }
 
-    private InlineKeyboardButton getDateButton(LocalDate date, CallbackCommandType command) {
-        CallbackPayload payload = CallbackPayload.builder().date(date).callbackCommandType(command).build();
+    private InlineKeyboardButton getDateButton(LocalDate date, ButtonType buttonType) {
+        CallbackPayload payload = CallbackPayload.builder().date(date).buttonType(buttonType).build();
         try {
             var caption = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x85}, StandardCharsets.UTF_8) + " " + Event.getDateLocalized(date);
             return InlineKeyboardButton.builder()
