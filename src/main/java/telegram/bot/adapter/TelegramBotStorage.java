@@ -24,10 +24,10 @@ public interface TelegramBotStorage {
     /**
      * Получаем участника по его телеграму
      *
-     * @param telegram - Телеграм пользователя
+     * @param tgUserName - Телеграм пользователя
      * @return Пользователь по телеграму
      */
-    Volunteer getVolunteerByTelegram(String telegram);
+    Volunteer getVolunteerByTgUserName(String tgUserName);
 
     /**
      * Получаем участника по его коду

@@ -43,9 +43,9 @@ public abstract class Storage implements TelegramBotStorage {
     }
 
     @Override
-    public Volunteer getVolunteerByTelegram(String telegram) {
+    public Volunteer getVolunteerByTgUserName(String tgUserName) {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
-        return contacts.values().stream().filter(volunteer -> Objects.equals(volunteer.getTgUserName(), telegram)).findFirst().orElse(null);
+        return contacts.values().stream().filter(volunteer -> Objects.equals(volunteer.getTgUserName(), tgUserName)).findFirst().orElse(null);
     }
 
     @Override

@@ -22,9 +22,9 @@ public class CallbackPayload {
     @JsonFormat(pattern = "dd.MM.yyyy")
     private final LocalDate date;
 
-    @JsonProperty("r")
-    private int sheetRowNumber;
-
     @JsonProperty("c")
     private String userChoice;
+
+    @JsonProperty("r")
+    private int sheetRowNumber;
 }
