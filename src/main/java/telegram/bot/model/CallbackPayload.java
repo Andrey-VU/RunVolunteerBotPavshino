@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import telegram.bot.service.enums.CallbackCommand;
+import telegram.bot.service.enums.CallbackCommandType;
 
 import java.time.LocalDate;
 
@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor(force = true)
 public class CallbackPayload {
     @JsonProperty("c")
-    private final CallbackCommand callbackCommand;
+    private final CallbackCommandType callbackCommandType;
 
     @JsonProperty("d")
     @JsonFormat(pattern = "dd.MM.yyyy")

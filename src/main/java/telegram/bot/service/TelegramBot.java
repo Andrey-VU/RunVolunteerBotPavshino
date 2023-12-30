@@ -17,9 +17,9 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.*;
-import telegram.bot.service.enums.CallbackCommand;
-import telegram.bot.service.enums.ConfirmationFeedback;
-import telegram.bot.service.enums.UserPathStage;
+import telegram.bot.service.enums.CallbackCommandType;
+import telegram.bot.service.enums.UserActionType;
+import telegram.bot.service.enums.UserChoiceType;
 import telegram.bot.service.factories.ReplyFactory;
 
 import java.time.LocalDate;
@@ -92,17 +92,17 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         // если этого юзера еще нет в мапе юзеров бота, добавляем его туда и отправляем приветствие
         if (!userRecords.containsKey(userIdentity.getKey())) {
-            userRecords.put(userIdentity.getKey(), UserRecord.builder().userPathStage(UserPathStage.COMMAND_REQUIRED).build());
+            userRecords.put(userIdentity.getKey(), UserRecord.builder().expectedUserActionType(UserActionType.CHOOSE_COMMAND).build());
             answerToUser(reply.botGreetingReply(getChatId(update)));
         }
 
         if (update.hasMessage()) {
             if (update.getMessage().getText().startsWith("/"))
-                handleCommand(update);
+                handleCommand(update); // если пользователь выбрал команду из меню
             else
-                handleStage(update);
+                handleStage(update); // если пользователь что-то написал
         } else if (update.hasCallbackQuery()) {
-            handleCallback(update);
+            handleCallback(update); // если пользователь кликнул кнопку
         }
     }
 
@@ -110,26 +110,42 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("handleCommand");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userIdentity = getUserIdentity(update);
-
-        if (Objects.isNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
-            if (update.hasMessage()) {
-                if (update.getMessage().getText().equals("/register"))
-                    handleCommand(update);
-                else answerToUser(reply.registrationRequired(getChatId(update)));
-            }
-        }
+        UserRecord userRecord = userRecords.get(userIdentity.getKey());
 
         switch (update.getMessage().getText()) {
-            case "/start" -> answerToUser(reply.botGreetingReply(getChatId(update)));
-            case "/register" -> {
-                if (Objects.nonNull(storage.getVolunteerByTelegram(userIdentity.getValue())))
-                    answerToUser(reply.alreadyRegisteredReply(chatId));
-                else handleStage(update);
+            case "/start" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(reply.botGreetingReply(getChatId(update)));
             }
-            case "/show_volunteers" -> answerToUser(reply.selectDatesReply(chatId, CallbackCommand.SHOW_PART));
-            case "/volunteer" -> answerToUser(reply.selectDatesReply(chatId, CallbackCommand.SHOW_ROLES));
-            case "/subscribe" -> replyToSubscriptionRequester(userIdentity, chatId);
-            default -> answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+            case "/register" -> {
+                if (Objects.nonNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
+                    userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
+                    answerToUser(reply.alreadyRegisteredReply(chatId));
+                } else handleStage(update);
+            }
+            case "/show_volunteers" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                answerToUser(reply.selectDatesReply(chatId, CallbackCommandType.SHOW_PART));
+            }
+            case "/volunteer" -> {
+                if (Objects.isNull(storage.getVolunteerByTelegram(userIdentity.getValue()))) {
+                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                    answerToUser(reply.registrationRequired(getChatId(update)));
+                } else {
+                    userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                    answerToUser(reply.selectDatesReply(chatId, CallbackCommandType.SHOW_ROLES));
+                }
+            }
+            case "/subscribe" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                if (Objects.isNull(storage.getVolunteerByTelegram(userIdentity.getValue())))
+                    answerToUser(reply.registrationRequired(getChatId(update)));
+                else replyToSubscriptionRequester(userIdentity, chatId);
+            }
+            default -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+            }
         }
     }
 
@@ -137,6 +153,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("handleCallback");
         long chatId = getChatId(update);
         Map.Entry<Long, String> userIdentity = getUserIdentity(update);
+        UserRecord userRecord = userRecords.get(userIdentity.getKey());
 
 //        if (volunteerBotRecords.containsKey(userIdentity.getKey()) && volunteerBotRecords.get(userIdentity.getKey()).getStage() == TgUserJourneyStage.INITIAL) {
 //            answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
@@ -151,7 +168,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Error reading payload");
             return;
         }
-        switch (payload.getCallbackCommand()) {
+        switch (payload.getCallbackCommandType()) {
             case SHOW_PART -> {
                 answerToUser(
                         reply.showVolunteersReply(
@@ -200,13 +217,13 @@ public class TelegramBot extends TelegramLongPollingBot {
 
                             // готовим коллбэк для диалога подтверждения
                             var callBack = CallbackPayload.builder()
-                                    .callbackCommand(CallbackCommand.CONFIRM_PART)
+                                    .callbackCommandType(CallbackCommandType.CONFIRM_PART)
                                     .date(payload.getDate())
                                     .sheetRowNumber(payload.getSheetRowNumber())
                                     .build();
 
                             // запоминаем, что дальше нужно будет запросить у него подтверждение записи на роль
-                            userRecords.get(userIdentity.getKey()).setUserPathStage(UserPathStage.CONFIRMATION_REQUIRED);
+                            userRecords.get(userIdentity.getKey()).setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
 
                             // отправляем диалог да/нет
                             answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, callBack));
@@ -222,45 +239,45 @@ public class TelegramBot extends TelegramLongPollingBot {
         Map.Entry<Long, String> userIdentity = getUserIdentity(update);
         UserRecord userRecord = userRecords.get(userIdentity.getKey());
 
-        switch (userRecord.getUserPathStage()) {
-            case COMMAND_REQUIRED -> answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+        switch (userRecord.getExpectedUserActionType()) {
+            case CHOOSE_COMMAND -> answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
             case REGISTRATION_REQUIRED -> {
-                userRecord.setUserPathStage(UserPathStage.NAME_REQUIRED);
+                userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
                 answerToUser(reply.registerInitialReply(chatId));
                 answerToUser(reply.enterNameReply(chatId));
             }
-            case NAME_REQUIRED -> {
+            case ENTER_NAME -> {
                 userRecord.setName(update.getMessage().getText());
 
-                userRecord.setUserPathStage(UserPathStage.SURNAME_REQUIRED);
+                userRecord.setExpectedUserActionType(UserActionType.ENTER_SURNAME);
                 answerToUser(reply.enterSurNameReply(chatId));
             }
-            case SURNAME_REQUIRED -> {
+            case ENTER_SURNAME -> {
                 userRecord.setSurname(update.getMessage().getText());
 
-                userRecord.setUserPathStage(UserPathStage.CODE_REQUIRED);
+                userRecord.setExpectedUserActionType(UserActionType.ENTER_CODE);
                 answerToUser(reply.enterCodeReply(chatId));
             }
-            case CODE_REQUIRED -> {
+            case ENTER_CODE -> {
                 userRecord.setCode(update.getMessage().getText());
 
                 String confirmationMessage = "Зарегистрировать вас в списке волонтеров: " +
                         userRecords.get(userIdentity.getKey()).getName() + " " +
                         userRecords.get(userIdentity.getKey()).getSurname() + ", " +
                         userRecords.get(userIdentity.getKey()).getCode() + "?";
-                userRecord.setUserPathStage(UserPathStage.CONFIRMATION_REQUIRED);
-                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().callbackCommand(CallbackCommand.CONFIRM_REG).build()));
+                userRecord.setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
+                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().callbackCommandType(CallbackCommandType.CONFIRM_REG).build()));
             }
-            case CONFIRMATION_REQUIRED -> {
+            case CONFIRM_CHOICE -> {
                 CallbackPayload payload;
                 try {
                     payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                switch (CallbackCommand.valueOf(payload.getCallbackCommand().name())) {
+                switch (CallbackCommandType.valueOf(payload.getCallbackCommandType().name())) {
                     case CONFIRM_REG -> {
-                        switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
+                        switch (UserChoiceType.valueOf(payload.getConfirmationAnswer())) {
                             case YES -> {
                                 if (storage.getVolunteerByTelegram(userIdentity.getValue()) != null)
                                     answerToUser(reply.alreadyRegisteredReply(chatId));
@@ -295,7 +312,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         }
                     }
                     case CONFIRM_PART -> {
-                        switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
+                        switch (UserChoiceType.valueOf(payload.getConfirmationAnswer())) {
                             case YES -> {
                                 // из данных коллбэка определяем имя роли
                                 String eventRole = storage.getParticipantsByDate(payload.getDate())

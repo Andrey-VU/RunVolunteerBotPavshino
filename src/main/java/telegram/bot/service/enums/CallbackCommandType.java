@@ -1,6 +1,6 @@
 package telegram.bot.service.enums;
 
-public enum CallbackCommand {
+public enum CallbackCommandType {
     SHOW_PART,
     SHOW_ROLES,
     TAKE_ROLE,

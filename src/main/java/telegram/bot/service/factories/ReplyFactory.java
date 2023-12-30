@@ -4,7 +4,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
-import telegram.bot.service.enums.CallbackCommand;
+import telegram.bot.service.enums.CallbackCommandType;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -58,7 +58,7 @@ public class ReplyFactory {
         return SendMessage.builder().chatId(chatId).text(ORG_REJECT_SIGNUP_MESSAGE).build();
     }
 
-    public SendMessage selectDatesReply(long chatId, CallbackCommand command) {
+    public SendMessage selectDatesReply(long chatId, CallbackCommandType command) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(SELECT_DATES_MESSAGE)

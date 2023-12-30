@@ -2,12 +2,12 @@ package telegram.bot.model;
 
 import lombok.Builder;
 import lombok.Data;
-import telegram.bot.service.enums.UserPathStage;
+import telegram.bot.service.enums.UserActionType;
 
 @Data
 @Builder
 public class UserRecord {
-    private UserPathStage userPathStage;
+    private UserActionType expectedUserActionType;
     private String name;
     private String surname;
     private String code;
