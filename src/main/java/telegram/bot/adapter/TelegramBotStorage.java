@@ -1,7 +1,7 @@
 package telegram.bot.adapter;
 
 import telegram.bot.model.Participation;
-import telegram.bot.model.User;
+import telegram.bot.model.Volunteer;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,23 +11,23 @@ public interface TelegramBotStorage {
     /**
      * Записываем нового участника
      *
-     * @param user - Новый пользователь
+     * @param volunteer - Новый пользователь
      * @return Возвращает участника
      */
-    User saveUser(User user);
+    Volunteer saveVolunteer(Volunteer volunteer);
 
     // обновляем данные для уже зарегистрированного участника
-    default User updateUser(User user) {
+    default Volunteer updateVolunteer(Volunteer volunteer) {
         return null;
     }
 
     /**
      * Получаем участника по его телеграму
      *
-     * @param telegram - Телеграм пользователя
+     * @param tgUserName - Телеграм пользователя
      * @return Пользователь по телеграму
      */
-    User getUserByTelegram(String telegram);
+    Volunteer getVolunteerByTgUserName(String tgUserName);
 
     /**
      * Получаем участника по его коду
@@ -35,14 +35,14 @@ public interface TelegramBotStorage {
      * @param code - Код пользователя в системе 5 верст
      * @return Пользователь по телеграму
      */
-    User getUserByCode(String code);
+    Volunteer getVolunteerByCode(String code);
 
     /**
      * Получаем всех участников
      *
      * @return Полный список всенх заргестрированных пользователей
      */
-    List<User> getUsers();
+    List<Volunteer> getVolunteers();
 
     /**
      * Получаем список участников на дату

@@ -1,4 +1,4 @@
-package telegram.bot.service;
+package telegram.bot.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import telegram.bot.service.enums.Callbackcommands;
+import telegram.bot.service.enums.ButtonType;
 
 import java.time.LocalDate;
 
@@ -15,16 +15,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 public class CallbackPayload {
-    @JsonProperty("c")
-    private final Callbackcommands command;
+    @JsonProperty("b")
+    private final ButtonType buttonType;
 
     @JsonProperty("d")
     @JsonFormat(pattern = "dd.MM.yyyy")
     private final LocalDate date;
 
+    @JsonProperty("c")
+    private String userChoice;
+
     @JsonProperty("r")
     private int sheetRowNumber;
-
-    @JsonProperty("a")
-    private String confirmationAnswer;
 }

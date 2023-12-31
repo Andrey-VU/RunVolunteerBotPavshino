@@ -1,7 +1,7 @@
 package telegram.bot.adapter.local;
 
 import lombok.extern.slf4j.Slf4j;
-import telegram.bot.service.AESUtil;
+import telegram.bot.service.utils.AESUtil;
 import telegram.bot.storage.Storage;
 import telegram.bot.storage.StorageUtils;
 

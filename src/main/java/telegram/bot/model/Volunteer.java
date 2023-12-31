@@ -3,7 +3,7 @@ package telegram.bot.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import telegram.bot.service.AESUtil;
+import telegram.bot.service.utils.AESUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Optional;
 @Data
 @Builder
 @AllArgsConstructor
-public class User {
+public class Volunteer {
     // Имя
     private String name;
 
@@ -21,7 +21,7 @@ public class User {
     private String surname;
 
     // Телеграм пользователя
-    private String telegram;
+    private String tgUserName;
 
     // Идентификатор пользователя в системе 5 верст
     private String code;
@@ -30,7 +30,7 @@ public class User {
     private String comment;
 
     // id пользователя в телеграме
-    private Long userId;
+    private Long tgUserId;
 
     // является ли пользователь организатором в какую-либо из суббот
     private Boolean isOrganizer;
@@ -41,9 +41,9 @@ public class User {
     // номер строки в таблице на закладке "Контакты"
     private Integer sheetRowNumber;
 
-    public static User createFrom(List<String> userProperties, AESUtil aesUtil) {
+    public static Volunteer createFrom(List<String> userProperties, AESUtil aesUtil) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
-        return new User(
+        return new Volunteer(
                 getValueFromList(fullNameList, 0),
                 getValueFromList(fullNameList, 1),
                 getValueFromList(userProperties, 1),
@@ -69,20 +69,20 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        User user = (User) o;
+        Volunteer volunteer = (Volunteer) o;
 
-        if (!name.equals(user.name)) return false;
-        if (!surname.equals(user.surname)) return false;
-        if (!telegram.equals(user.telegram)) return false;
-        if (!code.equals(user.code)) return false;
-        return comment.equals(user.comment);
+        if (!name.equals(volunteer.name)) return false;
+        if (!surname.equals(volunteer.surname)) return false;
+        if (!tgUserName.equals(volunteer.tgUserName)) return false;
+        if (!code.equals(volunteer.code)) return false;
+        return comment.equals(volunteer.comment);
     }
 
     @Override
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + surname.hashCode();
-        result = 31 * result + telegram.hashCode();
+        result = 31 * result + tgUserName.hashCode();
         result = 31 * result + code.hashCode();
         result = 31 * result + comment.hashCode();
         return result;

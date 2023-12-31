@@ -1,4 +1,4 @@
-package telegram.bot.service;
+package telegram.bot.service.utils;
 
 import telegram.bot.config.BotConfiguration;
 

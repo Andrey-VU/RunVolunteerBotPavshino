@@ -7,7 +7,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
 import telegram.bot.model.Participation;
-import telegram.bot.model.User;
+import telegram.bot.model.Volunteer;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,7 +25,7 @@ class Pavshino5verstApplicationTests {
     private static final String eventRoleToCheck = "Фотограф1";
     private static final int sheetRowNumber = 6;
 
-    User userToBeAdded;
+    Volunteer volunteerToBeAdded;
     Participation participation;
 
     @BeforeAll
@@ -36,16 +36,16 @@ class Pavshino5verstApplicationTests {
 
     @Test
     void saveUserTest() {
-        var listUsersBefore = telegramBotStorage.getUsers();
+        var listUsersBefore = telegramBotStorage.getVolunteers();
 
-        userToBeAdded = createNewUser();
-        telegramBotStorage.saveUser(userToBeAdded);
+        volunteerToBeAdded = createNewUser();
+        telegramBotStorage.saveVolunteer(volunteerToBeAdded);
 
-        var listUsersAfter = telegramBotStorage.getUsers();
+        var listUsersAfter = telegramBotStorage.getVolunteers();
         assertThat(listUsersAfter.size() - listUsersBefore.size(), equalTo(1));
 
-        var userIsAdded = listUsersAfter.stream().filter(user -> user.equals(userToBeAdded)).findFirst().orElse(null);
-        assertThat(userIsAdded, equalTo(userToBeAdded));
+        var userIsAdded = listUsersAfter.stream().filter(user -> user.equals(volunteerToBeAdded)).findFirst().orElse(null);
+        assertThat(userIsAdded, equalTo(volunteerToBeAdded));
     }
 
     @Test
@@ -55,10 +55,10 @@ class Pavshino5verstApplicationTests {
 
         assertThat(isEventRoleAvailable(), equalTo(true));
 
-        userToBeAdded = createNewUser();
-        telegramBotStorage.saveUser(userToBeAdded);
+        volunteerToBeAdded = createNewUser();
+        telegramBotStorage.saveVolunteer(volunteerToBeAdded);
 
-        participation = createParticipationForUser(userToBeAdded);
+        participation = createParticipationForUser(volunteerToBeAdded);
         telegramBotStorage.saveParticipation(participation);
 
         assertThat(isEventRoleAvailable(), equalTo(false));
@@ -72,10 +72,10 @@ class Pavshino5verstApplicationTests {
         var listParticipationBefore = telegramBotStorage.getParticipantsByDate(eventDateToCheck);
         var counterEventRolesBusyBefore = countEventRolesBusy(listParticipationBefore);
 
-        userToBeAdded = createNewUser();
-        telegramBotStorage.saveUser(userToBeAdded);
+        volunteerToBeAdded = createNewUser();
+        telegramBotStorage.saveVolunteer(volunteerToBeAdded);
 
-        participation = createParticipationForUser(userToBeAdded);
+        participation = createParticipationForUser(volunteerToBeAdded);
         telegramBotStorage.saveParticipation(participation);
 
         var listParticipationAfter = telegramBotStorage.getParticipantsByDate(eventDateToCheck);
@@ -83,17 +83,17 @@ class Pavshino5verstApplicationTests {
         assertThat(counterEventRolesBusyAfter - counterEventRolesBusyBefore, equalTo(1));
     }
 
-    private User createNewUser() {
-        return User.builder()
+    private Volunteer createNewUser() {
+        return Volunteer.builder()
                 .name("Петя")
                 .surname("ИВАНОВ" + " " + LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))
-                .telegram("@ivanov")
+                .tgUserName("@ivanov")
                 .code("0000").build();
     }
 
-    private Participation createParticipationForUser(User user) {
+    private Participation createParticipationForUser(Volunteer volunteer) {
         return Participation.builder()
-                .user(user)
+                .volunteer(volunteer)
                 .eventDate(eventDateToCheck)
                 .eventRole(eventRoleToCheck)
                 .sheetRowNumber(sheetRowNumber)
@@ -107,6 +107,6 @@ class Pavshino5verstApplicationTests {
     }
 
     private int countEventRolesBusy(List<Participation> participation) {
-        return participation.stream().filter(obj -> !Objects.isNull(obj.getUser())).toList().size();
+        return participation.stream().filter(obj -> !Objects.isNull(obj.getVolunteer())).toList().size();
     }
 }

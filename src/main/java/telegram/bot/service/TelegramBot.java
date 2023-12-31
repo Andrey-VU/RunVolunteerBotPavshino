@@ -16,11 +16,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import telegram.bot.adapter.TelegramBotStorage;
 import telegram.bot.config.BotConfiguration;
-import telegram.bot.model.Participation;
-import telegram.bot.model.User;
-import telegram.bot.service.enums.Callbackcommands;
-import telegram.bot.service.enums.ConfirmationFeedback;
-import telegram.bot.service.enums.RegistrationStages;
+import telegram.bot.model.*;
+import telegram.bot.service.enums.ButtonType;
+import telegram.bot.service.enums.UserActionType;
+import telegram.bot.service.enums.UserChoiceType;
 import telegram.bot.service.factories.ReplyFactory;
 
 import java.time.LocalDate;
@@ -53,7 +52,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     /**
      * Список активных регистраций
      */
-    private final Map<Long, RegistrationForm> forms = new HashMap<>();
+    private final Map<Long, UserRecord> userRecords = new HashMap<>();
 
     /**
      * Класс формирующий ответы
@@ -70,39 +69,10 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @PostConstruct
     private void init() throws TelegramApiException {
-        log.info("Registerung bot...");
+        log.info("Registering bot...");
         telegramBotsApi.registerBot(this); // Регистрируем бота
-        log.info("Registrartion successfull!!");
+        log.info("Registration successful!!");
         mapper.registerModule(new JavaTimeModule());
-    }
-
-    @Override
-    public void onUpdateReceived(Update update) {
-        log.info("received update!");
-        Map.Entry<Long, String> userKeys = getUserKeys(update);
-        if (!isKnownUser(userKeys)) {
-            log.info("user unknown.");
-            if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
-                log.info("user unknown /start command.");
-                answerToUser(reply.startCommandReply(getChatId(update)));
-            } else if (update.hasMessage() && update.getMessage().getText().equals("/register")) {
-                log.info("user unknown /register command.");
-                registration(update);
-
-                return;
-            }
-            answerToUser(reply.registrationRequired(getChatId(update)));
-        } else if (update.hasMessage()) {
-            if (update.getMessage().getText().startsWith("/")) {
-                handleCommand(update);
-            } else if (forms.containsKey(userKeys.getKey())) {
-                registration(update);
-            } else {
-                answerToUser(reply.commandNeededMessage(getChatId(update)));
-            }
-        } else if (update.hasCallbackQuery()) {
-            handleCallback(update);
-        }
     }
 
     @Override
@@ -115,16 +85,337 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botToken;
     }
 
+    @Override
+    public void onUpdateReceived(Update update) {
+        log.info("onUpdateReceived");
+        Map.Entry<Long, String> userIdentity = getUserIdentity(update);
+
+        // если этого юзера еще нет в мапе юзеров бота, добавляем его туда и отправляем приветствие
+        if (!userRecords.containsKey(userIdentity.getKey())) {
+            userRecords.put(userIdentity.getKey(), UserRecord.builder().expectedUserActionType(UserActionType.CHOOSE_COMMAND).build());
+            answerToUser(reply.botGreetingReply(getChatId(update)));
+        }
+        var userRecord = userRecords.get(userIdentity.getKey());
+
+        if (update.hasMessage()) {
+            if (update.getMessage().getText().startsWith("/"))
+                handleCommand(update, userIdentity, userRecord); // если пользователь выбрал команду из меню
+            else
+                handleStage(update, userIdentity, userRecord); // если пользователь что-то написал
+        } else if (update.hasCallbackQuery()) {
+            handleCallback(update, userIdentity, userRecord); // если пользователь кликнул кнопку
+        }
+    }
+
+    private void handleCommand(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
+        log.info("handleCommand");
+        long chatId = getChatId(update);
+
+        switch (update.getMessage().getText()) {
+            case "/start" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(reply.botGreetingReply(getChatId(update)));
+            }
+            case "/register" -> {
+                if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
+                    userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
+                    answerToUser(reply.registerInitialReply(chatId));
+                    answerToUser(reply.enterNameReply(chatId));
+                } else {
+                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                    answerToUser(reply.alreadyRegisteredReply(chatId));
+                }
+
+            }
+            case "/show_volunteers" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
+            }
+            case "/volunteer" -> {
+                if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
+                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                    answerToUser(reply.registrationRequired(getChatId(update)));
+                } else {
+                    userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART));
+                }
+            }
+            case "/subscribe" -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue())))
+                    answerToUser(reply.registrationRequired(getChatId(update)));
+                else replyToSubscriptionRequester(userIdentity, chatId);
+            }
+            default -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+            }
+        }
+    }
+
+    private void handleCallback(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
+        log.info("handleCallback");
+        long chatId = getChatId(update);
+
+        CallbackPayload payload;
+        try {
+            var pr = update.getCallbackQuery().getData();
+            payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error reading payload");
+            return;
+        }
+        switch (payload.getButtonType()) {
+            case SHOW_PART -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                answerToUser(
+                        reply.showVolunteersReply(
+                                chatId,
+                                payload.getDate(),
+                                storage.getParticipantsByDate(payload.getDate())
+                                        .stream()
+                                        .filter(part -> part.getVolunteer() != null)
+                                        .collect(Collectors.toList())));
+            }
+            case TAKE_PART -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                List<Participation> vacantRolesList = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getVolunteer() == null)
+                        .toList();
+                if (vacantRolesList.isEmpty())
+                    answerToUser(reply.allSlotsTakenReply(chatId));
+                else answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
+            }
+            case CHOSEN_ROLE -> {
+                // берем список участников на указанную субботу и ищем среди них нашего волонтера
+                var existingUSer = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(participant -> !Objects.isNull(participant.getVolunteer()))
+                        .filter(participant -> participant.getVolunteer().getTgUserName().equals(userIdentity.getValue()))
+                        .findFirst().orElse(null);
+
+                Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если волонтер уже записан на какую-то роль
+                {
+                    // ожидаем, что дальше пользователь выберет другую дату
+                    userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                    // отравляем в бот сообщение об этом
+                    answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()));
+                }, () -> // если волонтер в эту дату еще не записан на какую-либо роль
+                {
+                    // из данных полученного коллбэка определяем имя роли, которую выбрад волонтер
+                    var eventRole = getRoleName(payload);
+
+                    // готовим сообщение для диалога подтверждения
+                    String confirmationMessage = "Записать вас на " +
+                            Event.getDateLocalized(payload.getDate()) + " на роль \"" +
+                            eventRole + "\"?";
+
+                    // готовим коллбэк для диалога подтверждения
+                    var callBack = CallbackPayload.builder()
+                            .buttonType(ButtonType.PART_CHOICE)
+                            .date(payload.getDate())
+                            .sheetRowNumber(payload.getSheetRowNumber())
+                            .build();
+
+                    // запоминаем, что дальше нужно будет запросить у него подтверждение записи на роль
+                    userRecords.get(userIdentity.getKey()).setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
+
+                    // отправляем диалог да/нет
+                    answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, callBack));
+                });
+            }
+            case REG_CHOICE, PART_CHOICE -> {
+                handleStage(update, userIdentity, userRecord);
+            }
+        }
+    }
+
+    private void handleStage(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
+        log.info("handleStage");
+        long chatId = getChatId(update);
+
+        switch (userRecord.getExpectedUserActionType()) {
+            case CHOOSE_COMMAND -> answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
+            case ENTER_NAME -> {
+                userRecord.setName(update.getMessage().getText());
+
+                userRecord.setExpectedUserActionType(UserActionType.ENTER_SURNAME);
+                answerToUser(reply.enterSurNameReply(chatId));
+            }
+            case ENTER_SURNAME -> {
+                userRecord.setSurname(update.getMessage().getText());
+
+                userRecord.setExpectedUserActionType(UserActionType.ENTER_CODE);
+                answerToUser(reply.enterCodeReply(chatId));
+            }
+            case ENTER_CODE -> {
+                userRecord.setCode(update.getMessage().getText());
+
+                String confirmationMessage = "Зарегистрировать вас в списке волонтеров: " +
+                        userRecords.get(userIdentity.getKey()).getName() + " " +
+                        userRecords.get(userIdentity.getKey()).getSurname() + ", " +
+                        userRecords.get(userIdentity.getKey()).getCode() + "?";
+                userRecord.setExpectedUserActionType(UserActionType.CONFIRM_CHOICE);
+                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage, CallbackPayload.builder().buttonType(ButtonType.REG_CHOICE).build()));
+            }
+            case CONFIRM_CHOICE -> {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                CallbackPayload payload;
+                try {
+                    payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                switch (ButtonType.valueOf(payload.getButtonType().name())) {
+                    case REG_CHOICE -> {
+                        switch (UserChoiceType.valueOf(payload.getUserChoice())) {
+                            case YES -> {
+                                if (storage.getVolunteerByTgUserName(userIdentity.getValue()) != null)
+                                    answerToUser(reply.alreadyRegisteredReply(chatId));
+                                else {
+                                    if (isNameAndSurnameAreCorrect(userRecord.getName(), userRecord.getSurname()) && isCode5VerstCorrect(userRecord.getCode())) {
+                                        Volunteer volunteer = storage.saveVolunteer(
+                                                Volunteer.builder()
+                                                        .name(userRecord.getName())
+                                                        .surname(userRecord.getSurname())
+                                                        .code(userRecord.getCode())
+                                                        .tgUserName(userIdentity.getValue())
+                                                        .tgUserId(userIdentity.getKey())
+                                                        .comment("useless comment")
+                                                        .build()
+                                        );
+                                        answerToUser(reply.registrationDoneReply(chatId));
+                                    } else {
+                                        if (!isNameAndSurnameAreCorrect(userRecord.getName(), userRecord.getSurname())) {
+                                            answerToUser(reply.registrationFamilyNameErrorReply(chatId));
+                                        }
+                                        if (!isCode5VerstCorrect(userRecord.getCode())) {
+                                            answerToUser(reply.registrationCode5VerstErrorReply(chatId));
+                                        }
+                                    }
+                                }
+                            }
+                            case NO -> {
+                                if (storage.getVolunteerByTgUserName(userIdentity.getValue()) != null)
+                                    answerToUser(reply.genericMessage(chatId, "Вы уже зарегистрированы"));
+                                else answerToUser(reply.registrationCancelReply(chatId));
+                            }
+                        }
+                    }
+                    case PART_CHOICE -> {
+                        switch (UserChoiceType.valueOf(payload.getUserChoice())) {
+                            case YES -> {
+                                if (isRoleOccupiedAlready(payload, storage.getVolunteerByTgUserName(userIdentity.getValue())))
+                                    answerToUser(reply.genericMessage(chatId, "Запись на " + Event.getDateLocalized(payload.getDate()) + " на роль \"" + getRoleName(payload) + "\" уже подтверждена"));
+                                else {
+                                    // из данных коллбэка определяем имя роли
+                                    String eventRole = storage.getParticipantsByDate(payload.getDate())
+                                            .stream()
+                                            .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
+                                            .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
+
+                                    // записываем информацию в таблицу
+                                    storage.saveParticipation(Participation.builder()
+                                            .volunteer(storage.getVolunteerByTgUserName(userIdentity.getValue()))
+                                            .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
+
+                                    // запоминаем, что после записи на роль нужно снова выбирать команду
+                                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+
+                                    // информируем волонтера
+                                    answerToUser(reply.genericMessage(chatId, "Запись на " + Event.getDateLocalized(payload.getDate()) + " на роль \"" + getRoleName(payload) + "\" подтверждена"));
+
+                                    // ищем организаторов на эту дату
+                                    List<Volunteer> organizers = storage.getParticipantsByDate(payload.getDate())
+                                            .stream()
+                                            .filter(part -> part.getEventRole().equals(BotConfiguration.getSheetVolunteersRolesOrganizerName()))
+                                            .map(Participation::getVolunteer)
+                                            .filter(Objects::nonNull)
+                                            .toList();
+
+                                    // отправляем сообщение организаторам
+                                    informingOrganizers(organizers, payload.getDate(), storage.getVolunteerByTgUserName(userIdentity.getValue()).getFullName(), eventRole);
+                                }
+                            }
+                            case NO -> {
+                                if (isRoleOccupiedAlready(payload, storage.getVolunteerByTgUserName(userIdentity.getValue())))
+                                    answerToUser(reply.genericMessage(chatId, "Запись на " + Event.getDateLocalized(payload.getDate()) + " на роль \"" + getRoleName(payload) + "\" уже подтверждена"));
+                                else
+                                    answerToUser(reply.genericMessage(chatId, "Запись на " + Event.getDateLocalized(payload.getDate()) + " на роль \"" + getRoleName(payload) + "\" отменена"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private String getRoleName(CallbackPayload payload) {
+        return storage.getParticipantsByDate(payload.getDate())
+                .stream()
+                .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
+                .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
+    }
+
+    private boolean isRoleOccupiedAlready(CallbackPayload payload, Volunteer volunteer) {
+        return storage.getParticipantsByDate(payload.getDate()).stream()
+                .anyMatch(participcant -> participcant.getSheetRowNumber() == payload.getSheetRowNumber() && participcant.getVolunteer() == volunteer);
+    }
+
+    private boolean isNameAndSurnameAreCorrect(String name, String surname) {
+        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-ЯёЁ]+$", Pattern.UNICODE_CASE);
+        return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
+    }
+
+    private boolean isCode5VerstCorrect(String code) {
+        Pattern codePattern = Pattern.compile("[0-9]{9}$", Pattern.UNICODE_CASE);
+        return codePattern.matcher(code).matches();
+    }
+
+    private void replyToSubscriptionRequester(Map.Entry<Long, String> userKeys, long chatId) {
+        storage.getVolunteers()
+                .stream()
+                .filter(user -> user.getTgUserName().equals(userKeys.getValue()))
+                .findAny()
+                .ifPresentOrElse(user -> {
+                            if (user.getIsOrganizer() && !user.getIsSubscribed()) {
+                                answerToUser(reply.addOrganizerSignupReply(chatId));
+                                user.setTgUserId(userKeys.getKey());
+                                user.setIsSubscribed(true);
+                                storage.updateVolunteer(user);
+                            } else if (user.getIsOrganizer()) answerToUser(reply.alreadyOrganizerSignupReply(chatId));
+                            else answerToUser(reply.rejectOrganizerSignupReply(chatId));
+                        }, () -> answerToUser(reply.registrationRequired(chatId))
+                );
+    }
+
+    private void informingOrganizers(List<Volunteer> organizers, LocalDate eventDate, String volunteer, String eventRole) {
+        organizers.stream()
+                .map(Volunteer::getTgUserId)
+                .filter(userId -> userId != 0)
+                .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, volunteer, eventRole)));
+    }
+
     private void answerToUser(SendMessage message) {
         try {
-            this.execute(message);
+            execute(message);
         } catch (TelegramApiException e) {
             log.error("Can't send answer! - " + message.toString());
             throw new RuntimeException();
         }
     }
 
-    private Map.Entry<Long, String> getUserKeys(Update update) {
+    private void answerToUser(long chatId, String message) {
+        try {
+            execute(reply.genericMessage(chatId, message));
+        } catch (TelegramApiException e) {
+            log.error("Can't send answer! - " + message);
+            throw new RuntimeException();
+        }
+    }
+
+    private Map.Entry<Long, String> getUserIdentity(Update update) {
         if (update.hasMessage()) {
             return new AbstractMap.SimpleEntry<Long, String>(
                     update.getMessage().getFrom().getId(), update.getMessage().getFrom().getUserName());
@@ -142,208 +433,5 @@ public class TelegramBot extends TelegramLongPollingBot {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         throw new RuntimeException("Can't define chat");
-    }
-
-    private boolean isKnownUser(Map.Entry<Long, String> userKeys) {
-        return forms.containsKey(userKeys.getKey()) || storage.getUserByTelegram(userKeys.getValue()) != null;
-    }
-
-    private void handleCommand(Update update) {
-        log.info("Handling command!");
-        long chatId = getChatId(update);
-        Map.Entry<Long, String> userKeys = getUserKeys(update);
-        switch (update.getMessage().getText()) {
-            case "/start" -> {
-                answerToUser(reply.startCommandReply(getChatId(update)));
-            }
-            case "/register" -> {
-                if (storage.getUserByTelegram(userKeys.getValue()) != null) {
-                    answerToUser(reply.alreadyRegisteredReply(chatId));
-                } else {
-                    registration(update);
-                }
-            }
-            case "/show_volunteers" -> {
-                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.SHOW));
-            }
-            case "/volunteer" -> {
-                answerToUser(reply.selectDatesReply(chatId, Callbackcommands.VOLUNTEER));
-            }
-            case "/subscribe" -> {
-                replyToSubscriptionRequestor(userKeys, chatId);
-            }
-            default -> {
-                answerToUser(reply.commandNeededMessage(chatId));
-            }
-        }
-    }
-
-    private void handleCallback(Update update) {
-        log.info("Handling command!");
-        long chatId = getChatId(update);
-        Map.Entry<Long, String> userKeys = getUserKeys(update);
-        CallbackPayload payload;
-        try {
-            var pr = update.getCallbackQuery().getData();
-            payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error reading payload");
-            return;
-        }
-        switch (payload.getCommand()) {
-            case SHOW -> {
-                answerToUser(
-                        reply.showVolunteersReply(
-                                chatId,
-                                payload.getDate(),
-                                storage.getParticipantsByDate(payload.getDate())
-                                        .stream()
-                                        .filter(part -> part.getUser() != null)
-                                        .collect(Collectors.toList())));
-            }
-            case VOLUNTEER -> {
-                List<Participation> participations = storage.getParticipantsByDate(payload.getDate())
-                        .stream()
-                        .filter(part -> part.getUser() == null)
-                        .toList();
-                if (participations.isEmpty()) {
-                    answerToUser(reply.allSlotsTakenReply(chatId));
-                } else {
-                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), participations));
-                }
-            }
-            case ROLE -> {
-                List<User> organizers = storage.getParticipantsByDate(payload.getDate())
-                        .stream()
-                        .filter(part -> part.getEventRole().equals(BotConfiguration.getSheetVolunteersRolesOrganizerName())) // ищем организаторов на эту дату
-                        .map(Participation::getUser)
-                        .toList();
-
-                String eventRole = storage.getParticipantsByDate(payload.getDate())
-                        .stream()
-                        .filter(participation -> participation.getSheetRowNumber() == payload.getSheetRowNumber())
-                        .map(Participation::getEventRole).findFirst().orElseThrow(() -> new RuntimeException("No role!"));
-
-
-                var existingUSer = storage.getParticipantsByDate(payload.getDate()) // берем список участников на указанную субботу
-                        .stream()
-                        .filter(participant -> !Objects.isNull(participant.getUser()))
-                        .filter(participant -> participant.getUser().getTelegram().equals(userKeys.getValue())) // ищем нашего волонтера
-                        .findFirst().orElse(null);
-
-                Optional.ofNullable(existingUSer).ifPresentOrElse(participant -> // если данный волонтер уже записан на какую роль
-                                answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole())) // тогда отравляем в бот сообщение об этом
-                        , () -> { // иначе записываем его на запрошенную роль
-                            storage.saveParticipation(Participation.builder() // записываем в файл
-                                    .user(storage.getUserByTelegram(userKeys.getValue()))
-                                    .eventDate(payload.getDate()).eventRole(eventRole).sheetRowNumber(payload.getSheetRowNumber()).build());
-                            answerToUser(reply.roleReservationDoneReply(chatId, payload.getDate(), eventRole)); // отправляем в бот сообщение об этом
-
-                            informingOrganizers(organizers, payload.getDate(), storage.getUserByTelegram(userKeys.getValue()).getFullName(), eventRole); // отправляем сообщение организаторам
-                        });
-            }
-            case CONFIRMATION -> registration(update);
-        }
-    }
-
-    private void registration(Update update) {
-        log.info("Registration progress.");
-        long chatId = getChatId(update);
-        Map.Entry<Long, String> userKeys = getUserKeys(update);
-        RegistrationForm form;
-        if (forms.containsKey(userKeys.getKey())) {
-            form = forms.get(userKeys.getKey());
-        } else {
-            form = new RegistrationForm();
-            answerToUser(reply.registerCommandReply(chatId));
-            forms.put(userKeys.getKey(), form);
-        }
-        switch (form.getStage()) {
-            case NEW -> {
-                answerToUser(reply.enterNameReply(chatId));
-                form.setStage(RegistrationStages.NAME);
-            }
-            case NAME -> {
-                form.setName(update.getMessage().getText());
-                answerToUser(reply.enterSurNameReply(chatId));
-                form.setStage(RegistrationStages.SURNAME);
-            }
-            case SURNAME -> {
-                form.setSurname(update.getMessage().getText());
-                answerToUser(reply.enterCodeReply(chatId));
-                form.setStage(RegistrationStages.CODE);
-            }
-            case CODE -> {
-                form.setCode(update.getMessage().getText());
-                String confirmationMessage = "Сохранить данные: " +
-                        forms.get(userKeys.getKey()).getName() + " " +
-                        forms.get(userKeys.getKey()).getSurname() + ", " +
-                        forms.get(userKeys.getKey()).getCode() + "?";
-                answerToUser(reply.selectConfirmationChoice(chatId, confirmationMessage));
-                form.setStage(RegistrationStages.CONFIRMATION);
-            }
-            case CONFIRMATION -> {
-                form.setStage(RegistrationStages.NEW);
-                CallbackPayload payload;
-                try {
-                    payload = mapper.readValue(update.getCallbackQuery().getData(), CallbackPayload.class);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-                switch (ConfirmationFeedback.valueOf(payload.getConfirmationAnswer())) {
-                    case YES -> {
-                        if (isNameAndSurnameAreCorrect(form.getName(), form.getSurname())) {
-                            User user = storage.saveUser(
-                                    User.builder()
-                                            .name(form.getName())
-                                            .surname(form.getSurname())
-                                            .code(form.getCode())
-                                            .telegram(userKeys.getValue())
-                                            .comment("useless comment")
-                                            .build()
-                            );
-                            forms.remove(userKeys.getValue());
-                            answerToUser(reply.registrationDoneReply(chatId));
-                        } else {
-                            forms.remove(userKeys.getValue());
-                            answerToUser(reply.registrationErrorReply(chatId));
-                        }
-                    }
-                    case NO -> {
-                        forms.remove(userKeys.getValue());
-                        answerToUser(reply.registrationCancelReply(chatId));
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean isNameAndSurnameAreCorrect(String name, String surname) {
-        Pattern pattern = Pattern.compile("^[a-zA-Zа-яА-ЯёЁ]+$", Pattern.UNICODE_CASE);
-        return pattern.matcher(name).matches() && pattern.matcher(surname).matches();
-    }
-
-    private void replyToSubscriptionRequestor(Map.Entry<Long, String> userKeys, long chatId) {
-        storage.getUsers()
-                .stream()
-                .filter(user -> user.getTelegram().equals(userKeys.getValue()))
-                .findAny()
-                .ifPresentOrElse(user -> {
-                            if (user.getIsOrganizer() && !user.getIsSubscribed()) {
-                                answerToUser(reply.addOrganizerSignupReply(chatId));
-                                user.setUserId(userKeys.getKey());
-                                user.setIsSubscribed(true);
-                                storage.updateUser(user);
-                            } else if (user.getIsOrganizer()) answerToUser(reply.alreadyOrganizerSignupReply(chatId));
-                            else answerToUser(reply.rejectOrganizerSignupReply(chatId));
-                        }, () -> answerToUser(reply.registrationRequired(chatId))
-                );
-    }
-
-    private void informingOrganizers(List<User> organizers, LocalDate eventDate, String volunteer, String eventRole) {
-        organizers.stream()
-                .map(User::getUserId)
-                .filter(userId -> userId != 0)
-                .forEach(userId -> answerToUser(reply.informOrgAboutJoinVolunteersMessage(userId, eventDate, volunteer, eventRole)));
     }
 }

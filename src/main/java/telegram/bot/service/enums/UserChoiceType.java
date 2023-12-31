@@ -1,6 +1,6 @@
 package telegram.bot.service.enums;
 
-public enum ConfirmationFeedback {
+public enum UserChoiceType {
     YES,
     NO;
 }
