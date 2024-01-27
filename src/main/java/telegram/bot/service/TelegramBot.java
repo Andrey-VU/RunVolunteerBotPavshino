@@ -113,7 +113,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         switch (update.getMessage().getText()) {
             case "/start" -> {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                answerToUser(reply.botGreetingReply(getChatId(update)));
+                answerToUser(reply.botGreetingReply(getChatId(update), nameForGreeting(userIdentity)));
             }
             case "/register" -> {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
@@ -124,7 +124,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                     userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 }
-
             }
             case "/show_volunteers" -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
@@ -251,7 +250,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             case ENTER_CODE -> {
                 userRecord.setCode(update.getMessage().getText());
 
-                String confirmationMessage = "Зарегистрировать вас в списке волонтеров: " +
+                String confirmationMessage = "Зарегистрировать Вас в списке волонтеров: " +
                         userRecords.get(userIdentity.getKey()).getName() + " " +
                         userRecords.get(userIdentity.getKey()).getSurname() + ", " +
                         userRecords.get(userIdentity.getKey()).getCode() + "?";
@@ -432,5 +431,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         throw new RuntimeException("Can't define chat");
+    }
+
+    private String nameForGreeting(Map.Entry<Long, String> userIdentity) {
+        String name = "!";
+        Volunteer volunteer = storage.getVolunteerByTgUserName(userIdentity.getValue());
+        if (volunteer != null) {
+            name = ", " + volunteer.getName() + " (" + userIdentity.getValue() + ")!";
+        }
+        return name;
     }
 }

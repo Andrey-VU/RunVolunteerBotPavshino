@@ -11,17 +11,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class ReplyFactory {
-    private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон 5 верст в парке Павшино.";
+    private static final String HELLO_MESSAGE = "Привет";
+    private static final String GREETING_MESSAGE = "Я бот-помощник для записи в волонтёры на 5 вёрст в Павшинской пойме.";
+    private static final String WHAT_DO_YOU_WANT = "Что желаете?";
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
-    private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
+    private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 вёрст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
-    private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 верст";
+    private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 вёрст";
     private static final String MAKE_CONFIRMATION_DATE_ROLE = "Подтвердите введённые данные!\nВы регистрируетесь на дату: ";
     private static final String REGISTRATION_DONE_MESSAGE = "Вы зарегистрированы";
     private static final String REGISTRATION_FAMILY_NAME_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
-    private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5Вёрст";
+    private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5 вёрст";
     private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
     private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую.";
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
@@ -29,13 +31,19 @@ public class ReplyFactory {
     private static final String ERROR_MESSAGE = "Что-то пошло не так";
     private static final String COMMAND_REQUIRED_MESSAGE = "Введите команду!";
     private static final String INFORM_ORG_JOIN_VOLUNTEERS_MESSAGE = " регистрируется в волонтеры на позицию ";
-    private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписаны на рассылку уведомлений о записи волонтеров";
-    private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
+    private static final String ORG_ADD_SIGNUP_MESSAGE = "Вы подписаны на рассылку уведомлений о записи волонтёров";
+        private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтёров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
 
-    public SendMessage botGreetingReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
+    public SendMessage botGreetingReply(long chatId, String name) {
+        String message = HELLO_MESSAGE
+                + name
+                + System.lineSeparator()
+                + GREETING_MESSAGE
+                + System.lineSeparator()
+                + WHAT_DO_YOU_WANT;
+        return SendMessage.builder().chatId(chatId).text(message).build();
     }
 
     public SendMessage registerInitialReply(long chatId) {
