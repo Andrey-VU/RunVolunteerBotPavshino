@@ -93,7 +93,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         // если этого юзера еще нет в мапе юзеров бота, добавляем его туда и отправляем приветствие
         if (!userRecords.containsKey(userIdentity.getKey())) {
             userRecords.put(userIdentity.getKey(), UserRecord.builder().expectedUserActionType(UserActionType.CHOOSE_COMMAND).build());
-            answerToUser(reply.botGreetingReply(getChatId(update)));
         }
         var userRecord = userRecords.get(userIdentity.getKey());
 
