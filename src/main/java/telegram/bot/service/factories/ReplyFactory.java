@@ -14,9 +14,9 @@ public class ReplyFactory {
     private static final String HELLO_MESSAGE = "Привет";
     private static final String GREETING_MESSAGE = "Я бот-помощник для записи в волонтёры на 5 вёрст в Павшинской пойме.";
     private static final String WHAT_DO_YOU_WANT = "Что желаете?";
-    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
-    private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 вёрст";
-    private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
+    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с Вами ещё не знакомы! Давайте я Вас запишу. Введите команду /register";
+    private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и Ваш код в Системе 5 вёрст";
+    private static final String ALREADY_REGISTERED_MESSAGE = "Я Вас уже знаю!";
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
     private static final String ENTER_SURNAME_MESSAGE = "Введите фамилию";
     private static final String ENTER_5VERST_CODE_MESSAGE = "Введите код 5 вёрст";
