@@ -97,26 +97,25 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         var userRecord = userRecords.get(userIdentity.getKey());
 
-        if (update.hasMessage()) {
-            if (update.getMessage().getText().startsWith("/"))
-                handleCommand(update, userIdentity, userRecord); // если пользователь выбрал команду из меню
-            else
-                handleStage(update, userIdentity, userRecord); // если пользователь что-то написал
-        } else if (update.hasCallbackQuery()) {
-            handleCallback(update, userIdentity, userRecord); // если пользователь кликнул кнопку
-        }
+        if (update.hasMessage()) // если пользователь выбрал команду в основном меню или что-то ввел с клавиатуры
+            handleCommand(update, userIdentity, userRecord);
+        else if (update.hasCallbackQuery()) // если пользователь кликнул кнопку в каком-то из сценариев
+            handleCallback(update, userIdentity, userRecord);
     }
 
     private void handleCommand(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
         log.info("handleCommand");
         long chatId = getChatId(update);
 
-        switch (update.getMessage().getText()) {
-            case "/start" -> {
+        var text = update.getMessage().getText();
+
+        if (isCommand(text)) {
+            if (text.equals("/start")) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                answerToUser(reply.botGreetingReply(getChatId(update)));
-            }
-            case "/register" -> {
+                //answerToUser(reply.botGreetingReply(getChatId(update)));
+                answerToUser(reply.mainMenu(chatId));
+                // TODO - добавить вывод меню
+            } else if (text.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
                     answerToUser(reply.registerInitialReply(chatId));
@@ -126,12 +125,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 }
 
-            }
-            case "/show_volunteers" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS)) {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
-            }
-            case "/volunteer" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.registrationRequired(getChatId(update)));
@@ -139,18 +136,16 @@ public class TelegramBot extends TelegramLongPollingBot {
                     userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                     answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART));
                 }
-            }
-            case "/subscribe" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION)) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue())))
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 else replyToSubscriptionRequester(userIdentity, chatId);
-            }
-            default -> {
+            } else {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
             }
-        }
+        } else handleStage(update, userIdentity, userRecord); // значит пользователь что-то написал
     }
 
     private void handleCallback(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
@@ -433,5 +428,15 @@ public class TelegramBot extends TelegramLongPollingBot {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         throw new RuntimeException("Can't define chat");
+    }
+
+    private boolean isCommand(String command) {
+        if (command.equals("/start") ||
+                command.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS) ||
+                command.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION) ||
+                command.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION) ||
+                command.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION))
+            return true;
+        else return false;
     }
 }

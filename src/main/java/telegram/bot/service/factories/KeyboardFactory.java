@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
@@ -73,6 +75,19 @@ public class KeyboardFactory {
         inlineKeyboardMarkup.setKeyboard(getApproveDeclineButtons());
 
         return inlineKeyboardMarkup;
+    }
+
+    public ReplyKeyboardMarkup getMainMenu() {
+        var keyboardRow1 = new KeyboardRow();
+        keyboardRow1.add(ReplyFactory.COMMAND_TAKE_PARTICIPATION);
+        keyboardRow1.add(ReplyFactory.COMMAND_SHOW_VOLUNTEERS);
+        var keyboardRow2 = new KeyboardRow();
+        keyboardRow2.add(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION);
+        keyboardRow2.add(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION);
+        return ReplyKeyboardMarkup.builder()
+                .keyboard(List.of(keyboardRow1, keyboardRow2))
+                .resizeKeyboard(true)
+                .build();
     }
 
     private List<List<InlineKeyboardButton>> getApproveDeclineButtons() {
