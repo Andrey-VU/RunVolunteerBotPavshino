@@ -11,10 +11,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class ReplyFactory {
-    public static final String COMMAND_TAKE_PARTICIPATION = new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x8F}, StandardCharsets.UTF_8) + " Записаться в волонтеры)";
-    public static final String COMMAND_SHOW_VOLUNTEERS = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x8E, (byte) 0xBD}, StandardCharsets.UTF_8) + " Показать кто уже записан)";
+    public static final String COMMAND_TAKE_PARTICIPATION = new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x8F}, StandardCharsets.UTF_8) + " Записаться в волонтеры";
+    public static final String COMMAND_SHOW_VOLUNTEERS = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x8E, (byte) 0xBD}, StandardCharsets.UTF_8) + " Показать кто уже записан";
     public static final String COMMAND_VOLUNTEER_REGISTRATION = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x86, (byte) 0x95}, StandardCharsets.UTF_8) + " Зарегистрироваться";
-    public static final String COMMAND_SUBSCRIBE_NOTIFICATION = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x91, (byte) 0x80}, StandardCharsets.UTF_8) + " Подписаться на оповещения)";
+    public static final String COMMAND_SUBSCRIBE_NOTIFICATION = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x91, (byte) 0x80}, StandardCharsets.UTF_8) + " Подписаться на оповещения";
     private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон 5 верст в парке Павшино.";
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
     private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
@@ -37,10 +37,6 @@ public class ReplyFactory {
     private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
-
-    public SendMessage botGreetingReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
-    }
 
     public SendMessage registerInitialReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_INITIAL_MESSAGE).build();
@@ -76,16 +72,6 @@ public class ReplyFactory {
 
     public SendMessage enterNameReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(ENTER_NAME_MESSAGE).build();
-    }
-
-    public SendMessage makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
-        SendMessage message = SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
-                        + "\nНа роль: \"" + eventRole + "\""
-                        + "\nЕсли всё верно, выбирайте: \"YES\"!" +
-                        "\nЕсли что-то пошло не так, откажитесь от сохранения: \"NO\"!")
-                .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
-                .build();
-        return message;
     }
 
     public SendMessage enterSurNameReply(long chatId) {
