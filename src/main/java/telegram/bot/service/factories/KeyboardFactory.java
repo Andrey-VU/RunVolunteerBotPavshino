@@ -84,8 +84,10 @@ public class KeyboardFactory {
         var keyboardRow2 = new KeyboardRow();
         keyboardRow2.add(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION);
         keyboardRow2.add(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION);
+        var keyboardRow3 = new KeyboardRow();
+        keyboardRow3.add(ReplyFactory.COMMAND_HELP);
         return ReplyKeyboardMarkup.builder()
-                .keyboard(List.of(keyboardRow1, keyboardRow2))
+                .keyboard(List.of(keyboardRow1, keyboardRow2, keyboardRow3))
                 .resizeKeyboard(true)
                 .build();
     }

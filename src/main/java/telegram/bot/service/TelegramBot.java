@@ -121,7 +121,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                     userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 }
-
             } else if (text.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS)) {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
@@ -138,7 +137,15 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue())))
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 else replyToSubscriptionRequester(userIdentity, chatId);
-            } else {
+
+            } else if (text.equals(ReplyFactory.COMMAND_HELP)) {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(chatId,"С помощью бота можно:\n" +
+                        "\n" +
+                        "1. Записаться в волонтёры на 5 вёрст “Павшинская Пойма” на нужную дату и позицию.\n" +
+                        "2. Просмотреть, кто уже записан на мероприятие в определённую дату.");
+            }
+            else {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
             }
@@ -432,7 +439,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                 command.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS) ||
                 command.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION) ||
                 command.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION) ||
-                command.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION))
+                command.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION) ||
+                command.equals(ReplyFactory.COMMAND_HELP))
             return true;
         else return false;
     }
