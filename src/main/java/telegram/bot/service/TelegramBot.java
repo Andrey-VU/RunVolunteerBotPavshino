@@ -111,9 +111,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (isCommand(text)) {
             if (text.equals("/start")) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                //answerToUser(reply.botGreetingReply(getChatId(update)));
                 answerToUser(reply.mainMenu(chatId));
-                // TODO - добавить вывод меню
             } else if (text.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
