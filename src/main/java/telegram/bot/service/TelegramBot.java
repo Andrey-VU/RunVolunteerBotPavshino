@@ -130,7 +130,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 } else {
                     userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART));
+                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART1));
                 }
             } else if (text.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION)) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
@@ -140,12 +140,11 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             } else if (text.equals(ReplyFactory.COMMAND_HELP)) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                answerToUser(chatId,"С помощью бота можно:\n" +
+                answerToUser(chatId, "С помощью бота можно:\n" +
                         "\n" +
                         "1. Записаться в волонтёры на 5 вёрст “Павшинская Пойма” на нужную дату и позицию.\n" +
                         "2. Просмотреть, кто уже записан на мероприятие в определённую дату.");
-            }
-            else {
+            } else {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
             }
@@ -176,7 +175,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                         .filter(part -> part.getVolunteer() != null)
                                         .collect(Collectors.toList())));
             }
-            case TAKE_PART -> {
+            case TAKE_PART1 -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 List<Participation> vacantRolesList = storage.getParticipantsByDate(payload.getDate())
                         .stream()
@@ -185,6 +184,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (vacantRolesList.isEmpty())
                     answerToUser(reply.allSlotsTakenReply(chatId));
                 else answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
+            }
+            case TAKE_PART2 -> {
+
             }
             case CHOSEN_ROLE -> {
                 // берем список участников на указанную субботу и ищем среди них нашего волонтера
@@ -202,7 +204,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()));
                 }, () -> // если волонтер в эту дату еще не записан на какую-либо роль
                 {
-                    // из данных полученного коллбэка определяем имя роли, которую выбрад волонтер
+                    // из данных полученного коллбэка определяем имя роли, которую выбрал волонтер
                     var eventRole = getRoleName(payload);
 
                     // готовим сообщение для диалога подтверждения

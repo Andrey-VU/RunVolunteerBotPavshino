@@ -1,23 +1,29 @@
 package telegram.bot.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
 @Data
 @Builder
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class Participation {
 
     // Волонтер
-    private Volunteer volunteer;
+    Volunteer volunteer;
 
     // Дата участия
-    private LocalDate eventDate;
+    LocalDate eventDate;
 
     // Позиция
-    private String eventRole;
+    String eventRole;
 
     // номер строки в таблице на закладке "Волонтеры"
-    private int sheetRowNumber;
+    int sheetRowNumber;
+
+    // используется в UI бота, чтобы пометить кнопку, с помощью которой вызывается 2 часть списка доступных ролей при записи волонтера
+    boolean pointerToNextPageOfRoles;
 }
