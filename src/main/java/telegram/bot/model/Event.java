@@ -1,7 +1,9 @@
 package telegram.bot.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -11,15 +13,16 @@ import java.util.Locale;
 
 @Data
 @Builder
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class Event {
     // Дата забега
-    private LocalDate eventDate;
+    LocalDate eventDate;
 
     // Команда
-    private List<Participation> participants;
+    List<Participation> participants;
 
     // номер колонки в sheet
-    private int columnNumber;
+    int columnNumber;
 
     public static String getDateLocalized(LocalDate date) {
         return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).localizedBy(new Locale("ru")));

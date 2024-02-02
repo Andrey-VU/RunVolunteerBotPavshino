@@ -28,7 +28,8 @@ public class ReplyFactory {
     private static final String REGISTRATION_FAMILY_NAME_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
     private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5Вёрст";
     private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
-    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую.";
+    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую";
+    private static final String OTHER_SLOTS_TAKEN_MESSAGE = "Больше свободны ролей нет>";
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
     private static final String ERROR_MESSAGE = "Что-то пошло не так";
