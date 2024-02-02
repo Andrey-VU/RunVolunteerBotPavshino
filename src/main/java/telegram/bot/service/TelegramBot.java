@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -177,16 +178,33 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             case TAKE_PART1 -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                List<Participation> vacantRolesList = storage.getParticipantsByDate(payload.getDate())
+                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(part -> part.getVolunteer() == null)
                         .toList();
-                if (vacantRolesList.isEmpty())
+                if (vacantRoles.isEmpty())
                     answerToUser(reply.allSlotsTakenReply(chatId));
-                else answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
+                else {
+                    List<Participation> vacantRolesPage1 = Stream.concat(
+                            vacantRoles.stream().limit(BotConfiguration.getSheetVolunteersRolesFirstPartRows()),
+                            Stream.of(vacantRoles.size() > BotConfiguration.getSheetVolunteersRolesFirstPartRows() ?
+                                    Participation.builder()
+                                            .eventDate(payload.getDate())
+                                            .eventRole(">>>")
+                                            .pointerToNextPageOfRoles(true).build() :
+                                    null)
+                    ).toList();
+                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesPage1));
+                }
             }
             case TAKE_PART2 -> {
-
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getVolunteer() == null)
+                        .skip(BotConfiguration.getSheetVolunteersRolesFirstPartRows())
+                        .toList();
+                answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRoles));
             }
             case CHOSEN_ROLE -> {
                 // берем список участников на указанную субботу и ищем среди них нашего волонтера

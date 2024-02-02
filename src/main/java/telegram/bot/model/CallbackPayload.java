@@ -2,10 +2,8 @@ package telegram.bot.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import telegram.bot.service.enums.ButtonType;
 
 import java.time.LocalDate;
@@ -14,17 +12,18 @@ import java.time.LocalDate;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class CallbackPayload {
     @JsonProperty("b")
-    private final ButtonType buttonType;
+    final ButtonType buttonType;
 
     @JsonProperty("d")
     @JsonFormat(pattern = "dd.MM.yyyy")
-    private final LocalDate date;
+    final LocalDate date;
 
     @JsonProperty("c")
-    private String userChoice;
+    String userChoice;
 
     @JsonProperty("r")
-    private int sheetRowNumber;
+    int sheetRowNumber;
 }

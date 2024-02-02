@@ -116,10 +116,17 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).buttonType(ButtonType.CHOSEN_ROLE).build();
+                .date(date)
+                .sheetRowNumber(participation.getSheetRowNumber())
+                .buttonType(
+                        !participation.isPointerToNextPageOfRoles() ?
+                        ButtonType.CHOSEN_ROLE :
+                        ButtonType.TAKE_PART2)
+                .build();
         try {
             return InlineKeyboardButton.builder()
-                    .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
+                    .text((!participation.isPointerToNextPageOfRoles() ?
+                            new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8) : "")
                             + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
