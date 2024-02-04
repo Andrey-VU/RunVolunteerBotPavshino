@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import telegram.bot.model.CallbackPayload;
 import telegram.bot.model.Event;
 import telegram.bot.model.Participation;
@@ -75,6 +77,21 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
+    public ReplyKeyboardMarkup getMainMenu() {
+        var keyboardRow1 = new KeyboardRow();
+        keyboardRow1.add(ReplyFactory.COMMAND_TAKE_PARTICIPATION);
+        keyboardRow1.add(ReplyFactory.COMMAND_SHOW_VOLUNTEERS);
+        var keyboardRow2 = new KeyboardRow();
+        keyboardRow2.add(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION);
+        keyboardRow2.add(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION);
+        var keyboardRow3 = new KeyboardRow();
+        keyboardRow3.add(ReplyFactory.COMMAND_HELP);
+        return ReplyKeyboardMarkup.builder()
+                .keyboard(List.of(keyboardRow1, keyboardRow2, keyboardRow3))
+                .resizeKeyboard(true)
+                .build();
+    }
+
     private List<List<InlineKeyboardButton>> getApproveDeclineButtons() {
 
         List<List<InlineKeyboardButton>> approveDeclineButtons = new ArrayList<>();
@@ -99,10 +116,17 @@ public class KeyboardFactory {
 
     private InlineKeyboardButton getRoleButton(LocalDate date, Participation participation) {
         CallbackPayload payload = CallbackPayload.builder()
-                .date(date).sheetRowNumber(participation.getSheetRowNumber()).buttonType(ButtonType.CHOSEN_ROLE).build();
+                .date(date)
+                .sheetRowNumber(participation.getSheetRowNumber())
+                .buttonType(
+                        !participation.isPointerToNextPageOfRoles() ?
+                        ButtonType.CHOSEN_ROLE :
+                        ButtonType.TAKE_PART2)
+                .build();
         try {
             return InlineKeyboardButton.builder()
-                    .text(new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8)
+                    .text((!participation.isPointerToNextPageOfRoles() ?
+                            new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x9A, (byte) 0xA9}, StandardCharsets.UTF_8) : "")
                             + " " + participation.getEventRole()).callbackData(mapper.writeValueAsString(payload)).build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

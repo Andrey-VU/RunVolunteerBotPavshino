@@ -41,6 +41,7 @@ public class BotConfiguration {
     private static int SHEET_VOLUNTEERS_ROLE_COLUMN;
     private static int SHEET_VOLUNTEERS_EVENT_COLUMN_START;
     private static int SHEET_VOLUNTEERS_EVENT_ROW;
+    private static int SHEET_VOLUNTEERS_ROLES_FIRST_PART_ROWS;
     private static int SHEET_SATURDAYS_AHEAD;
     private static String SHEET_USERID_CRYPT_PASS;
     private static String SHEET_USERID_CRYPT_SALT;
@@ -80,6 +81,7 @@ public class BotConfiguration {
                             @Value("${sheet.volunteers.role.column}") String sheet_volunteers_role_column,
                             @Value("${sheet.volunteers.event.column.start}") String sheet_volunteers_event_column_start,
                             @Value("${sheet.volunteers.event.row}") String sheet_volunteers_event_row,
+                            @Value("${sheet.volunteers.roles.first_part_rows}") String sheet_volunteers_roles_first_part_rows,
                             @Value("${sheet.saturdays.ahead}") String sheet_saturdays_ahead,
                             @Value("${sheet.userid.crypt.pass}") String sheet_userid_crypt_pass,
                             @Value("${sheet.userid.crypt.salt}") String sheet_userid_crypt_salt) {
@@ -104,6 +106,7 @@ public class BotConfiguration {
         SHEET_VOLUNTEERS_ROLE_COLUMN = Integer.parseInt(sheet_volunteers_role_column);
         SHEET_VOLUNTEERS_EVENT_COLUMN_START = Integer.parseInt(sheet_volunteers_event_column_start);
         SHEET_VOLUNTEERS_EVENT_ROW = Integer.parseInt(sheet_volunteers_event_row);
+        SHEET_VOLUNTEERS_ROLES_FIRST_PART_ROWS = Integer.parseInt(sheet_volunteers_roles_first_part_rows);
         SHEET_SATURDAYS_AHEAD = Integer.parseInt(sheet_saturdays_ahead);
         SHEET_USERID_CRYPT_PASS = sheet_userid_crypt_pass;
         SHEET_USERID_CRYPT_SALT = sheet_userid_crypt_salt;
@@ -167,6 +170,10 @@ public class BotConfiguration {
 
     public static int getSheetVolunteersEventRow() {
         return SHEET_VOLUNTEERS_EVENT_ROW;
+    }
+
+    public static int getSheetVolunteersRolesFirstPartRows() {
+        return SHEET_VOLUNTEERS_ROLES_FIRST_PART_ROWS;
     }
 
     public static int getSheetSaturdaysAhead() {

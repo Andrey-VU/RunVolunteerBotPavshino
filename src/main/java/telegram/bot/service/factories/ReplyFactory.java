@@ -11,7 +11,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class ReplyFactory {
-    private static final String GREETING_MESSAGE = "Приветствую, вас! Я бот для записи волонтёром на марафон 5 верст в парке Павшино.";
+    public static final String COMMAND_TAKE_PARTICIPATION = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x93, (byte) 0x9D}, StandardCharsets.UTF_8) + " Записаться в волонтеры";
+    public static final String COMMAND_SHOW_VOLUNTEERS = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x8E, (byte) 0xBD}, StandardCharsets.UTF_8) + " Кто уже записан?";
+    public static final String COMMAND_VOLUNTEER_REGISTRATION = new String(new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x91, (byte) 0x8B}, StandardCharsets.UTF_8) + " Зарегистрироваться";
+    public static final String COMMAND_SUBSCRIBE_NOTIFICATION = new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x8D}, StandardCharsets.UTF_8) + " Подписаться на оповещения";
+    public static final String COMMAND_HELP = new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x93}, StandardCharsets.UTF_8) + " Помощь";
+    private static final String GREETING_MESSAGE = "! Я бот-помощник для записи в волонтеры на 5 верст в Павшинской Пойме.\nЧего желаете?";
     private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
     private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
@@ -23,7 +28,8 @@ public class ReplyFactory {
     private static final String REGISTRATION_FAMILY_NAME_ERROR_MESSAGE = "Фамилия и/или имя некорректны";
     private static final String REGISTRATION_CODE_5VERST_ERROR_MESSAGE = "Введён некорректный код 5Вёрст";
     private static final String REGISTRATION_CANCEL_MESSAGE = "Регистрация отменена";
-    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую.";
+    private static final String ALL_SLOTS_TAKEN_MESSAGE = "На эту дату уже нет записи, попробуйте другую";
+    private static final String OTHER_SLOTS_TAKEN_MESSAGE = "Больше свободны ролей нет>";
     private static final String SELECT_DATES_MESSAGE = "Выберите дату";
     private static final String SELECT_ROLE_MESSAGE = "Выберите роль";
     private static final String ERROR_MESSAGE = "Что-то пошло не так";
@@ -33,10 +39,6 @@ public class ReplyFactory {
     private static final String ORG_ALREADY_SIGNUP_MESSAGE = "Вы уже подписаны на рассылку уведомлений о записи волонтеров";
     private static final String ORG_REJECT_SIGNUP_MESSAGE = "Вас нет в списке организаторов";
     private final KeyboardFactory keyboardFactory = new KeyboardFactory();
-
-    public SendMessage botGreetingReply(long chatId) {
-        return SendMessage.builder().chatId(chatId).text(GREETING_MESSAGE).build();
-    }
 
     public SendMessage registerInitialReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(REGISTRATION_INITIAL_MESSAGE).build();
@@ -72,16 +74,6 @@ public class ReplyFactory {
 
     public SendMessage enterNameReply(long chatId) {
         return SendMessage.builder().chatId(chatId).text(ENTER_NAME_MESSAGE).build();
-    }
-
-    public SendMessage makeConfirmationDateRole(long chatId, LocalDate date, String eventRole) {
-        SendMessage message = SendMessage.builder().chatId(chatId).text(MAKE_CONFIRMATION_DATE_ROLE + "\"" + date.toString() + "\""
-                        + "\nНа роль: \"" + eventRole + "\""
-                        + "\nЕсли всё верно, выбирайте: \"YES\"!" +
-                        "\nЕсли что-то пошло не так, откажитесь от сохранения: \"NO\"!")
-                .replyMarkup(keyboardFactory.getApproveDeclineButtonsMarkup())
-                .build();
-        return message;
     }
 
     public SendMessage enterSurNameReply(long chatId) {
@@ -157,5 +149,13 @@ public class ReplyFactory {
 
     public SendMessage genericMessage(long chatId, String message) {
         return SendMessage.builder().chatId(chatId).text(message).build();
+    }
+
+    public SendMessage mainMenu(long chatId, String firstName) {
+        return SendMessage.builder().chatId(chatId)
+                .parseMode("HTML")
+                .text("Привет, " + firstName + GREETING_MESSAGE)
+                .replyMarkup(keyboardFactory.getMainMenu())
+                .build();
     }
 }

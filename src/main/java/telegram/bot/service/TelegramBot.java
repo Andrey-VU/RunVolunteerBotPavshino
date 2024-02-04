@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -91,32 +92,28 @@ public class TelegramBot extends TelegramLongPollingBot {
         Map.Entry<Long, String> userIdentity = getUserIdentity(update);
 
         // если этого юзера еще нет в мапе юзеров бота, добавляем его туда и отправляем приветствие
-        if (!userRecords.containsKey(userIdentity.getKey())) {
+        if (!userRecords.containsKey(userIdentity.getKey()))
             userRecords.put(userIdentity.getKey(), UserRecord.builder().expectedUserActionType(UserActionType.CHOOSE_COMMAND).build());
-            answerToUser(reply.botGreetingReply(getChatId(update)));
-        }
+
         var userRecord = userRecords.get(userIdentity.getKey());
 
-        if (update.hasMessage()) {
-            if (update.getMessage().getText().startsWith("/"))
-                handleCommand(update, userIdentity, userRecord); // если пользователь выбрал команду из меню
-            else
-                handleStage(update, userIdentity, userRecord); // если пользователь что-то написал
-        } else if (update.hasCallbackQuery()) {
-            handleCallback(update, userIdentity, userRecord); // если пользователь кликнул кнопку
-        }
+        if (update.hasMessage()) // если пользователь выбрал команду в основном меню или что-то ввел с клавиатуры
+            handleCommand(update, userIdentity, userRecord);
+        else if (update.hasCallbackQuery()) // если пользователь кликнул кнопку в каком-то из сценариев
+            handleCallback(update, userIdentity, userRecord);
     }
 
     private void handleCommand(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
         log.info("handleCommand");
         long chatId = getChatId(update);
 
-        switch (update.getMessage().getText()) {
-            case "/start" -> {
+        var text = update.getMessage().getText();
+
+        if (isCommand(text)) {
+            if (text.equals("/start")) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                answerToUser(reply.botGreetingReply(getChatId(update)));
-            }
-            case "/register" -> {
+                answerToUser(reply.mainMenu(chatId, update.getMessage().getChat().getFirstName()));
+            } else if (text.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
                     answerToUser(reply.registerInitialReply(chatId));
@@ -125,32 +122,34 @@ public class TelegramBot extends TelegramLongPollingBot {
                     userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.alreadyRegisteredReply(chatId));
                 }
-
-            }
-            case "/show_volunteers" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS)) {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                 answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
-            }
-            case "/volunteer" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 } else {
                     userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART));
+                    answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART1));
                 }
-            }
-            case "/subscribe" -> {
+            } else if (text.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION)) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue())))
                     answerToUser(reply.registrationRequired(getChatId(update)));
                 else replyToSubscriptionRequester(userIdentity, chatId);
-            }
-            default -> {
+
+            } else if (text.equals(ReplyFactory.COMMAND_HELP)) {
+                userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                answerToUser(chatId, "С помощью бота можно:\n" +
+                        "\n" +
+                        "1. Записаться в волонтёры на 5 вёрст “Павшинская Пойма” на нужную дату и позицию.\n" +
+                        "2. Просмотреть, кто уже записан на мероприятие в определённую дату.");
+            } else {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 answerToUser(reply.genericMessage(chatId, "Выберите команду из меню"));
             }
-        }
+        } else handleStage(update, userIdentity, userRecord); // значит пользователь что-то написал
     }
 
     private void handleCallback(Update update, Map.Entry<Long, String> userIdentity, UserRecord userRecord) {
@@ -177,15 +176,35 @@ public class TelegramBot extends TelegramLongPollingBot {
                                         .filter(part -> part.getVolunteer() != null)
                                         .collect(Collectors.toList())));
             }
-            case TAKE_PART -> {
+            case TAKE_PART1 -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                List<Participation> vacantRolesList = storage.getParticipantsByDate(payload.getDate())
+                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(part -> part.getVolunteer() == null)
                         .toList();
-                if (vacantRolesList.isEmpty())
+                if (vacantRoles.isEmpty())
                     answerToUser(reply.allSlotsTakenReply(chatId));
-                else answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesList));
+                else {
+                    List<Participation> vacantRolesPage1 = Stream.concat(
+                            vacantRoles.stream().limit(BotConfiguration.getSheetVolunteersRolesFirstPartRows()),
+                            Stream.of(vacantRoles.size() > BotConfiguration.getSheetVolunteersRolesFirstPartRows() ?
+                                    Participation.builder()
+                                            .eventDate(payload.getDate())
+                                            .eventRole(">>>")
+                                            .pointerToNextPageOfRoles(true).build() :
+                                    null)
+                    ).toList();
+                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesPage1));
+                }
+            }
+            case TAKE_PART2 -> {
+                userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
+                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(part -> part.getVolunteer() == null)
+                        .skip(BotConfiguration.getSheetVolunteersRolesFirstPartRows())
+                        .toList();
+                answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRoles));
             }
             case CHOSEN_ROLE -> {
                 // берем список участников на указанную субботу и ищем среди них нашего волонтера
@@ -203,7 +222,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     answerToUser(reply.volunteerIsEngagedAlready(chatId, payload.getDate(), participant.getEventRole()));
                 }, () -> // если волонтер в эту дату еще не записан на какую-либо роль
                 {
-                    // из данных полученного коллбэка определяем имя роли, которую выбрад волонтер
+                    // из данных полученного коллбэка определяем имя роли, которую выбрал волонтер
                     var eventRole = getRoleName(payload);
 
                     // готовим сообщение для диалога подтверждения
@@ -433,5 +452,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         throw new RuntimeException("Can't define chat");
+    }
+
+    private boolean isCommand(String command) {
+        if (command.equals("/start") ||
+                command.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS) ||
+                command.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION) ||
+                command.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION) ||
+                command.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION) ||
+                command.equals(ReplyFactory.COMMAND_HELP))
+            return true;
+        else return false;
     }
 }

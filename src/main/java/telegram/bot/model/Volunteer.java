@@ -1,8 +1,10 @@
 package telegram.bot.model;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import telegram.bot.service.utils.AESUtil;
 
 import java.util.Arrays;
@@ -13,33 +15,34 @@ import java.util.Optional;
 @Data
 @Builder
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Volunteer {
     // Имя
-    private String name;
+    String name;
 
     // Фамилия
-    private String surname;
+    String surname;
 
     // Телеграм пользователя
-    private String tgUserName;
+    String tgUserName;
 
     // Идентификатор пользователя в системе 5 верст
-    private String code;
+    String code;
 
     // Примечание
-    private String comment;
+    String comment;
 
     // id пользователя в телеграме
-    private Long tgUserId;
+    Long tgUserId;
 
     // является ли пользователь организатором в какую-либо из суббот
-    private Boolean isOrganizer;
+    Boolean isOrganizer;
 
     // подписан ли пользователь на оповещения о записях на роли
-    private Boolean isSubscribed;
+    Boolean isSubscribed;
 
     // номер строки в таблице на закладке "Контакты"
-    private Integer sheetRowNumber;
+    Integer sheetRowNumber;
 
     public static Volunteer createFrom(List<String> userProperties, AESUtil aesUtil) {
         var fullNameList = Arrays.asList((!userProperties.isEmpty() ? userProperties : List.of("")).get(0).split(" ", 2));
@@ -55,7 +58,7 @@ public class Volunteer {
                 null);
     }
 
-    private static String getValueFromList(List<String> list, int elementIndex) {
+    static String getValueFromList(List<String> list, int elementIndex) {
         return !Objects.isNull(list) && list.size() >= elementIndex + 1 && !list.get(elementIndex).isEmpty() ? list.get(elementIndex) : null;
     }
 

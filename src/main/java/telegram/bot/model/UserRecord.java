@@ -1,14 +1,17 @@
 package telegram.bot.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import telegram.bot.service.enums.UserActionType;
 
 @Data
 @Builder
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class UserRecord {
-    private UserActionType expectedUserActionType;
-    private String name;
-    private String surname;
-    private String code;
+    UserActionType expectedUserActionType;
+    String name;
+    String surname;
+    String code;
 }
