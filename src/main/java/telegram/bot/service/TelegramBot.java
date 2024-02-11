@@ -178,33 +178,43 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             case TAKE_PART1 -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
+                var vacantRolesMain = storage.getParticipantsByDate(payload.getDate())
                         .stream()
+                        .filter(participation -> storage.getMainRoles().stream().anyMatch(mainRole -> participation.getEventRole().equals(mainRole)))
                         .filter(part -> part.getVolunteer() == null)
                         .toList();
-                if (vacantRoles.isEmpty())
+
+                var vacantRolesOther = storage.getParticipantsByDate(payload.getDate())
+                        .stream()
+                        .filter(participation -> storage.getMainRoles().stream().noneMatch(mainRole -> participation.getEventRole().equals(mainRole)))
+                        .filter(part -> part.getVolunteer() == null)
+                        .toList();
+
+                if (vacantRolesMain.isEmpty() && vacantRolesOther.isEmpty())
                     answerToUser(reply.allSlotsTakenReply(chatId));
-                else {
-                    List<Participation> vacantRolesPage1 = Stream.concat(
-                            vacantRoles.stream().limit(BotConfiguration.getSheetVolunteersRolesFirstPartRows()),
-                            Stream.of(vacantRoles.size() > BotConfiguration.getSheetVolunteersRolesFirstPartRows() ?
+                else if (!vacantRolesMain.isEmpty()) {
+                    List<Participation> vacantRolesMainPlusOptionalSeparator = Stream.concat(
+                            vacantRolesMain.stream(),
+                            Stream.of(!vacantRolesOther.isEmpty() ?
                                     Participation.builder()
                                             .eventDate(payload.getDate())
                                             .eventRole(">>>")
                                             .pointerToNextPageOfRoles(true).build() :
                                     null)
                     ).toList();
-                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesPage1));
-                }
+                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesMainPlusOptionalSeparator));
+                } else
+                    answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesOther));
+
             }
             case TAKE_PART2 -> {
                 userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
-                var vacantRoles = storage.getParticipantsByDate(payload.getDate())
+                var vacantRolesOther = storage.getParticipantsByDate(payload.getDate())
                         .stream()
+                        .filter(participation -> storage.getMainRoles().stream().noneMatch(mainRole -> participation.getEventRole().equals(mainRole)))
                         .filter(part -> part.getVolunteer() == null)
-                        .skip(BotConfiguration.getSheetVolunteersRolesFirstPartRows())
                         .toList();
-                answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRoles));
+                answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesOther));
             }
             case CHOSEN_ROLE -> {
                 // берем список участников на указанную субботу и ищем среди них нашего волонтера
