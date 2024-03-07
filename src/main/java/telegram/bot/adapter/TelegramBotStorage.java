@@ -44,6 +44,8 @@ public interface TelegramBotStorage {
      */
     List<Volunteer> getVolunteers();
 
+    List<String> getMainRoles();
+
     /**
      * Получаем список участников на дату
      *

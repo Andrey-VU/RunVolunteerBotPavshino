@@ -120,8 +120,8 @@ public class KeyboardFactory {
                 .sheetRowNumber(participation.getSheetRowNumber())
                 .buttonType(
                         !participation.isPointerToNextPageOfRoles() ?
-                        ButtonType.CHOSEN_ROLE :
-                        ButtonType.TAKE_PART2)
+                                ButtonType.CHOSEN_ROLE :
+                                ButtonType.TAKE_PART2)
                 .build();
         try {
             return InlineKeyboardButton.builder()

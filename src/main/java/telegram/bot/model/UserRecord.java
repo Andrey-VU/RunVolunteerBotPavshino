@@ -8,7 +8,7 @@ import telegram.bot.service.enums.UserActionType;
 
 @Data
 @Builder
-@FieldDefaults(level= AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRecord {
     UserActionType expectedUserActionType;
     String name;

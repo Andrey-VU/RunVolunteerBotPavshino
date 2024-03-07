@@ -22,6 +22,7 @@ public abstract class Storage implements TelegramBotStorage {
     protected StorageUtils storageUtils;
     protected Map<String, Volunteer> contacts;
     protected Map<LocalDate, Event> events;
+    protected List<String> mainRoles;
     protected volatile LocalDateTime cacheLastUpdateTime;
     private volatile boolean isStorageSyncStarted = false;
 
@@ -58,6 +59,11 @@ public abstract class Storage implements TelegramBotStorage {
     public List<Volunteer> getVolunteers() {
         checkIfCacheIsObsoletedAndUpdateIfNeeded();
         return new LinkedList<>(contacts.values());
+    }
+
+    @Override
+    public List<String> getMainRoles() {
+        return mainRoles;
     }
 
     @Override
@@ -129,6 +135,7 @@ public abstract class Storage implements TelegramBotStorage {
     synchronized public void loadDataFromStorage() {
         loadContacts();
         loadEvents();
+        loadMainRoles();
         cacheLastUpdateTime = LocalDateTime.now();
 
         if (!isStorageSyncStarted && BotConfiguration.getBotStorageSheetSyncIntervalMilliSec() != 0) {
@@ -176,6 +183,12 @@ public abstract class Storage implements TelegramBotStorage {
         var eventVolunteers = getEventVolunteers(eventRoles, eventDates);
         prepareEvents(eventRoles, eventDates, eventVolunteers);
         log.info("loadEvents is finished");
+    }
+
+    protected void loadMainRoles() {
+        log.info("loadMainRoles is started");
+        mainRoles = storageUtils.readValuesList(BotConfiguration.getSheetRoles(), "R1C1", "C1");
+        log.info("loadMainRoles is finished");
     }
 
     protected void addNewEvent(LocalDate newEventDate) {
