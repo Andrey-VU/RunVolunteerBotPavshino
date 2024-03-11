@@ -113,7 +113,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (text.equals("/start")) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                 answerToUser(reply.mainMenu(chatId, update.getMessage().getChat().getFirstName()));
-            } else if (text.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION)) {
+            } else if (text.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION) || text.equals("/register")) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
                     answerToUser(reply.registerInitialReply(chatId));
@@ -465,7 +465,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private boolean isCommand(String command) {
-        if (command.equals("/start") ||
+        if (command.equals("/start") || command.equals("/register") ||
                 command.equals(ReplyFactory.COMMAND_SHOW_VOLUNTEERS) ||
                 command.equals(ReplyFactory.COMMAND_VOLUNTEER_REGISTRATION) ||
                 command.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION) ||
