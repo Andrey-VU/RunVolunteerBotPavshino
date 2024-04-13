@@ -17,7 +17,8 @@ public class ReplyFactory {
     public static final String COMMAND_SUBSCRIBE_NOTIFICATION = new String(new byte[]{(byte) 0xE2, (byte) 0x9C, (byte) 0x8D}, StandardCharsets.UTF_8) + " Подписаться на оповещения";
     public static final String COMMAND_HELP = new String(new byte[]{(byte) 0xE2, (byte) 0x9D, (byte) 0x93}, StandardCharsets.UTF_8) + " Помощь";
     private static final String GREETING_MESSAGE = "! Я бот-помощник для записи в волонтеры на 5 верст в Павшинской Пойме.\nЧего желаете?";
-    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
+    //private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас запишу. Введите команду /register";
+    private static final String REGISTRATION_REQUIRED_MESSAGE = "Мы с вами ещё не знакомы! Давайте я вас зарегистрирую в системе";
     private static final String REGISTRATION_INITIAL_MESSAGE = "Для регистрации необходимы Имя, Фамилия,  и ваш код в Системе 5 верст";
     private static final String ALREADY_REGISTERED_MESSAGE = "Я вас уже знаю!";
     private static final String ENTER_NAME_MESSAGE = "Введите имя";
