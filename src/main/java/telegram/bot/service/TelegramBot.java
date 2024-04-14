@@ -127,16 +127,23 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answerToUser(reply.selectDatesReply(chatId, ButtonType.SHOW_PART));
             } else if (text.equals(ReplyFactory.COMMAND_TAKE_PARTICIPATION)) {
                 if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
-                    userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
+                    //userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
                     answerToUser(reply.registrationRequired(getChatId(update)));
+                    userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
+                    answerToUser(reply.registerInitialReply(chatId));
+                    answerToUser(reply.enterNameReply(chatId));
                 } else {
                     userRecord.setExpectedUserActionType(UserActionType.CLICK_BUTTON);
                     answerToUser(reply.selectDatesReply(chatId, ButtonType.TAKE_PART1));
                 }
             } else if (text.equals(ReplyFactory.COMMAND_SUBSCRIBE_NOTIFICATION)) {
                 userRecord.setExpectedUserActionType(UserActionType.CHOOSE_COMMAND);
-                if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue())))
+                if (Objects.isNull(storage.getVolunteerByTgUserName(userIdentity.getValue()))) {
                     answerToUser(reply.registrationRequired(getChatId(update)));
+                    userRecord.setExpectedUserActionType(UserActionType.ENTER_NAME);
+                    answerToUser(reply.registerInitialReply(chatId));
+                    answerToUser(reply.enterNameReply(chatId));
+                }
                 else replyToSubscriptionRequester(userIdentity, chatId);
 
             } else if (text.equals(ReplyFactory.COMMAND_HELP)) {
