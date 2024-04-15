@@ -188,13 +188,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                 var vacantRolesMain = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> storage.getMainRoles().stream().anyMatch(mainRole -> participation.getEventRole().equals(mainRole)))
-                        .filter(part -> part.getVolunteer() == null)
+                        .filter(part -> part.getVolunteer() == null && !part.getEventRole().equals("Организатор"))
                         .toList();
 
                 var vacantRolesOther = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> storage.getMainRoles().stream().noneMatch(mainRole -> participation.getEventRole().equals(mainRole)))
-                        .filter(part -> part.getVolunteer() == null)
+                        .filter(part -> part.getVolunteer() == null && !part.getEventRole().equals("Организатор"))
                         .toList();
 
                 if (vacantRolesMain.isEmpty() && vacantRolesOther.isEmpty())
@@ -219,7 +219,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 var vacantRolesOther = storage.getParticipantsByDate(payload.getDate())
                         .stream()
                         .filter(participation -> storage.getMainRoles().stream().noneMatch(mainRole -> participation.getEventRole().equals(mainRole)))
-                        .filter(part -> part.getVolunteer() == null)
+                        .filter(part -> part.getVolunteer() == null && !part.getEventRole().equals("Организатор"))
                         .toList();
                 answerToUser(reply.showVacantRoles(chatId, payload.getDate(), vacantRolesOther));
             }
